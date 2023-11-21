@@ -7,10 +7,11 @@ class SupernovaI2CBlockingInterface:
         self.device = device
         self.controller = controller
 
-    def set_parameters(self):
+    def set_parameters(self, voltage: float, rate: int = 1000000):
+        voltage_int = voltage * 1000
         result = self.controller.sync_submit([
-            lambda transfer_id: self.device.setI2cSpiUartBusVoltage(transfer_id, 3300),
-            lambda transfer_id: self.device.i2cSetParameters(transfer_id, baudrate=1000000),
+            lambda transfer_id: self.device.setI2cSpiUartBusVoltage(transfer_id, voltage_int),
+            lambda transfer_id: self.device.i2cSetParameters(transfer_id, baudrate=rate),
         ])
 
         return result
