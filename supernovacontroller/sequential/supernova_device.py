@@ -16,7 +16,7 @@ class SupernovaDevice:
     def __init__(self, start_id=0):
       self.controller = TransferController(id_gen(start_id))
       self.response_queue = queue.SimpleQueue()
-      self.ibi_queue = queue.SimpleQueue()
+      self.notification_queue = queue.SimpleQueue()
 
       self.process_response_thread = threading.Thread(target=self._pull_sdk_response, daemon=True)
       self.running = True
@@ -60,7 +60,7 @@ class SupernovaDevice:
             return
 
         if supernova_response["name"] == "I3C TRANSFER":
-            self.ibi_queue.put((supernova_response, system_message))
+            self.notification_queue.put((supernova_response, system_message))
 
         # Process non-sequenced responses
         # ...
