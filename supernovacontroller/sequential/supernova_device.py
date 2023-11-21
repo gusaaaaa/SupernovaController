@@ -1,5 +1,6 @@
 from transfer_controller import TransferController
 from BinhoSupernova.Supernova import Supernova
+from BinhoSupernova.commands.definitions import GetUsbStringSubCommand
 import queue
 import threading
 from .i2c import SupernovaI2CBlockingInterface
@@ -30,6 +31,12 @@ class SupernovaDevice:
         self.device.onEvent(self._push_sdk_response)
         self.i2c = SupernovaI2CBlockingInterface(self.device, self.controller)
         # self.i3c = SupernovaI3CBlockingInterface(self.device, self.controller)
+
+        return self.controller.sync_submit([
+            lambda id: self.device.getUsbString(id, getattr(GetUsbStringSubCommand, 'HW_VERSION')),
+            lambda id: self.device.getUsbString(id, getattr(GetUsbStringSubCommand, 'FW_VERSION')),
+            lambda id: self.device.getUsbString(id, getattr(GetUsbStringSubCommand, 'SERIAL_NUMBER')),
+        ])
 
     def _push_sdk_response(self, supernova_response, system_message):
         self.response_queue.put((supernova_response, system_message))

@@ -5,7 +5,7 @@ from setuptools import setup, find_packages
 gh_token = os.environ.get('GH_TOKEN')
 
 setup(
-    name='SupernovaController',
+    name='supernovacontroller',
     version='0.1.0',
     packages=find_packages(),
     description='A blocking API for interacting with the Supernova host-adapter device',

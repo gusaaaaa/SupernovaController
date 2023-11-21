@@ -1,23 +1,24 @@
-from SupernovaController.sequential import SupernovaDevice
+from supernovacontroller.sequential import SupernovaDevice
 
 
 def main():
-    supernova = SupernovaDevice()
+    device = SupernovaDevice()
 
-    info = supernova.open()
+    info = device.open()
+    print(info)
 
-    result = info.i2c.set_parameters()
+    result = device.i2c.set_parameters()
     print(result)
-    result = info.i2c.write(0x50, [0,0], [33 for i in range(1,129)])
+    result = device.i2c.write(0x50, [0,0], [33 for i in range(1,129)])
     print(result)
-    result = info.i2c.write_non_stop(0x50, [0,0], [55 for i in range(1,129)])
+    result = device.i2c.write_non_stop(0x50, [0,0], [55 for i in range(1,129)])
     print(result)
-    result = info.i2c.read(0x50, 70)
+    result = device.i2c.read(0x50, 70)
     print(result)
-    result = info.i2c.read_from(0x50, [0,0], 70)
+    result = device.i2c.read_from(0x50, [0,0], 70)
     print(result)
 
-    supernova.close()
+    device.close()
 
 
 if __name__ == "__main__":
