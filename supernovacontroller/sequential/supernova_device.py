@@ -4,6 +4,7 @@ from BinhoSupernova.commands.definitions import GetUsbStringSubCommand
 import queue
 import threading
 from .i2c import SupernovaI2CBlockingInterface
+from .i3c import SupernovaI3CBlockingInterface
 
 def id_gen(start=0):
     i = start
@@ -30,7 +31,7 @@ class SupernovaDevice:
         self.device.open()
         self.device.onEvent(self._push_sdk_response)
         self.i2c = SupernovaI2CBlockingInterface(self.device, self.controller)
-        # self.i3c = SupernovaI3CBlockingInterface(self.device, self.controller)
+        self.i3c = SupernovaI3CBlockingInterface(self.device, self.controller)
 
         return self.controller.sync_submit([
             lambda id: self.device.getUsbString(id, getattr(GetUsbStringSubCommand, 'HW_VERSION')),
