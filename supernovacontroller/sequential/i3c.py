@@ -36,12 +36,10 @@ class SupernovaI3CBlockingInterface:
         # TODO: consider renaming
         pass
 
-    def clear_feature(self, selector, address):
-        # TODO: consider renaming
+    def ibi_toggle(self, enabled: bool = False):
         pass
 
-    def set_feature(self, selector_address):
-        # TODO: consider renaming
+    def hotjoin_toggle(self, enabled: bool = False):
         pass
 
     def target_update_address(self, current_address, new_address):
