@@ -20,7 +20,7 @@ class SupernovaI3CBlockingInterface:
         voltage_int = int(1000 * voltage)
         pass
 
-    def init_bus(voltage: float):
+    def init_bus(self, voltage: float):
         pass
 
     def reset_bus(self):
@@ -47,10 +47,10 @@ class SupernovaI3CBlockingInterface:
     def target_update_address(self, current_address, new_address):
         pass
 
-    def target_config(self, address, config):
+    def target_config(self, target_address, config):
         pass
 
-    def target_reset(self, address, def_byte, rw: TransferDirection):
+    def target_reset(self, target_address, def_byte, rw: TransferDirection):
         # Get parameters from self.push_pull_clock_freq_mhz and self.open_drain_clock_freq_mhz
         pass
 
@@ -58,8 +58,103 @@ class SupernovaI3CBlockingInterface:
         # Get parameters from self.push_pull_clock_freq_mhz and self.open_drain_clock_freq_mhz
         pass
 
-    def read(self, address, mode: TransferMode, subaddress: [], length):
+    def read(self, target_address, mode: TransferMode, subaddress: [], length):
         # Get parameters from self.push_pull_clock_freq_mhz and self.open_drain_clock_freq_mhz
         pass
 
-    # Continue...
+    def ccc_GETBCR(self, target_address):
+        pass
+
+    def ccc_GETDCR(self, target_address):
+        pass
+
+    def ccc_GETPID(self, target_address):
+        pass
+
+    def ccc_GETACCCR(self, target_address):
+        pass
+
+    def ccc_GETMXDS(self, target_address):
+        pass
+
+    def ccc_GETMRL(self, target_address):
+        pass
+
+    def ccc_GETMWL(self, target_address):
+        pass
+
+    def ccc_GETXTIME(self, target_address):
+        pass
+
+    def ccc_GETCAPS(self, target_address):
+        pass
+
+    def ccc_RSTDAA(self, target_address):
+        pass
+
+    def ccc_broadcast_ENEC(self):
+        pass
+
+    def ccc_broadcast_DISEC(self):
+        pass
+
+    def ccc_unicast_ENEC(self, target_address):
+        pass
+
+    def ccc_unicast_DISEC(self, target_address):
+        pass
+
+    def ccc_SETDASA(self, static_address, dynamic_address):
+        pass
+
+    def ccc_SETNEWDA(self, current_address, new_address):
+        pass
+
+    def ccc_unicast_SETGRPA(self, target_address):
+        pass
+
+    def ccc_unicast_RSTGRPA(self):
+        pass
+
+    def ccc_unicast_SETMRL(self, target_address):
+        pass
+
+    def ccc_unicast_SETMWL(self, target_address):
+        pass
+
+    def ccc_broadcast_SETMWL(self):
+        pass
+
+    def ccc_broadcast_SETMRL(self):
+        pass
+
+    def ccc_SETAASA(self):
+        pass
+
+    def ccc_broadcast_ENDXFED(self):
+        pass
+
+    def ccc_unicast_ENDXFER(self, target_address):
+        pass
+
+    def ccc_broadcast_SETXTIME(self):
+        pass
+
+    def ccc_unicast_SETXTIME(self, target_address):
+        pass
+
+    def ccc_broadcast_SETBUSCON(self):
+        pass
+
+    def ccc_broadcast_ENTAS0(self):
+        pass
+
+    def ccc_broadcast_ENTAS1(self):
+        pass
+
+    def ccc_broadcast_ENTAS2(self):
+        pass
+
+    def ccc_broadcast_ENTAS3(self):
+        pass
+
