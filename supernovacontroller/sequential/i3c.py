@@ -7,6 +7,7 @@ from BinhoSupernova.commands.definitions import I3cSetFeatureSelector
 from BinhoSupernova.commands.definitions import I3cClearFeatureSelector
 from supernovacontroller.errors import BusVoltageError
 
+
 class SupernovaI3CBlockingInterface:
     # TODO: Replicate definitions (TransferMode, I3cCommandType, TransferDirection)
 
@@ -159,7 +160,7 @@ class SupernovaI3CBlockingInterface:
                 - 'dynamic_address': The dynamic address in hexadecimal format.
                 - 'bcr': The Bus Characteristics Register value.
                 - 'dcr': The Device Characteristics Register.
-                - 'pid':  Unique ID containing a manufacturer ID, a part ID and an instance ID.
+                - 'pid': Unique ID (Provisional ID) containing a manufacturer ID, a part ID and an instance ID.
         """
 
         responses = self.controller.sync_submit([
@@ -260,7 +261,46 @@ class SupernovaI3CBlockingInterface:
 
         return result
 
+    def _process_response(self, command_name, responses, extra_data=None):
+        def format_response_payload(command_name, response):
+            match command_name:
+                case "write" | "read": return response["data"]
+                case "ccc_GETBCR": return response["bcr"]["value"][2][2:].upper()
+
+            return None
+
+        response = responses[0]
+        if response["header"]["result"] == "I3C_TRANSFER_SUCCESS":
+            data = format_response_payload(command_name, response)
+            result_data = {"data": data, "length": response["descriptor"]["dataLength"]}
+            if extra_data:
+                result_data.update(extra_data)
+            result = (True, result_data)
+        else:
+            result = (False, response["descriptor"]["errors"][0])
+        return result
+
     def write(self, target_address, mode: TransferMode, subaddress: [], buffer: list):
+        """
+        Performs a write operation to a target device on the I3C bus.
+
+        This method sends data to the specified target device. It includes various parameters like the target
+        address, transfer mode, and data to be written. It checks the operation's success status and returns
+        a tuple indicating whether the operation was successful along with the relevant data or error message.
+
+        Args:
+        target_address: The address of the target device on the I3C bus to which data is to be written.
+        mode (TransferMode): The transfer mode to be used for the write operation. This should be an instance
+                            of the TransferMode enum, indicating the desired transfer mode.
+        subaddress (list): A list of integers representing the subaddress to be used in the write operation.
+        buffer (list): A list of data bytes to be written to the target device.
+
+        Returns:
+        tuple: A tuple containing two elements:
+            - The first element is a Boolean indicating the success (True) or failure (False) of the operation.
+            - The second element is either a dictionary containing the data written and its length, indicating
+                success, or an error message detailing the failure.
+        """
         responses = self.controller.sync_submit([
             lambda id: self.device.i3cWrite(
                 id,
@@ -272,70 +312,498 @@ class SupernovaI3CBlockingInterface:
                 buffer,
             )
         ])
-
-        response = responses[0]
-
-        if response["header"]["result"] == "I3C_TRANSFER_SUCCESS":
-            result = (True, { "data": response["data"], "length": response["descriptor"]["dataLength"] })
-        else:
-            result = (False, response["errors"])
-        
-        return result
+        return self._process_response("write", responses)
 
     def read(self, target_address, mode: TransferMode, subaddress: [], length):
-        # Get parameters from self.push_pull_clock_freq_mhz and self.open_drain_clock_freq_mhz
-        pass
+        """
+        Performs a read operation from a target device on the I3C bus.
+
+        This method reads data from the specified target device using a given transfer mode, subaddress,
+        and expected length of data. It sends the appropriate command to the controller and processes the
+        response, returning either the successfully read data or an error message.
+
+        Args:
+        target_address: The address of the target device on the I3C bus from which data is to be read.
+        mode (TransferMode): The transfer mode to be used for the read operation. This should be an instance
+                            of the TransferMode enum, indicating the desired transfer mode.
+        subaddress (list): A list of integers representing the subaddress to be used in the read operation.
+        length (int): The expected length of data to be read from the device, specified as an integer.
+
+        Returns:
+        tuple: A tuple containing two elements:
+            - The first element is a Boolean indicating the success (True) or failure (False) of the operation.
+            - The second element is either a dictionary containing the read data and its length, indicating
+                success, or an error message detailing the failure.
+        """
+        responses = self.controller.sync_submit([
+            lambda id: self.device.i3cRead(
+                id,
+                target_address,
+                mode,
+                self.push_pull_clock_freq_mhz,
+                self.push_pull_clock_freq_mhz,
+                subaddress,
+                length,
+            )
+        ])
+        return self._process_response("read", responses)
 
     def ccc_GETBCR(self, target_address):
-        pass
+        responses = self.controller.sync_submit([
+            lambda id: self.device.i3cGETBCR(
+                id,
+                target_address,
+                self.push_pull_clock_freq_mhz,
+                self.push_pull_clock_freq_mhz,
+            )
+        ])
+        return self._process_response("ccc_GETBCR", responses)
 
     def ccc_GETDCR(self, target_address):
-        pass
+        """
+        Performs a GETDCR (Get Device Characteristics Register) operation on a target device on the I3C bus.
+
+        This method requests the Device Characteristics Register (DCR) data from the specified target device.
+        The operation's success status is checked, and it returns a tuple indicating whether the operation
+        was successful along with the relevant data or error message.
+
+        Args:
+        target_address: The address of the target device on the I3C bus from which the DCR data is requested.
+
+        Returns:
+        tuple: A tuple containing two elements:
+            - The first element is a Boolean indicating the success (True) or failure (False) of the operation.
+            - The second element is either a dictionary containing the DCR data and its length, indicating
+                success, or an error message detailing the failure.
+        """
+        responses = self.controller.sync_submit([
+            lambda id: self.device.i3cGETDCR(
+                id,
+                target_address,
+                self.push_pull_clock_freq_mhz,
+                self.push_pull_clock_freq_mhz,
+            )
+        ])
+
+        return self._process_response("ccc_GETDCR", responses)
 
     def ccc_GETPID(self, target_address):
-        pass
+        """
+        Performs a GETPID (Get Provisional ID) operation on a target device on the I3C bus.
+
+        This method requests the Provisional ID (PID) data from the specified target device.
+        The operation's success status is checked, and it returns a tuple indicating whether the operation
+        was successful along with the relevant data or error message.
+
+        Args:
+        target_address: The address of the target device on the I3C bus from which the PID data is requested.
+
+        Returns:
+        tuple: A tuple containing two elements:
+            - The first element is a Boolean indicating the success (True) or failure (False) of the operation.
+            - The second element is either a dictionary containing the PID data and its length, indicating
+                success, or an error message detailing the failure.
+        """
+        responses = self.controller.sync_submit([
+            lambda id: self.device.i3cGETPID(
+                id,
+                target_address,
+                self.push_pull_clock_freq_mhz,
+                self.push_pull_clock_freq_mhz,
+            )
+        ])
+
+        return self._process_response("ccc_GETPID", responses)
 
     def ccc_GETACCCR(self, target_address):
-        pass
+        """
+        Performs a GETACCCR (Get Acceptable Command Codes Register) operation on a target device on the I3C bus.
+
+        This method requests the Acceptable Command Codes Register (ACCCR) data from the specified target device.
+        The operation's success status is checked, and it returns a tuple indicating whether the operation
+        was successful along with the relevant data or error message.
+
+        Args:
+        target_address: The address of the target device on the I3C bus from which the ACCCR data is requested.
+
+        Returns:
+        tuple: A tuple containing two elements:
+            - The first element is a Boolean indicating the success (True) or failure (False) of the operation.
+            - The second element is either a dictionary containing the ACCCR data and its length, indicating
+                success, or an error message detailing the failure.
+        """
+        responses = self.controller.sync_submit([
+            lambda id: self.device.i3cGETACCCR(
+                id,
+                target_address,
+                self.push_pull_clock_freq_mhz,
+                self.push_pull_clock_freq_mhz,
+            )
+        ])
+
+        return self._process_response("ccc_GETACCCR", responses)
 
     def ccc_GETMXDS(self, target_address):
-        pass
+        """
+        Performs a GETMXDS (Get Max Data Speed) operation on a target device on the I3C bus.
+
+        This method requests the Maximum Data Speed information from the specified target device.
+        The operation's success status is checked, and it returns a tuple indicating whether the operation
+        was successful along with the relevant data or error message.
+
+        Args:
+        target_address: The address of the target device on the I3C bus from which the Max Data Speed information is requested.
+
+        Returns:
+        tuple: A tuple containing two elements:
+            - The first element is a Boolean indicating the success (True) or failure (False) of the operation.
+            - The second element is either a dictionary containing the Max Data Speed information and its length, indicating
+                success, or an error message detailing the failure.
+        """
+        responses = self.controller.sync_submit([
+            lambda id: self.device.i3cGETMXDS(
+                id,
+                target_address,
+                self.push_pull_clock_freq_mhz,
+                self.push_pull_clock_freq_mhz,
+            )
+        ])
+
+        return self._process_response("ccc_GETMXDS", responses)
 
     def ccc_GETMRL(self, target_address):
-        pass
+        """
+        Performs a GETMRL (Get Maximum Read Length) operation on a target device on the I3C bus.
+
+        This method requests the Maximum Read Length information from the specified target device.
+        The success of the operation is checked, and it returns a tuple indicating whether the operation
+        was successful along with the relevant data or error message.
+
+        Args:
+        target_address: The address of the target device on the I3C bus from which the Max Read Length information is requested.
+
+        Returns:
+        tuple: A tuple containing two elements:
+            - The first element is a Boolean indicating the success (True) or failure (False) of the operation.
+            - The second element is either a dictionary containing the Max Read Length information and its length, indicating
+                success, or an error message detailing the failure.
+        """
+        responses = self.controller.sync_submit([
+            lambda id: self.device.i3cGETMRL(
+                id,
+                target_address,
+                self.push_pull_clock_freq_mhz,
+                self.push_pull_clock_freq_mhz,
+            )
+        ])
+
+        return self._process_response("ccc_GETMRL", responses)
 
     def ccc_GETMWL(self, target_address):
-        pass
+        """
+        Performs a GETMWL (Get Maximum Write Length) operation on a target device on the I3C bus.
+
+        This method requests the Maximum Write Length information from the specified target device.
+        The operation's success status is checked, and it returns a tuple indicating whether the operation
+        was successful along with the relevant data or error message.
+
+        Args:
+        target_address: The address of the target device on the I3C bus from which the Maximum Write Length information is requested.
+
+        Returns:
+        tuple: A tuple containing two elements:
+            - The first element is a Boolean indicating the success (True) or failure (False) of the operation.
+            - The second element is either a dictionary containing the Maximum Write Length information and its length, indicating
+                success, or an error message detailing the failure.
+        """
+        responses = self.controller.sync_submit([
+            lambda id: self.device.i3cGETMWL(
+                id,
+                target_address,
+                self.push_pull_clock_freq_mhz,
+                self.push_pull_clock_freq_mhz,
+            )
+        ])
+
+        return self._process_response("ccc_GETMWL", responses)
 
     def ccc_GETXTIME(self, target_address):
-        pass
+        """
+        Performs a GETXTIME (Get Extra Timing Information) operation on a target device on the I3C bus.
+
+        This method requests the Extra Timing Information from the specified target device.
+        The operation's success status is checked, and it returns a tuple indicating whether the operation
+        was successful along with the relevant data or error message.
+
+        Args:
+        target_address: The address of the target device on the I3C bus from which the Extra Timing Information is requested.
+
+        Returns:
+        tuple: A tuple containing two elements:
+            - The first element is a Boolean indicating the success (True) or failure (False) of the operation.
+            - The second element is either a dictionary containing the Extra Timing Information and its length, indicating
+                success, or an error message detailing the failure.
+        """
+        responses = self.controller.sync_submit([
+            lambda id: self.device.i3cGETXTIME(
+                id,
+                target_address,
+                self.push_pull_clock_freq_mhz,
+                self.push_pull_clock_freq_mhz,
+            )
+        ])
+
+        return self._process_response("ccc_GETXTIME", responses)
 
     def ccc_GETCAPS(self, target_address):
-        pass
+        """
+        Performs a GETCAPS (Get Capabilities) operation on a target device on the I3C bus.
+
+        This method requests the Capabilities information from the specified target device.
+        The operation's success status is checked, and it returns a tuple indicating whether the operation
+        was successful along with the relevant data or error message.
+
+        Args:
+        target_address: The address of the target device on the I3C bus from which the Capabilities information is requested.
+
+        Returns:
+        tuple: A tuple containing two elements:
+            - The first element is a Boolean indicating the success (True) or failure (False) of the operation.
+            - The second element is either a dictionary containing the Capabilities information and its length, indicating
+                success, or an error message detailing the failure.
+        """
+        responses = self.controller.sync_submit([
+            lambda id: self.device.i3cGETCAPS(
+                id,
+                target_address,
+                self.push_pull_clock_freq_mhz,
+                self.push_pull_clock_freq_mhz,
+            )
+        ])
+
+        return self._process_response("ccc_GETCAPS", responses)
 
     def ccc_RSTDAA(self, target_address):
-        pass
+        """
+        Performs a RSTDAA (Reset Dynamic Address Assignment) operation on a target device on the I3C bus.
+
+        This method initiates a Reset Dynamic Address Assignment process on the specified target device.
+        The operation's success status is checked, and it returns a tuple indicating whether the operation
+        was successful along with the relevant data or error message.
+
+        Args:
+        target_address: The address of the target device on the I3C bus on which the RSTDAA process is initiated.
+
+        Returns:
+        tuple: A tuple containing two elements:
+            - The first element is a Boolean indicating the success (True) or failure (False) of the operation.
+            - The second element is either an error message detailing the failure or a success message.
+              Since RSTDAA does not typically return data, only success or failure is indicated.
+        """
+        responses = self.controller.sync_submit([
+            lambda id: self.device.i3cRSTDAA(
+                id,
+                target_address,
+                self.push_pull_clock_freq_mhz,
+                self.push_pull_clock_freq_mhz,
+            )
+        ])
+
+        return self._process_response("ccc_RSTDAA", responses)
 
     def ccc_broadcast_ENEC(self):
-        pass
+        """
+        Performs a broadcast ENEC (Enable Events Command) operation on the I3C bus.
+
+        This method sends a broadcast command to enable events on all devices on the I3C bus.
+        The operation's success status is checked, and it returns a tuple indicating whether the operation
+        was successful along with the relevant data or error message.
+
+        Returns:
+        tuple: A tuple containing two elements:
+            - The first element is a Boolean indicating the success (True) or failure (False) of the operation.
+            - The second element is either an error message detailing the failure or a success message.
+              Since this is a broadcast command, no specific data is expected in return.
+        """
+        responses = self.controller.sync_submit([
+            lambda id: self.device.i3cBroadcastENEC(
+                id,
+                self.push_pull_clock_freq_mhz,
+                self.push_pull_clock_freq_mhz,
+            )
+        ])
+
+        # Note: The command name 'ccc_broadcast_ENEC' should be handled appropriately in _process_response
+        return self._process_response("ccc_broadcast_ENEC", responses)
 
     def ccc_broadcast_DISEC(self):
-        pass
+        """
+        Performs a broadcast DISEC (Disable Events Command) operation on the I3C bus.
+
+        This method sends a broadcast command to disable events on all devices on the I3C bus.
+        The operation's success status is checked, and it returns a tuple indicating whether the operation
+        was successful along with the relevant data or error message.
+
+        Returns:
+        tuple: A tuple containing two elements:
+            - The first element is a Boolean indicating the success (True) or failure (False) of the operation.
+            - The second element is either an error message detailing the failure or a success message.
+              Since this is a broadcast command, no specific data is expected in return.
+        """
+        responses = self.controller.sync_submit([
+            lambda id: self.device.i3cBroadcastDISEC(
+                id,
+                self.push_pull_clock_freq_mhz,
+                self.push_pull_clock_freq_mhz,
+            )
+        ])
+
+        # Note: The command name 'ccc_broadcast_DISEC' should be handled appropriately in _process_response
+        return self._process_response("ccc_broadcast_DISEC", responses)
 
     def ccc_unicast_ENEC(self, target_address):
-        pass
+        """
+        Performs a unicast ENEC (Enable Events Command) operation on a specific target device on the I3C bus.
+
+        This method sends a command to enable events on a specific target device identified by its address.
+        The operation's success status is checked, and it returns a tuple indicating whether the operation
+        was successful along with the relevant data or error message.
+
+        Args:
+        target_address: The address of the target device on the I3C bus to which the ENEC command is directed.
+
+        Returns:
+        tuple: A tuple containing two elements:
+            - The first element is a Boolean indicating the success (True) or failure (False) of the operation.
+            - The second element is either an error message detailing the failure or a success message.
+              Specific data is usually not returned in this operation, only the success or failure status.
+        """
+        responses = self.controller.sync_submit([
+            lambda id: self.device.i3cDirectENEC(
+                id,
+                target_address,
+                self.push_pull_clock_freq_mhz,
+                self.push_pull_clock_freq_mhz,
+            )
+        ])
+
+        return self._process_response("ccc_unicast_ENEC", responses)
 
     def ccc_unicast_DISEC(self, target_address):
-        pass
+        """
+        Performs a unicast DISEC (Disable Events Command) operation on a specific target device on the I3C bus.
+
+        This method sends a command to disable events on a specific target device identified by its address.
+        The operation's success status is checked, and it returns a tuple indicating whether the operation
+        was successful along with the relevant data or error message.
+
+        Args:
+        target_address: The address of the target device on the I3C bus to which the DISEC command is directed.
+
+        Returns:
+        tuple: A tuple containing two elements:
+            - The first element is a Boolean indicating the success (True) or failure (False) of the operation.
+            - The second element is either an error message detailing the failure or a success message.
+              Specific data is usually not returned in this operation, only the success or failure status.
+        """
+        responses = self.controller.sync_submit([
+            lambda id: self.device.i3cDirectDISEC(
+                id,
+                target_address,
+                self.push_pull_clock_freq_mhz,
+                self.push_pull_clock_freq_mhz,
+            )
+        ])
+
+        return self._process_response("ccc_unicast_DISEC", responses)
 
     def ccc_SETDASA(self, static_address, dynamic_address):
-        pass
+        """
+        Performs a SETDASA (Set Dynamic Address for Static Address) operation on the I3C bus.
+
+        This method sets a dynamic address for a device with a known static address.
+        The operation's success status is checked, and it returns a tuple indicating whether the operation
+        was successful along with the relevant data or error message.
+
+        Args:
+        static_address: The static address of the target device on the I3C bus.
+        dynamic_address: The dynamic address to be assigned to the target device.
+
+        Returns:
+        tuple: A tuple containing two elements:
+            - The first element is a Boolean indicating the success (True) or failure (False) of the operation.
+            - The second element is either an error message detailing the failure or a success message.
+              Specific data is usually not returned in this operation, only the success or failure status.
+        """
+        responses = self.controller.sync_submit([
+            lambda id: self.device.i3cSETDASA(
+                id,
+                static_address,
+                dynamic_address,
+                self.push_pull_clock_freq_mhz,
+                self.push_pull_clock_freq_mhz,
+            )
+        ])
+
+        return self._process_response("ccc_SETDASA", responses)
 
     def ccc_SETNEWDA(self, current_address, new_address):
-        pass
+        """
+        Performs a SETNEWDA (Set New Dynamic Address) operation on the I3C bus.
+
+        This method updates the dynamic address of a device currently on the I3C bus.
+        The operation's success status is checked, and it returns a tuple indicating whether the operation
+        was successful along with the relevant data or error message.
+
+        Args:
+        current_address: The current dynamic address of the target device on the I3C bus.
+        new_address: The new dynamic address to be assigned to the target device.
+
+        Returns:
+        tuple: A tuple containing two elements:
+            - The first element is a Boolean indicating the success (True) or failure (False) of the operation.
+            - The second element is either an error message detailing the failure or a success message.
+              Specific data is usually not returned in this operation, only the success or failure status.
+        """
+        responses = self.controller.sync_submit([
+            lambda id: self.device.i3cSETNEWDA(
+                id,
+                current_address,
+                new_address,
+                self.push_pull_clock_freq_mhz,
+                self.push_pull_clock_freq_mhz,
+            )
+        ])
+
+        return self._process_response("ccc_SETNEWDA", responses)
 
     def ccc_unicast_SETGRPA(self, target_address):
-        pass
+        """
+        Performs a unicast SETGRPA (Set Group Address) operation on a specific target device on the I3C bus.
+
+        This method sends a command to set the group address of a specific target device identified by its address.
+        The operation's success status is checked, and it returns a tuple indicating whether the operation
+        was successful along with the relevant data or error message.
+
+        Args:
+        target_address: The address of the target device on the I3C bus to which the SETGRPA command is directed.
+
+        Returns:
+        tuple: A tuple containing two elements:
+            - The first element is a Boolean indicating the success (True) or failure (False) of the operation.
+            - The second element is either an error message detailing the failure or a success message.
+              Specific data is usually not returned in this operation, only the success or failure status.
+        """
+        responses = self.controller.sync_submit([
+            lambda id: self.device.i3cDirectSETGRPA(
+                id,
+                target_address,
+                self.push_pull_clock_freq_mhz,
+                self.push_pull_clock_freq_mhz,
+            )
+        ])
+
+        return self._process_response("ccc_unicast_SETGRPA", responses)
 
     def ccc_unicast_RSTGRPA(self):
         pass
