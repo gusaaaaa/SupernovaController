@@ -54,5 +54,18 @@ class TestSupernovaController(unittest.TestCase):
 
         self.device.close()
 
+    def test_i3c_init_bus_with_no_targets_connected(self):
+        # This test assumes that the are no devices connected to the bus.
+
+        self.device.open()
+
+        (success, result) = self.device.i3c.init_bus(1500)
+
+        self.assertEqual(success, False)
+        self.assertTrue("errors" in result)
+        self.assertEqual(self.device.i3c.bus_voltage, None)
+
+        self.device.close()
+
 if __name__ == "__main__":
     unittest.main()

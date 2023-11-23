@@ -92,7 +92,7 @@ class SupernovaI3CBlockingInterface:
         Returns:
         tuple: A tuple containing two elements:
             - The first element is a Boolean indicating the success (True) or failure (False) of the operation.
-            - The second element is either the string "OK" indicating success, or an error message
+            - The second element is either the bus voltage indicating success, or an error message
                 detailing the failure, obtained from the device's response.
 
         Note:
@@ -105,7 +105,9 @@ class SupernovaI3CBlockingInterface:
                 raise BusVoltageError()
             voltage = self.bus_voltage
         else:
-            self.set_bus_voltage(voltage)
+            (success, set_bus_voltage_result) = self.set_bus_voltage(voltage)
+            if not success:
+                return (False, set_bus_voltage_result)
 
         responses = self.controller.sync_submit([
             lambda id: self.driver.i3cInitBus(id, None)
@@ -115,9 +117,10 @@ class SupernovaI3CBlockingInterface:
 
         status = responses[0]["result"]
         if status == "I3C_BUS_INIT_SUCCESS":
-            result = (True, "OK")
+            result = (True, voltage)
         else:
-            result = (False, responses[0]["errors"])
+            result = (False, {"errors": responses[0]["errors"]})
+            self.bus_voltage = None
 
         return result
 
