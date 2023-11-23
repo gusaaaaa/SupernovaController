@@ -105,7 +105,7 @@ class TestSupernovaController(unittest.TestCase):
 
         self.device.close()
 
-    def test_targets(self):
+    def test_i3c_targets(self):
         if not self.use_simulator:
             self.skipTest("For simulator only")
 
@@ -147,7 +147,7 @@ class TestSupernovaController(unittest.TestCase):
 
         self.device.close()
 
-    def test_targets_when_bus_not_initialized(self):
+    def test_i3c_targets_when_bus_not_initialized(self):
         if not self.use_simulator:
             self.skipTest("For simulator only")
 
@@ -157,6 +157,7 @@ class TestSupernovaController(unittest.TestCase):
             self.device.i3c.targets()
 
         self.device.close()
+
 
 if __name__ == "__main__":
     unittest.main()
