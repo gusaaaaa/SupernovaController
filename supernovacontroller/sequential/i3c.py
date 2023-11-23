@@ -55,7 +55,7 @@ class SupernovaI3CBlockingInterface:
         Returns:
         tuple: A tuple containing two elements:
             - The first element is a Boolean indicating the success (True) or failure (False) of the operation.
-            - The second element is either the string "OK" indicating success, or an error message
+            - The second element is either the new bus voltage indicating success, or an error message
                 detailing the failure, obtained from the device's response.
 
         Note:
@@ -66,13 +66,13 @@ class SupernovaI3CBlockingInterface:
             lambda id: self.driver.setI3cBusVoltage(id, voltage)
         ])
 
-        status = responses[0]["errors"][0]
-        if status == "NO_TRANSFER_ERROR":
-            result = (True, "OK")
+        response_ok = responses[0]["name"] == "SET I3C BUS VOLTAGE" and responses[0]["result"] == 0
+        if response_ok:
+            result = (True, voltage)
             # We want to set the bus_voltage when we know the operation was successful
             self.bus_voltage = voltage
         else:
-            result = (False, responses[0]["errors"])
+            result = (False, "Set bus voltage failed")
             self.bus_voltage = None
 
         return result

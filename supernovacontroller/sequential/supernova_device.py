@@ -1,6 +1,7 @@
 from transfer_controller import TransferController
 from BinhoSupernova.Supernova import Supernova
 from BinhoSupernova.commands.definitions import GetUsbStringSubCommand
+from supernovacontroller.errors import DeviceOpenError
 import queue
 import threading
 from .i2c import SupernovaI2CBlockingInterface
@@ -27,17 +28,34 @@ class SupernovaDevice:
       self.i2c = None
       self.i3c = None
 
-    def open(self):
-        self.driver.open()
+    def open(self, usb_address=None):
+        result = self.driver.open(path=usb_address, activateLogger=False)
+        if result["code"] == "OPEN_CONNECTION_FAIL":
+            raise DeviceOpenError(result["message"])
+
         self.driver.onEvent(self._push_sdk_response)
+
         self.i2c = SupernovaI2CBlockingInterface(self.driver, self.controller)
         self.i3c = SupernovaI3CBlockingInterface(self.driver, self.controller)
 
-        return self.controller.sync_submit([
+        responses = self.controller.sync_submit([
             lambda id: self.driver.getUsbString(id, getattr(GetUsbStringSubCommand, 'HW_VERSION')),
             lambda id: self.driver.getUsbString(id, getattr(GetUsbStringSubCommand, 'FW_VERSION')),
             lambda id: self.driver.getUsbString(id, getattr(GetUsbStringSubCommand, 'SERIAL_NUMBER')),
         ])
+
+        def _process_device_info(responses):
+            hw_version = responses[0]['message'][3:]
+            fw_version = responses[1]['message'][3:]
+            serial_number = responses[2]['message'][3:]
+
+            return {
+                "hw_version": hw_version,
+                "fw_version": fw_version,
+                "serial_number": serial_number
+            }
+
+        return _process_device_info(responses)
 
     def _push_sdk_response(self, supernova_response, system_message):
         self.response_queue.put((supernova_response, system_message))
