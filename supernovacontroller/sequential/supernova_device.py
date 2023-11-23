@@ -22,21 +22,21 @@ class SupernovaDevice:
       self.process_response_thread = threading.Thread(target=self._pull_sdk_response, daemon=True)
       self.running = True
       self.process_response_thread.start()
-      self.device = Supernova()
+      self.driver = Supernova()
 
       self.i2c = None
       self.i3c = None
 
     def open(self):
-        self.device.open()
-        self.device.onEvent(self._push_sdk_response)
-        self.i2c = SupernovaI2CBlockingInterface(self.device, self.controller)
-        self.i3c = SupernovaI3CBlockingInterface(self.device, self.controller)
+        self.driver.open()
+        self.driver.onEvent(self._push_sdk_response)
+        self.i2c = SupernovaI2CBlockingInterface(self.driver, self.controller)
+        self.i3c = SupernovaI3CBlockingInterface(self.driver, self.controller)
 
         return self.controller.sync_submit([
-            lambda id: self.device.getUsbString(id, getattr(GetUsbStringSubCommand, 'HW_VERSION')),
-            lambda id: self.device.getUsbString(id, getattr(GetUsbStringSubCommand, 'FW_VERSION')),
-            lambda id: self.device.getUsbString(id, getattr(GetUsbStringSubCommand, 'SERIAL_NUMBER')),
+            lambda id: self.driver.getUsbString(id, getattr(GetUsbStringSubCommand, 'HW_VERSION')),
+            lambda id: self.driver.getUsbString(id, getattr(GetUsbStringSubCommand, 'FW_VERSION')),
+            lambda id: self.driver.getUsbString(id, getattr(GetUsbStringSubCommand, 'SERIAL_NUMBER')),
         ])
 
     def _push_sdk_response(self, supernova_response, system_message):
@@ -83,7 +83,7 @@ class SupernovaDevice:
         return result
 
     def close(self):
-        self.device.close()
+        self.driver.close()
         self.running = False
 
 
