@@ -805,49 +805,378 @@ class SupernovaI3CBlockingInterface:
 
         return self._process_response("ccc_unicast_SETGRPA", responses)
 
-    def ccc_unicast_RSTGRPA(self):
-        pass
+    def ccc_unicast_RSTGRPA(self, target_address):
+        """
+        Performs a unicast RSTGRPA (Reset Group Address) operation on a specific target device on the I3C bus.
 
-    def ccc_unicast_SETMRL(self, target_address):
-        pass
+        This method sends a command to reset the group address of a specific target device identified by its address.
+        The operation's success status is checked, and it returns a tuple indicating whether the operation
+        was successful along with the relevant data or error message.
 
-    def ccc_unicast_SETMWL(self, target_address):
-        pass
+        Args:
+        target_address: The address of the target device on the I3C bus to which the RSTGRPA command is directed.
 
-    def ccc_broadcast_SETMWL(self):
-        pass
+        Returns:
+        tuple: A tuple containing two elements:
+            - The first element is a Boolean indicating the success (True) or failure (False) of the operation.
+            - The second element is either an error message detailing the failure or a success message.
+              Specific data is usually not returned in this operation, only the success or failure status.
+        """
+        responses = self.controller.sync_submit([
+            lambda id: self.device.i3cDirectRSTGRPA(
+                id,
+                target_address,
+                self.push_pull_clock_freq_mhz,
+                self.push_pull_clock_freq_mhz,
+            )
+        ])
 
-    def ccc_broadcast_SETMRL(self):
-        pass
+        return self._process_response("ccc_unicast_RSTGRPA", responses)
+
+    def ccc_unicast_SETMRL(self, target_address, max_read_length):
+        """
+        Performs a unicast SETMRL (Set Maximum Read Length) operation on a specific target device on the I3C bus.
+
+        This method sends a command to set the maximum read length for a specific target device identified by its address.
+        The operation's success status is checked, and it returns a tuple indicating whether the operation
+        was successful along with the relevant data or error message.
+
+        Args:
+        target_address: The address of the target device on the I3C bus to which the SETMRL command is directed.
+        max_read_length: The maximum read length to be set for the target device.
+
+        Returns:
+        tuple: A tuple containing two elements:
+            - The first element is a Boolean indicating the success (True) or failure (False) of the operation.
+            - The second element is either an error message detailing the failure or a success message.
+              Specific data is usually not returned in this operation, only the success or failure status.
+        """
+        responses = self.controller.sync_submit([
+            lambda id: self.device.i3cDirectSETMRL(
+                id,
+                target_address,
+                max_read_length,
+                self.push_pull_clock_freq_mhz,
+                self.push_pull_clock_freq_mhz,
+            )
+        ])
+
+        return self._process_response("ccc_unicast_SETMRL", responses)
+
+    def ccc_unicast_SETMWL(self, target_address, max_write_length):
+        """
+        Performs a unicast SETMWL (Set Maximum Write Length) operation on a specific target device on the I3C bus.
+
+        This method sends a command to set the maximum write length for a specific target device identified by its address.
+        The operation's success status is checked, and it returns a tuple indicating whether the operation
+        was successful along with the relevant data or error message.
+
+        Args:
+        target_address: The address of the target device on the I3C bus to which the SETMWL command is directed.
+        max_write_length: The maximum write length to be set for the target device.
+
+        Returns:
+        tuple: A tuple containing two elements:
+            - The first element is a Boolean indicating the success (True) or failure (False) of the operation.
+            - The second element is either an error message detailing the failure or a success message.
+              Specific data is usually not returned in this operation, only the success or failure status.
+        """
+        responses = self.controller.sync_submit([
+            lambda id: self.device.i3cDirectSETMWL(
+                id,
+                target_address,
+                max_write_length,
+                self.push_pull_clock_freq_mhz,
+                self.push_pull_clock_freq_mhz,
+            )
+        ])
+
+        return self._process_response("ccc_unicast_SETMWL", responses)
+
+    def ccc_broadcast_SETMWL(self, max_write_length):
+        """
+        Performs a broadcast SETMWL (Set Maximum Write Length) operation on the I3C bus.
+
+        This method sends a broadcast command to set the maximum write length for all devices on the I3C bus.
+        The operation's success status is checked, and it returns a tuple indicating whether the operation
+        was successful along with the relevant data or error message.
+
+        Args:
+        max_write_length: The maximum write length to be set for all devices on the I3C bus.
+
+        Returns:
+        tuple: A tuple containing two elements:
+            - The first element is a Boolean indicating the success (True) or failure (False) of the operation.
+            - The second element is either an error message detailing the failure or a success message.
+              Specific data is usually not returned in this operation, only the success or failure status.
+        """
+        responses = self.controller.sync_submit([
+            lambda id: self.device.i3cBroadcastSETMWL(
+                id,
+                max_write_length,
+                self.push_pull_clock_freq_mhz,
+                self.push_pull_clock_freq_mhz,
+            )
+        ])
+
+        return self._process_response("ccc_broadcast_SETMWL", responses)
+
+    def ccc_broadcast_SETMRL(self, max_read_length):
+        """
+        Performs a broadcast SETMRL (Set Maximum Read Length) operation on the I3C bus.
+
+        This method sends a broadcast command to set the maximum read length for all devices on the I3C bus.
+        The operation's success status is checked, and it returns a tuple indicating whether the operation
+        was successful along with the relevant data or error message.
+
+        Args:
+        max_read_length: The maximum read length to be set for all devices on the I3C bus.
+
+        Returns:
+        tuple: A tuple containing two elements:
+            - The first element is a Boolean indicating the success (True) or failure (False) of the operation.
+            - The second element is either an error message detailing the failure or a success message.
+              Specific data is usually not returned in this operation, only the success or failure status.
+        """
+        responses = self.controller.sync_submit([
+            lambda id: self.device.i3cBroadcastSETMWL(
+                id,
+                max_read_length,
+                self.push_pull_clock_freq_mhz,
+                self.push_pull_clock_freq_mhz,
+            )
+        ])
+
+        return self._process_response("ccc_broadcast_SETMRL", responses)
 
     def ccc_SETAASA(self):
-        pass
+        """
+        Performs a broadcast SETAASA (Set All Agents to Static Address) operation on the I3C bus.
+
+        This method sends a broadcast command to set all agents on the I3C bus to a static address.
+        The operation's success status is checked, and it returns a tuple indicating whether the operation
+        was successful along with the relevant data or error message.
+
+        Returns:
+        tuple: A tuple containing two elements:
+            - The first element is a Boolean indicating the success (True) or failure (False) of the operation.
+            - The second element is either an error message detailing the failure or a success message.
+              Specific data is usually not returned in this operation, only the success or failure status.
+        """
+        responses = self.controller.sync_submit([
+            lambda id: self.device.i3cSETAASA(
+                id,
+                self.push_pull_clock_freq_mhz,
+                self.push_pull_clock_freq_mhz,
+            )
+        ])
+
+        return self._process_response("ccc_SETAASA", responses)
 
     def ccc_broadcast_ENDXFED(self):
-        pass
+        """
+        Performs a broadcast ENDXFED (End Extra Fast-Mode Device Exchange) operation on the I3C bus.
+
+        This method sends a broadcast command to signal the end of an extra fast-mode data exchange period on all devices on the I3C bus.
+        The operation's success status is checked, and it returns a tuple indicating whether the operation
+        was successful along with the relevant data or error message.
+
+        Returns:
+        tuple: A tuple containing two elements:
+            - The first element is a Boolean indicating the success (True) or failure (False) of the operation.
+            - The second element is either an error message detailing the failure or a success message.
+              Specific data is usually not returned in this operation, only the success or failure status.
+        """
+        responses = self.controller.sync_submit([
+            lambda id: self.device.i3cBroadcastENDXFED(
+                id,
+                self.push_pull_clock_freq_mhz,
+                self.push_pull_clock_freq_mhz,
+            )
+        ])
+
+        return self._process_response("ccc_broadcast_ENDXFED", responses)
 
     def ccc_unicast_ENDXFER(self, target_address):
-        pass
+        """
+        Performs a unicast ENDXFER (End Transfer) operation on a specific target device on the I3C bus.
 
-    def ccc_broadcast_SETXTIME(self):
-        pass
+        This method sends a command to end a data transfer operation for a specific target device identified by its address.
+        The operation's success status is checked, and it returns a tuple indicating whether the operation
+        was successful along with the relevant data or error message.
+
+        Args:
+        target_address: The address of the target device on the I3C bus to which the ENDXFER command is directed.
+
+        Returns:
+        tuple: A tuple containing two elements:
+            - The first element is a Boolean indicating the success (True) or failure (False) of the operation.
+            - The second element is either an error message detailing the failure or a success message.
+              Specific data is usually not returned in this operation, only the success or failure status.
+        """
+        responses = self.controller.sync_submit([
+            lambda id: self.device.i3cDirectENDXFER(
+                id,
+                target_address,
+                self.push_pull_clock_freq_mhz,
+                self.push_pull_clock_freq_mhz,
+            )
+        ])
+
+        return self._process_response("ccc_unicast_ENDXFER", responses)
+
+    def ccc_broadcast_SETXTIME(self, timing_parameter):
+        """
+        Performs a broadcast SETXTIME (Set Extra Timing) operation on the I3C bus.
+
+        This method sends a broadcast command to configure extra timing parameters for all devices on the I3C bus.
+        The operation's success status is checked, and it returns a tuple indicating whether the operation
+        was successful along with the relevant data or error message.
+
+        Args:
+        timing_parameter: The extra timing parameter to be set for all devices on the I3C bus.
+
+        Returns:
+        tuple: A tuple containing two elements:
+            - The first element is a Boolean indicating the success (True) or failure (False) of the operation.
+            - The second element is either an error message detailing the failure or a success message.
+              Specific data is usually not returned in this operation, only the success or failure status.
+        """
+        responses = self.controller.sync_submit([
+            lambda id: self.device.i3cBroadcastSETXTIME(
+                id,
+                timing_parameter,
+                self.push_pull_clock_freq_mhz,
+                self.push_pull_clock_freq_mhz,
+            )
+        ])
+
+        return self._process_response("ccc_broadcast_SETXTIME", responses)
 
     def ccc_unicast_SETXTIME(self, target_address):
         pass
 
-    def ccc_broadcast_SETBUSCON(self):
-        pass
+    def ccc_broadcast_SETBUSCON(self, context: int, data: list = []):
+        """
+        Performs a broadcast SETBUSCON (Set Bus Configuration) operation on the I3C bus.
+
+        This method sends a broadcast command to set a particular context on the bus, which could be a higher-level protocol
+        specification or a version of the MIPI I3C Specification. This context is used to activate special functionalities
+        required to support the selected protocol on the bus.
+
+        Args:
+        context: An integer representing the context for the bus configuration. This could indicate a higher-level
+                 protocol or a specific version of the MIPI I3C Specification.
+        data: An optional list of data items relevant to the bus configuration.
+
+        Returns:
+        tuple: A tuple containing two elements:
+            - The first element is a Boolean indicating the success (True) or failure (False) of the operation.
+            - The second element is either an error message detailing the failure or a success message.
+              Specific data is usually not returned in this operation, only the success or failure status.
+        """
+        responses = self.controller.sync_submit([
+            lambda id: self.device.i3cBroadcastSETBUSCON(
+                id,
+                self.push_pull_clock_freq_mhz,
+                self.push_pull_clock_freq_mhz,
+                context,
+                data
+            )
+        ])
+
+        return self._process_response("ccc_broadcast_SETBUSCON", responses)
 
     def ccc_broadcast_ENTAS0(self):
-        pass
+        """
+        Performs a broadcast ENTAS0 (Enter Activity State 0) operation on the I3C bus.
+
+        This method sends a broadcast command to inform all devices on the I3C bus to enter Activity State 0,
+        where the bus is expected to be idle for 1 microsecond (us). It is part of an activity state series
+        (ENTAS0 to ENTAS3) that devices can use for power management, specifically to manage low power states during idle periods.
+
+        The ENTAS0 command acts as a suggestion rather than a directive, allowing devices to prepare for a
+        low-power state without overriding any specific or custom power-saving agreements that might be
+        implemented at the application level.
+
+        Returns:
+        tuple: A tuple containing two elements:
+            - The first element is a Boolean indicating the success (True) or failure (False) of the operation.
+            - The second element is either an error message detailing the failure or a success message,
+              reflecting the broadcast command's attempt to set the bus to the specified idle time.
+        """
+        responses = self.controller.sync_submit([
+            lambda id: self.device.i3cBroadcastENTAS0(
+                id,
+                self.push_pull_clock_freq_mhz,
+                self.push_pull_clock_freq_mhz,
+            )
+        ])
+
+        return self._process_response("ccc_broadcast_ENTAS0", responses)
 
     def ccc_broadcast_ENTAS1(self):
-        pass
+        """
+        Sends a broadcast ENTAS1 command to all devices on the I3C bus, indicating that the bus will enter
+        an idle state for 100 microseconds (us). This command is part of power management strategies to
+        reduce power consumption during known periods of inactivity.
+
+        Returns:
+        tuple: A tuple containing two elements:
+            - The first element is a Boolean indicating the success (True) or failure (False) of the operation.
+            - The second element is either an error message detailing the failure or a success message,
+              reflecting the broadcast command's attempt to set the bus to the specified idle time.
+        """
+        responses = self.controller.sync_submit([
+            lambda id: self.device.i3cBroadcastENTAS1(
+                id,
+                self.push_pull_clock_freq_mhz,
+                self.push_pull_clock_freq_mhz,
+            )
+        ])
+
+        return self._process_response("ccc_broadcast_ENTAS1", responses)
 
     def ccc_broadcast_ENTAS2(self):
-        pass
+        """
+        Sends a broadcast ENTAS2 command to all devices on the I3C bus, indicating that the bus will enter
+        an idle state for 2 milliseconds (ms). This command is part of power management strategies to
+        reduce power consumption during known periods of inactivity.
+
+        Returns:
+        tuple: A tuple containing two elements:
+            - The first element is a Boolean indicating the success (True) or failure (False) of the operation.
+            - The second element is either an error message detailing the failure or a success message,
+              reflecting the broadcast command's attempt to set the bus to the specified idle time.
+        """
+        responses = self.controller.sync_submit([
+            lambda id: self.device.i3cBroadcastENTAS2(
+                id,
+                self.push_pull_clock_freq_mhz,
+                self.push_pull_clock_freq_mhz,
+            )
+        ])
+
+        return self._process_response("ccc_broadcast_ENTAS2", responses)
 
     def ccc_broadcast_ENTAS3(self):
-        pass
+        """
+        Sends a broadcast ENTAS3 command to all devices on the I3C bus, indicating that the bus will enter
+        an idle state for 50 milliseconds (ms). This command is part of power management strategies to
+        reduce power consumption during known periods of inactivity.
 
+        Returns:
+        tuple: A tuple containing two elements:
+            - The first element is a Boolean indicating the success (True) or failure (False) of the operation.
+            - The second element is either an error message detailing the failure or a success message,
+              reflecting the broadcast command's attempt to set the bus to the specified idle time.
+        """
+        responses = self.controller.sync_submit([
+            lambda id: self.device.i3cBroadcastENTAS3(
+                id,
+                self.push_pull_clock_freq_mhz,
+                self.push_pull_clock_freq_mhz,
+            )
+        ])
 
+        return self._process_response("ccc_broadcast_ENTAS3", responses)
