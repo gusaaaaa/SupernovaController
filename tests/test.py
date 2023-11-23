@@ -117,32 +117,32 @@ class TestSupernovaController(unittest.TestCase):
         self.assertEqual(success, True)
         self.assertEqual(len(targets), 4)
         self.assertDictEqual(targets[0], {
-            'bcr': int('10', 16),
-            'dcr': int('C3', 16),
-            'dynamic_address': int('08', 16),
-            'pid': [int(item, 16) for item in ['65', '64', '00', '00', '00', '00']],
-            'static_address': int('50', 16)
+            'bcr': 0x10,
+            'dcr': 0xC3,
+            'dynamic_address': 0x08,
+            'pid': [0x65, 0x64, 0x00, 0x00, 0x00, 0x00],
+            'static_address': 0x50
         })
         self.assertDictEqual(targets[1], {
-            'bcr': int('10', 16),
-            'dcr': int('C3', 16),
-            'dynamic_address': int('09', 16),
-            'pid': [int(item, 16) for item in ['65', '64', '00', '00', '00', '00']],
-            'static_address': int('51', 16)
+            'bcr': 0x10,
+            'dcr': 0xC3,
+            'dynamic_address': 0x09,
+            'pid': [0x65, 0x64, 0x00, 0x00, 0x00, 0x00],
+            'static_address': 0x51
         })
         self.assertDictEqual(targets[2], {
-            'bcr': int('10', 16),
-            'dcr': int('C3', 16),
-            'dynamic_address': int('0A', 16),
-            'pid': [int(item, 16) for item in ['65', '64', '00', '00', '00', '00']],
-            'static_address': int('52', 16)
+            'bcr': 0x10,
+            'dcr': 0xC3,
+            'dynamic_address': 0x0A,
+            'pid': [0x65, 0x64, 0x00, 0x00, 0x00, 0x00],
+            'static_address': 0x52
         })
         self.assertDictEqual(targets[3], {
-            'bcr': int('03', 16),
-            'dcr': int('63', 16),
-            'dynamic_address': int('0B', 16),
-            'pid': [int(item, 16) for item in ['5A', '00', '1D', '0F', '17', '02']],
-            'static_address': int('53', 16)
+            'bcr': 0x03,
+            'dcr': 0x63,
+            'dynamic_address': 0x0B,
+            'pid': [0x5A, 0x00, 0x1D, 0x0F, 0x17, 0x02],
+            'static_address': 0x53
         })
 
         self.device.close()
@@ -166,17 +166,36 @@ class TestSupernovaController(unittest.TestCase):
 
         self.device.i3c.init_bus(3300)
 
+        subaddress = [0x00, 0x00]
+
         (success, result) = self.device.i3c.write(
-            int('08', 16),
+            0x08,
             self.device.i3c.TransferMode.I3C_SDR,
-            [0x00, 0x00],
-            [int(item, 16) for item in ['DE', 'AD', 'BE', 'EF']]
+            subaddress,
+            [0xDE, 0xAD, 0xBE, 0xEF]
         )
 
-        print(success)
-        print(result)
+        self.assertEqual(success, True)
+        self.assertDictEqual(result, {
+            "data": [],
+            "length": 0
+        })
+
+        (success, result) = self.device.i3c.read(
+            0x08,
+            self.device.i3c.TransferMode.I3C_SDR,
+            subaddress,
+            4
+        )
+
+        self.assertEqual(success, True)
+        self.assertDictEqual(result, {
+            "data": [0xDE, 0xAD, 0xBE, 0xEF],
+            "length": 4
+        })
 
         self.device.close()
+
 
 
 if __name__ == "__main__":
