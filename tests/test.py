@@ -4,14 +4,24 @@ import sys
 import os
 from supernovacontroller.sequential import SupernovaDevice
 from supernovacontroller.errors import DeviceOpenError
+from supernovacontroller.errors import BusVoltageError
 
 sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
-# from deviceSimulators.supernova import BinhoSupernovaSimulator
+from deviceSimulators.supernova import BinhoSupernovaSimulator
 
 class TestSupernovaController(unittest.TestCase):
+    @classmethod
+    def setUpClass(cls):
+        """
+        Initializes the testing class. Determines whether to use the simulator or real device
+        based on the 'USE_REAL_DEVICE' environment variable. Default is to use the simulator.
+        """
+        cls.use_simulator = not os.getenv('USE_REAL_DEVICE', 'False') == 'True'
+
     def setUp(self):
         self.device = SupernovaDevice()
-        # self.device.driver = BinhoSupernovaSimulator()
+        if self.use_simulator:
+            self.device.driver = BinhoSupernovaSimulator()
 
     def test_open_device_with_wrong_address(self):
         with self.assertRaises(DeviceOpenError):
@@ -57,6 +67,9 @@ class TestSupernovaController(unittest.TestCase):
     def test_i3c_init_bus_with_no_targets_connected(self):
         # This test assumes that the are no devices connected to the bus.
 
+        if self.use_simulator:
+            self.skipTest("Using the simulator")
+
         self.device.open()
 
         (success, result) = self.device.i3c.init_bus(1500)
@@ -64,6 +77,24 @@ class TestSupernovaController(unittest.TestCase):
         self.assertEqual(success, False)
         self.assertTrue("errors" in result)
         self.assertEqual(self.device.i3c.bus_voltage, None)
+
+        self.device.close()
+
+    def test_i3c_reset_bus(self):
+        self.device.open()
+
+        self.device.i3c.init_bus(2000)
+        (success, result) = self.device.i3c.reset_bus()
+
+        self.assertTupleEqual((success, result), (True, 2000))
+
+        self.device.close()
+
+    def test_i3c_reset_bus_before_init(self):
+        self.device.open()
+
+        with self.assertRaises(BusVoltageError):
+            (success, result) = self.device.i3c.reset_bus()
 
         self.device.close()
 

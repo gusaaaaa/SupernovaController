@@ -134,16 +134,19 @@ class SupernovaI3CBlockingInterface:
         Returns:
         tuple: A tuple containing two elements:
             - The first element is a Boolean indicating the success (True) or failure (False) of the operation.
-            - The second element is either the string "OK" indicating success, or an error message
+            - The second element is either the bus voltage indicating success, or an error message
                 detailing the failure, obtained from the device's response.
         """
+        if self.bus_voltage is None:
+            raise BusVoltageError()
+
         responses = self.controller.sync_submit([
             lambda id: self.driver.i3cClearFeature(id, I3cClearFeatureSelector.I3C_BUS, self.BROADCAST_ADDRESS)
         ])
 
         status = responses[0]["result"]
         if status == "I3C_CLEAR_FEATURE_SUCCESS":
-            result = (True, "OK")
+            result = (True, self.bus_voltage)
         else:
             result = (False, responses[0]["errors"])
 
