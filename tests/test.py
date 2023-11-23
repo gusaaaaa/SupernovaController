@@ -158,6 +158,26 @@ class TestSupernovaController(unittest.TestCase):
 
         self.device.close()
 
+    def test_i3c_write_operation_on_target(self):
+        if not self.use_simulator:
+            self.skipTest("For simulator only")
+
+        self.device.open()
+
+        self.device.i3c.init_bus(3300)
+
+        (success, result) = self.device.i3c.write(
+            int('08', 16),
+            self.device.i3c.TransferMode.I3C_SDR,
+            [0x00, 0x00],
+            [int(item, 16) for item in ['DE', 'AD', 'BE', 'EF']]
+        )
+
+        print(success)
+        print(result)
+
+        self.device.close()
+
 
 if __name__ == "__main__":
     unittest.main()
