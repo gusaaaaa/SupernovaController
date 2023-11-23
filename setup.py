@@ -13,7 +13,7 @@ setup(
     long_description_content_type='text/markdown',
     author='Binho LLC',
     author_email='support@binho.io',
-    url='https://github.com/yourusername/SupernovaController',
+    url='https://github.com/binhollc/SupernovaController',
     license='Private',
     install_requires=[
       f'transfer_controller @ git+https://{gh_token}@github.com/binhollc/TransferController.git@667-gus#egg=transfer_controller', # Remove when transfer_controller v0.3.0 is approved
