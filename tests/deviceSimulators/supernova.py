@@ -29,8 +29,21 @@ class BinhoSupernovaSimulator:
     def onEvent(self, callback):
         self.callback = callback
 
-    def open(self, path, activateLogger):
-        pass
+    def open(self, path=None, activateLogger=False):
+        simulated_device_port = "SupernovaSimulatedPort"
+        if path is None:
+            path = simulated_device_port
+
+        if path != simulated_device_port:
+            return {
+                "code": "OPEN_CONNECTION_FAIL",
+                "message": "Connection with Supernova device opened successfully."
+            }
+
+        return {
+            "code": "OK",
+            "message": f"Simulator address should be {simulated_device_port}"
+        }
 
     def close(self):
         pass
@@ -101,7 +114,7 @@ class BinhoSupernovaSimulator:
 
     def helperGetStaticFromDynamicAddress(self, targetAddress):
         return self.i3cTargetTable[str(targetAddress)]["staticAddress"]
-    
+
     def helperGetDeviceInfoFromDynamicAddress(self, targetAddress):
         staticAddress = self.helperGetStaticFromDynamicAddress(targetAddress)
         return self.i3cTargets[str(staticAddress)].getDeviceInfo()
