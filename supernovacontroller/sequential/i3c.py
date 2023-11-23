@@ -170,7 +170,7 @@ class SupernovaI3CBlockingInterface:
         """
 
         responses = self.controller.sync_submit([
-            lambda id: self.driver.i3cGetTargetDeviceTable(id, None)
+            lambda id: self.driver.i3cGetTargetDeviceTable(id)
         ])
 
         # Note: Borrowed from MissionControlBridge's Supernova Adaptor
@@ -191,11 +191,10 @@ class SupernovaI3CBlockingInterface:
 
             targets.append(formatted_target_info)
 
-        status = responses[0]["errors"][0]
-        if status == "NO_TRANSFER_ERROR":
-            result = (True, "OK")
-        else:
-            result = (False, responses[0]["errors"])
+        print(targets)
+
+        # TODO: Error cases
+        result = (True, targets)
 
         return result
 

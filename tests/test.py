@@ -94,9 +94,49 @@ class TestSupernovaController(unittest.TestCase):
         self.device.open()
 
         with self.assertRaises(BusVoltageError):
-            (success, result) = self.device.i3c.reset_bus()
+            self.device.i3c.reset_bus()
 
         self.device.close()
+
+    def test_targets(self):
+        self.device.open()
+
+        self.device.i3c.init_bus(3300)
+        (success, targets) = self.device.i3c.targets()
+
+        self.assertTupleEqual((success, targets), (True, [
+            {
+                'bcr': '10',
+                'dcr': 'C3',
+                'dynamic_address': '08',
+                'pid': ['65', '64', '00', '00', '00', '00'],
+                'static_address': '50'
+            },
+            {
+                'bcr': '10',
+                'dcr': 'C3',
+                'dynamic_address': '09',
+                'pid': ['65', '64', '00', '00', '00', '00'],
+                'static_address': '51'
+            },
+            {
+                'bcr': '10',
+                'dcr': 'C3',
+                'dynamic_address': '0A',
+                'pid': ['65', '64', '00', '00', '00', '00'],
+                'static_address': '52'
+            },
+            {
+                'bcr': '03',
+                'dcr': '63',
+                'dynamic_address': '0B',
+                'pid': ['5A', '00', '1D', '0F', '17', '02'],
+                'static_address': '53'
+            }
+        ]))
+
+        self.device.close()
+
 
 if __name__ == "__main__":
     unittest.main()
