@@ -68,7 +68,7 @@ class TestSupernovaController(unittest.TestCase):
         # This test assumes that the are no devices connected to the bus.
 
         if self.use_simulator:
-            self.skipTest("Using the simulator")
+            self.skipTest("For real device only")
 
         self.device.open()
 
@@ -81,6 +81,9 @@ class TestSupernovaController(unittest.TestCase):
         self.device.close()
 
     def test_i3c_reset_bus(self):
+        if not self.use_simulator:
+            self.skipTest("For simulator only")
+
         self.device.open()
 
         self.device.i3c.init_bus(2000)
@@ -91,6 +94,9 @@ class TestSupernovaController(unittest.TestCase):
         self.device.close()
 
     def test_i3c_reset_bus_before_init(self):
+        if not self.use_simulator:
+            self.skipTest("For simulator only")
+
         self.device.open()
 
         with self.assertRaises(BusVoltageError):
@@ -99,6 +105,9 @@ class TestSupernovaController(unittest.TestCase):
         self.device.close()
 
     def test_targets(self):
+        if not self.use_simulator:
+            self.skipTest("For simulator only")
+
         self.device.open()
 
         self.device.i3c.init_bus(3300)
