@@ -113,36 +113,36 @@ class TestSupernovaController(unittest.TestCase):
         self.device.i3c.init_bus(3300)
         (success, targets) = self.device.i3c.targets()
 
-        self.assertTupleEqual((success, targets), (True, [
-            {
-                'bcr': '10',
-                'dcr': 'C3',
-                'dynamic_address': '08',
-                'pid': ['65', '64', '00', '00', '00', '00'],
-                'static_address': '50'
-            },
-            {
-                'bcr': '10',
-                'dcr': 'C3',
-                'dynamic_address': '09',
-                'pid': ['65', '64', '00', '00', '00', '00'],
-                'static_address': '51'
-            },
-            {
-                'bcr': '10',
-                'dcr': 'C3',
-                'dynamic_address': '0A',
-                'pid': ['65', '64', '00', '00', '00', '00'],
-                'static_address': '52'
-            },
-            {
-                'bcr': '03',
-                'dcr': '63',
-                'dynamic_address': '0B',
-                'pid': ['5A', '00', '1D', '0F', '17', '02'],
-                'static_address': '53'
-            }
-        ]))
+        self.assertEqual(success, True)
+        self.assertEqual(len(targets), 4)
+        self.assertDictEqual(targets[0], {
+            'bcr': int('10', 16),
+            'dcr': int('C3', 16),
+            'dynamic_address': int('08', 16),
+            'pid': [int(item, 16) for item in ['65', '64', '00', '00', '00', '00']],
+            'static_address': int('50', 16)
+        })
+        self.assertDictEqual(targets[1], {
+            'bcr': int('10', 16),
+            'dcr': int('C3', 16),
+            'dynamic_address': int('09', 16),
+            'pid': [int(item, 16) for item in ['65', '64', '00', '00', '00', '00']],
+            'static_address': int('51', 16)
+        })
+        self.assertDictEqual(targets[2], {
+            'bcr': int('10', 16),
+            'dcr': int('C3', 16),
+            'dynamic_address': int('0A', 16),
+            'pid': [int(item, 16) for item in ['65', '64', '00', '00', '00', '00']],
+            'static_address': int('52', 16)
+        })
+        self.assertDictEqual(targets[3], {
+            'bcr': int('03', 16),
+            'dcr': int('63', 16),
+            'dynamic_address': int('0B', 16),
+            'pid': [int(item, 16) for item in ['5A', '00', '1D', '0F', '17', '02']],
+            'static_address': int('53', 16)
+        })
 
         self.device.close()
 

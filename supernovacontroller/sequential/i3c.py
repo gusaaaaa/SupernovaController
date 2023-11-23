@@ -178,20 +178,18 @@ class SupernovaI3CBlockingInterface:
         for target_info in responses[0]["table"]:
             static_address = target_info["staticAddress"]
             dynamic_address = target_info["dynamicAddress"]
-            bcr = target_info["bcr"]["value"][2]
+            bcr = int(target_info["bcr"]["value"][2][2:4], 16)
             dcr = target_info["dcr"]
             pid = target_info["pid"][::-1] # Reversing using list slicing
             formatted_target_info = {
-                "static_address" : f"{static_address:02X}",
-                "dynamic_address" : f"{dynamic_address:02X}",
-                "bcr" : bcr[2:4],
-                "dcr" : f"{dcr:02X}",
-                "pid" : [f"{num:02X}" for num in pid]
+                "static_address" : static_address,
+                "dynamic_address" : dynamic_address,
+                "bcr" : bcr,
+                "dcr" : dcr,
+                "pid" : pid
             }
 
             targets.append(formatted_target_info)
-
-        print(targets)
 
         # TODO: Error cases
         result = (True, targets)
