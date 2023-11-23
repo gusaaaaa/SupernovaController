@@ -5,6 +5,7 @@ import os
 from supernovacontroller.sequential import SupernovaDevice
 from supernovacontroller.errors import DeviceOpenError
 from supernovacontroller.errors import BusVoltageError
+from supernovacontroller.errors import BusNotInitializedError
 
 sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
 from deviceSimulators.supernova import BinhoSupernovaSimulator
@@ -99,7 +100,7 @@ class TestSupernovaController(unittest.TestCase):
 
         self.device.open()
 
-        with self.assertRaises(BusVoltageError):
+        with self.assertRaises(BusNotInitializedError):
             self.device.i3c.reset_bus()
 
         self.device.close()
@@ -146,6 +147,16 @@ class TestSupernovaController(unittest.TestCase):
 
         self.device.close()
 
+    def test_targets_when_bus_not_initialized(self):
+        if not self.use_simulator:
+            self.skipTest("For simulator only")
+
+        self.device.open()
+
+        with self.assertRaises(BusNotInitializedError):
+            self.device.i3c.targets()
+
+        self.device.close()
 
 if __name__ == "__main__":
     unittest.main()

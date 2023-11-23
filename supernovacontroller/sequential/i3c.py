@@ -6,6 +6,7 @@ from BinhoSupernova.commands.definitions import TransferDirection
 from BinhoSupernova.commands.definitions import I3cSetFeatureSelector
 from BinhoSupernova.commands.definitions import I3cClearFeatureSelector
 from supernovacontroller.errors import BusVoltageError
+from supernovacontroller.errors import BusNotInitializedError
 
 
 class SupernovaI3CBlockingInterface:
@@ -138,7 +139,7 @@ class SupernovaI3CBlockingInterface:
                 detailing the failure, obtained from the device's response.
         """
         if self.bus_voltage is None:
-            raise BusVoltageError()
+            raise BusNotInitializedError()
 
         responses = self.controller.sync_submit([
             lambda id: self.driver.i3cClearFeature(id, I3cClearFeatureSelector.I3C_BUS, self.BROADCAST_ADDRESS)
@@ -168,6 +169,9 @@ class SupernovaI3CBlockingInterface:
                 - 'dcr': The Device Characteristics Register.
                 - 'pid': Unique ID (Provisional ID) containing a manufacturer ID, a part ID and an instance ID.
         """
+
+        if self.bus_voltage is None:
+            raise BusNotInitializedError()
 
         responses = self.controller.sync_submit([
             lambda id: self.driver.i3cGetTargetDeviceTable(id)
