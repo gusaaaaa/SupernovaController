@@ -32,6 +32,9 @@ class BinhoSupernovaSimulator:
     def open(self, path, activateLogger):
         pass
 
+    def close(self):
+        pass
+
     def setI2cSpiUartBusVoltage(self, id, i2cSpiUartBusVolt):
         self.callback({
             "id": id,
