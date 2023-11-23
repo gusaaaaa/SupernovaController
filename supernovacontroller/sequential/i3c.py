@@ -12,6 +12,7 @@ from supernovacontroller.errors import BusNotInitializedError
 class SupernovaI3CBlockingInterface:
     # TODO: Replicate definitions (TransferMode, I3cCommandType, TransferDirection)
 
+    TransferMode = TransferMode
     BROADCAST_ADDRESS = 0x7E
 
     def __init__(self, driver: Supernova, controller: TransferController):
