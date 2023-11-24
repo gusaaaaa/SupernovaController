@@ -273,6 +273,7 @@ class SupernovaI3CBlockingInterface:
         def format_response_payload(command_name, response):
             match command_name:
                 case "write" | "read": return response["data"]
+                case "ccc_GETPID": return [int(item[2:], 16) for item in response["pid"]]
                 case "ccc_GETBCR": return response["bcr"]["value"][2][2:].upper()
 
             return None
@@ -320,6 +321,7 @@ class SupernovaI3CBlockingInterface:
                 buffer,
             )
         ])
+
         return self._process_response("write", responses)
 
     def read(self, target_address, mode: TransferMode, subaddress: [], length):

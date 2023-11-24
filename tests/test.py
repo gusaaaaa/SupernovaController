@@ -214,7 +214,23 @@ class TestSupernovaController(unittest.TestCase):
 
         self.device.close()
 
+    def test_ccc_getpid(self):
+        if not self.use_simulator:
+            self.skipTest("For simulator only")
 
+        self.device.open()
+
+        self.device.i3c.init_bus(3300)
+
+        (success, result) = self.device.i3c.ccc_GETPID(0x08)
+
+        self.assertEqual(success, True)
+        self.assertDictEqual(result, {
+            "data": [0x00, 0x00, 0x00, 0x00, 0x64, 0x65],
+            "length": 6
+        })
+
+        self.device.close()
 
 if __name__ == "__main__":
     unittest.main()
