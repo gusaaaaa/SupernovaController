@@ -359,7 +359,7 @@ class SupernovaI3CBlockingInterface:
         ])
         return self._process_response("read", responses)
 
-    def ccc_GETBCR(self, target_address):
+    def ccc_getbcr(self, target_address):
         responses = self.controller.sync_submit([
             lambda id: self.driver.i3cGETBCR(
                 id,
@@ -370,7 +370,7 @@ class SupernovaI3CBlockingInterface:
         ])
         return self._process_response("ccc_GETBCR", responses)
 
-    def ccc_GETDCR(self, target_address):
+    def ccc_getdcr(self, target_address):
         """
         Performs a GETDCR (Get Device Characteristics Register) operation on a target device on the I3C bus.
 
@@ -398,7 +398,7 @@ class SupernovaI3CBlockingInterface:
 
         return self._process_response("ccc_GETDCR", responses)
 
-    def ccc_GETPID(self, target_address):
+    def ccc_getpid(self, target_address):
         """
         Performs a GETPID (Get Provisional ID) operation on a target device on the I3C bus.
 
@@ -426,7 +426,7 @@ class SupernovaI3CBlockingInterface:
 
         return self._process_response("ccc_GETPID", responses)
 
-    def ccc_GETACCCR(self, target_address):
+    def ccc_getacccr(self, target_address):
         """
         Performs a GETACCCR (Get Acceptable Command Codes Register) operation on a target device on the I3C bus.
 
@@ -454,7 +454,7 @@ class SupernovaI3CBlockingInterface:
 
         return self._process_response("ccc_GETACCCR", responses)
 
-    def ccc_GETMXDS(self, target_address):
+    def ccc_getmxds(self, target_address):
         """
         Performs a GETMXDS (Get Max Data Speed) operation on a target device on the I3C bus.
 
@@ -482,7 +482,7 @@ class SupernovaI3CBlockingInterface:
 
         return self._process_response("ccc_GETMXDS", responses)
 
-    def ccc_GETMRL(self, target_address):
+    def ccc_getmrl(self, target_address):
         """
         Performs a GETMRL (Get Maximum Read Length) operation on a target device on the I3C bus.
 
@@ -510,7 +510,7 @@ class SupernovaI3CBlockingInterface:
 
         return self._process_response("ccc_GETMRL", responses)
 
-    def ccc_GETMWL(self, target_address):
+    def ccc_getmwl(self, target_address):
         """
         Performs a GETMWL (Get Maximum Write Length) operation on a target device on the I3C bus.
 
@@ -538,7 +538,7 @@ class SupernovaI3CBlockingInterface:
 
         return self._process_response("ccc_GETMWL", responses)
 
-    def ccc_GETXTIME(self, target_address):
+    def ccc_getxtime(self, target_address):
         """
         Performs a GETXTIME (Get Extra Timing Information) operation on a target device on the I3C bus.
 
@@ -566,7 +566,7 @@ class SupernovaI3CBlockingInterface:
 
         return self._process_response("ccc_GETXTIME", responses)
 
-    def ccc_GETCAPS(self, target_address):
+    def ccc_getcaps(self, target_address):
         """
         Performs a GETCAPS (Get Capabilities) operation on a target device on the I3C bus.
 
@@ -594,7 +594,7 @@ class SupernovaI3CBlockingInterface:
 
         return self._process_response("ccc_GETCAPS", responses)
 
-    def ccc_RSTDAA(self, target_address):
+    def ccc_rstdaa(self, target_address):
         """
         Performs a RSTDAA (Reset Dynamic Address Assignment) operation on a target device on the I3C bus.
 
@@ -622,7 +622,7 @@ class SupernovaI3CBlockingInterface:
 
         return self._process_response("ccc_RSTDAA", responses)
 
-    def ccc_broadcast_ENEC(self):
+    def ccc_broadcast_enec(self):
         """
         Performs a broadcast ENEC (Enable Events Command) operation on the I3C bus.
 
@@ -647,7 +647,7 @@ class SupernovaI3CBlockingInterface:
         # Note: The command name 'ccc_broadcast_ENEC' should be handled appropriately in _process_response
         return self._process_response("ccc_broadcast_ENEC", responses)
 
-    def ccc_broadcast_DISEC(self):
+    def ccc_broadcast_disec(self):
         """
         Performs a broadcast DISEC (Disable Events Command) operation on the I3C bus.
 
@@ -672,7 +672,7 @@ class SupernovaI3CBlockingInterface:
         # Note: The command name 'ccc_broadcast_DISEC' should be handled appropriately in _process_response
         return self._process_response("ccc_broadcast_DISEC", responses)
 
-    def ccc_unicast_ENEC(self, target_address):
+    def ccc_unicast_enec(self, target_address):
         """
         Performs a unicast ENEC (Enable Events Command) operation on a specific target device on the I3C bus.
 
@@ -700,7 +700,7 @@ class SupernovaI3CBlockingInterface:
 
         return self._process_response("ccc_unicast_ENEC", responses)
 
-    def ccc_unicast_DISEC(self, target_address):
+    def ccc_unicast_disec(self, target_address):
         """
         Performs a unicast DISEC (Disable Events Command) operation on a specific target device on the I3C bus.
 
@@ -728,7 +728,7 @@ class SupernovaI3CBlockingInterface:
 
         return self._process_response("ccc_unicast_DISEC", responses)
 
-    def ccc_SETDASA(self, static_address, dynamic_address):
+    def ccc_setdasa(self, static_address, dynamic_address):
         """
         Performs a SETDASA (Set Dynamic Address for Static Address) operation on the I3C bus.
 
@@ -758,7 +758,7 @@ class SupernovaI3CBlockingInterface:
 
         return self._process_response("ccc_SETDASA", responses)
 
-    def ccc_SETNEWDA(self, current_address, new_address):
+    def ccc_setnewda(self, current_address, new_address):
         """
         Performs a SETNEWDA (Set New Dynamic Address) operation on the I3C bus.
 
@@ -788,7 +788,7 @@ class SupernovaI3CBlockingInterface:
 
         return self._process_response("ccc_SETNEWDA", responses)
 
-    def ccc_unicast_SETGRPA(self, target_address):
+    def ccc_unicast_setgrpa(self, target_address):
         """
         Performs a unicast SETGRPA (Set Group Address) operation on a specific target device on the I3C bus.
 
@@ -816,7 +816,7 @@ class SupernovaI3CBlockingInterface:
 
         return self._process_response("ccc_unicast_SETGRPA", responses)
 
-    def ccc_unicast_RSTGRPA(self, target_address):
+    def ccc_unicast_rstgrpa(self, target_address):
         """
         Performs a unicast RSTGRPA (Reset Group Address) operation on a specific target device on the I3C bus.
 
@@ -844,7 +844,7 @@ class SupernovaI3CBlockingInterface:
 
         return self._process_response("ccc_unicast_RSTGRPA", responses)
 
-    def ccc_unicast_SETMRL(self, target_address, max_read_length):
+    def ccc_unicast_setmrl(self, target_address, max_read_length):
         """
         Performs a unicast SETMRL (Set Maximum Read Length) operation on a specific target device on the I3C bus.
 
@@ -874,7 +874,7 @@ class SupernovaI3CBlockingInterface:
 
         return self._process_response("ccc_unicast_SETMRL", responses)
 
-    def ccc_unicast_SETMWL(self, target_address, max_write_length):
+    def ccc_unicast_setmwl(self, target_address, max_write_length):
         """
         Performs a unicast SETMWL (Set Maximum Write Length) operation on a specific target device on the I3C bus.
 
@@ -904,7 +904,7 @@ class SupernovaI3CBlockingInterface:
 
         return self._process_response("ccc_unicast_SETMWL", responses)
 
-    def ccc_broadcast_SETMWL(self, max_write_length):
+    def ccc_broadcast_setmwl(self, max_write_length):
         """
         Performs a broadcast SETMWL (Set Maximum Write Length) operation on the I3C bus.
 
@@ -932,7 +932,7 @@ class SupernovaI3CBlockingInterface:
 
         return self._process_response("ccc_broadcast_SETMWL", responses)
 
-    def ccc_broadcast_SETMRL(self, max_read_length):
+    def ccc_broadcast_setmrl(self, max_read_length):
         """
         Performs a broadcast SETMRL (Set Maximum Read Length) operation on the I3C bus.
 
@@ -960,7 +960,7 @@ class SupernovaI3CBlockingInterface:
 
         return self._process_response("ccc_broadcast_SETMRL", responses)
 
-    def ccc_SETAASA(self):
+    def ccc_setaasa(self):
         """
         Performs a broadcast SETAASA (Set All Agents to Static Address) operation on the I3C bus.
 
@@ -984,7 +984,7 @@ class SupernovaI3CBlockingInterface:
 
         return self._process_response("ccc_SETAASA", responses)
 
-    def ccc_broadcast_ENDXFED(self):
+    def ccc_broadcast_endxfed(self):
         """
         Performs a broadcast ENDXFED (End Extra Fast-Mode Device Exchange) operation on the I3C bus.
 
@@ -1008,7 +1008,7 @@ class SupernovaI3CBlockingInterface:
 
         return self._process_response("ccc_broadcast_ENDXFED", responses)
 
-    def ccc_unicast_ENDXFER(self, target_address):
+    def ccc_unicast_endxfer(self, target_address):
         """
         Performs a unicast ENDXFER (End Transfer) operation on a specific target device on the I3C bus.
 
@@ -1036,7 +1036,7 @@ class SupernovaI3CBlockingInterface:
 
         return self._process_response("ccc_unicast_ENDXFER", responses)
 
-    def ccc_broadcast_SETXTIME(self, timing_parameter):
+    def ccc_broadcast_setxtime(self, timing_parameter):
         """
         Performs a broadcast SETXTIME (Set Extra Timing) operation on the I3C bus.
 
@@ -1064,10 +1064,10 @@ class SupernovaI3CBlockingInterface:
 
         return self._process_response("ccc_broadcast_SETXTIME", responses)
 
-    def ccc_unicast_SETXTIME(self, target_address):
+    def ccc_unicast_setxtime(self, target_address):
         pass
 
-    def ccc_broadcast_SETBUSCON(self, context: int, data: list = []):
+    def ccc_broadcast_setbuscon(self, context: int, data: list = []):
         """
         Performs a broadcast SETBUSCON (Set Bus Configuration) operation on the I3C bus.
 
@@ -1098,7 +1098,7 @@ class SupernovaI3CBlockingInterface:
 
         return self._process_response("ccc_broadcast_SETBUSCON", responses)
 
-    def ccc_broadcast_ENTAS0(self):
+    def ccc_broadcast_entas0(self):
         """
         Performs a broadcast ENTAS0 (Enter Activity State 0) operation on the I3C bus.
 
@@ -1126,7 +1126,7 @@ class SupernovaI3CBlockingInterface:
 
         return self._process_response("ccc_broadcast_ENTAS0", responses)
 
-    def ccc_broadcast_ENTAS1(self):
+    def ccc_broadcast_entas1(self):
         """
         Sends a broadcast ENTAS1 command to all devices on the I3C bus, indicating that the bus will enter
         an idle state for 100 microseconds (us). This command is part of power management strategies to
@@ -1148,7 +1148,7 @@ class SupernovaI3CBlockingInterface:
 
         return self._process_response("ccc_broadcast_ENTAS1", responses)
 
-    def ccc_broadcast_ENTAS2(self):
+    def ccc_broadcast_entas2(self):
         """
         Sends a broadcast ENTAS2 command to all devices on the I3C bus, indicating that the bus will enter
         an idle state for 2 milliseconds (ms). This command is part of power management strategies to
@@ -1170,7 +1170,7 @@ class SupernovaI3CBlockingInterface:
 
         return self._process_response("ccc_broadcast_ENTAS2", responses)
 
-    def ccc_broadcast_ENTAS3(self):
+    def ccc_broadcast_entas3(self):
         """
         Sends a broadcast ENTAS3 command to all devices on the I3C bus, indicating that the bus will enter
         an idle state for 50 milliseconds (ms). This command is part of power management strategies to

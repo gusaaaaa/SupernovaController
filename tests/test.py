@@ -215,7 +215,7 @@ class TestSupernovaController(unittest.TestCase):
 
         self.device.i3c.init_bus(3300)
 
-        (success, result) = self.device.i3c.ccc_GETPID(0x08)
+        (success, result) = self.device.i3c.ccc_getpid(0x08)
 
         self.assertTupleEqual((success, result), (True, [0x00, 0x00, 0x00, 0x00, 0x64, 0x65]))
 
