@@ -42,17 +42,23 @@ class SupernovaDevice:
             lambda id: self.driver.getUsbString(id, getattr(GetUsbStringSubCommand, 'HW_VERSION')),
             lambda id: self.driver.getUsbString(id, getattr(GetUsbStringSubCommand, 'FW_VERSION')),
             lambda id: self.driver.getUsbString(id, getattr(GetUsbStringSubCommand, 'SERIAL_NUMBER')),
+            lambda id: self.driver.getUsbString(id, getattr(GetUsbStringSubCommand, 'MANUFACTURER')),
+            lambda id: self.driver.getUsbString(id, getattr(GetUsbStringSubCommand, 'PRODUCT_NAME')),
         ])
 
         def _process_device_info(responses):
             hw_version = responses[0]['message'][3:]
             fw_version = responses[1]['message'][3:]
             serial_number = responses[2]['message'][3:]
+            manufacturer = responses[3]['message'][3:]
+            product_name = responses[4]['message'][3:]
 
             return {
                 "hw_version": hw_version,
                 "fw_version": fw_version,
-                "serial_number": serial_number
+                "serial_number": serial_number,
+                "manufacturer": manufacturer,
+                "product_name": product_name,
             }
 
         return _process_device_info(responses)

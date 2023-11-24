@@ -34,6 +34,8 @@ class TestSupernovaController(unittest.TestCase):
         self.assertRegex(info['hw_version'], r'^[A-Za-z0-9]$', "Invalid hw_version format")
         self.assertRegex(info['fw_version'], r'^\d+\.\d+\.\d+$', "Invalid fw_version format")
         self.assertRegex(info['serial_number'], r'^[A-Fa-f0-9]+$', "Invalid serial_number format")
+        self.assertEqual(info['manufacturer'], "Binho LLC", "Invalid manufacturer string")
+        self.assertEqual(info['product_name'], "Binho Supernova", "Invalid product name")
 
         self.device.close()
 
