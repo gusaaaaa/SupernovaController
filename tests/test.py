@@ -158,7 +158,7 @@ class TestSupernovaController(unittest.TestCase):
 
         self.device.close()
 
-    def test_i3c_write_operation_on_target(self):
+    def test_i3c_successful_write_operation_on_target_should_return_empty_output_symbol(self):
         if not self.use_simulator:
             self.skipTest("For simulator only")
 
@@ -175,11 +175,29 @@ class TestSupernovaController(unittest.TestCase):
             [0xDE, 0xAD, 0xBE, 0xEF]
         )
 
+        empty_output_symbol = { "data": [], "length": 0 }
+
         self.assertEqual(success, True)
-        self.assertDictEqual(result, {
-            "data": [],
-            "length": 0
-        })
+        self.assertDictEqual(result, empty_output_symbol)
+
+        self.device.close()
+
+    def test_i3c_successful_write_read_operations_on_target(self):
+        if not self.use_simulator:
+            self.skipTest("For simulator only")
+
+        self.device.open()
+
+        self.device.i3c.init_bus(3300)
+
+        subaddress = [0x00, 0x00]
+
+        (success, result) = self.device.i3c.write(
+            0x08,
+            self.device.i3c.TransferMode.I3C_SDR,
+            subaddress,
+            [0xDE, 0xAD, 0xBE, 0xEF]
+        )
 
         (success, result) = self.device.i3c.read(
             0x08,
