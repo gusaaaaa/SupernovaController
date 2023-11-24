@@ -272,7 +272,8 @@ class SupernovaI3CBlockingInterface:
     def _process_response(self, command_name, responses, extra_data=None):
         def format_response_payload(command_name, response):
             match command_name:
-                case "write" | "read": return response["data"]
+                case "write": return None
+                case "read": return response["data"]
                 case "ccc_GETPID": return [int(item[2:], 16) for item in response["pid"]]
                 case "ccc_GETBCR": return response["bcr"]["value"][2][2:].upper()
 
@@ -281,7 +282,7 @@ class SupernovaI3CBlockingInterface:
         response = responses[0]
         if response["header"]["result"] == "I3C_TRANSFER_SUCCESS":
             data = format_response_payload(command_name, response)
-            result_data = {"data": data, "length": response["descriptor"]["dataLength"]}
+            result_data = data
             if extra_data:
                 result_data.update(extra_data)
             result = (True, result_data)
