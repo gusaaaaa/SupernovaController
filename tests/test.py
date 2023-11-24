@@ -158,7 +158,7 @@ class TestSupernovaController(unittest.TestCase):
 
         self.device.close()
 
-    def test_i3c_successful_write_operation_on_target_should_return_empty_output_symbol(self):
+    def test_i3c_successful_write_operation_on_target_should_return_none(self):
         if not self.use_simulator:
             self.skipTest("For simulator only")
 
@@ -175,10 +175,7 @@ class TestSupernovaController(unittest.TestCase):
             [0xDE, 0xAD, 0xBE, 0xEF]
         )
 
-        empty_output_symbol = { "data": [], "length": 0 }
-
-        self.assertEqual(success, True)
-        self.assertDictEqual(result, empty_output_symbol)
+        self.assertTupleEqual((success, result), (True, None))
 
         self.device.close()
 
@@ -206,11 +203,7 @@ class TestSupernovaController(unittest.TestCase):
             4
         )
 
-        self.assertEqual(success, True)
-        self.assertDictEqual(result, {
-            "data": [0xDE, 0xAD, 0xBE, 0xEF],
-            "length": 4
-        })
+        self.assertTupleEqual((success, result), (True, [0xDE, 0xAD, 0xBE, 0xEF]))
 
         self.device.close()
 
@@ -224,11 +217,7 @@ class TestSupernovaController(unittest.TestCase):
 
         (success, result) = self.device.i3c.ccc_GETPID(0x08)
 
-        self.assertEqual(success, True)
-        self.assertDictEqual(result, {
-            "data": [0x00, 0x00, 0x00, 0x00, 0x64, 0x65],
-            "length": 6
-        })
+        self.assertTupleEqual((success, result), (True, [0x00, 0x00, 0x00, 0x00, 0x64, 0x65]))
 
         self.device.close()
 
