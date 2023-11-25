@@ -42,7 +42,17 @@ class TestSupernovaController(unittest.TestCase):
 
     def test_create_interface_before_open_throws_error(self):
         with self.assertRaises(DeviceNotMountedError):
-            self.device.create_interface("i3c")
+            self.device.create_interface("i3c.controller")
+
+    def test_subsequent_calls_to_create_interface_retrieve_the_same_instance(self):
+        self.device.open()
+
+        instance_1 = self.device.create_interface("i3c.controller")
+        instance_2 = self.device.create_interface("i3c.controller")
+
+        self.assertEqual(instance_1, instance_2)
+
+        self.device.close()
 
     def test_set_i3c_bus_voltage_attribute(self):
         self.device.open()
