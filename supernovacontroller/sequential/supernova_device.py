@@ -110,22 +110,6 @@ class SupernovaDevice:
 
         return interface
 
-    def invoke_sync(self, sequence):
-        result = None
-
-        def collect_responses(responses):
-            nonlocal result
-            result = responses
-
-        sequence_id = self.controller.submit(
-            sequence=sequence,
-            on_ready=collect_responses
-        )
-
-        self.controller.wait_for(sequence_id)
-
-        return result
-
     def close(self):
         self.driver.close()
         self.running = False
