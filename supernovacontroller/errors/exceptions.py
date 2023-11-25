@@ -5,6 +5,13 @@ class DeviceOpenError(Exception):
         self.message = message
         super().__init__(self.message)
 
+class DeviceNotMountedError(Exception):
+    """Exception raised when trying to execute an operation on an unmounted device."""
+
+    def __init__(self, message="Device not mounted"):
+        self.message = message
+        super().__init__(self.message)
+
 class BusVoltageError(Exception):
     """Exception raised when bus voltage is not set properly."""
 

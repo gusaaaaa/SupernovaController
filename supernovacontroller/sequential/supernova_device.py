@@ -2,6 +2,7 @@ from transfer_controller import TransferController
 from BinhoSupernova.Supernova import Supernova
 from BinhoSupernova.commands.definitions import GetUsbStringSubCommand
 from supernovacontroller.errors import DeviceOpenError
+from supernovacontroller.errors import DeviceNotMountedError
 import queue
 import threading
 from .i2c import SupernovaI2CBlockingInterface
@@ -25,8 +26,12 @@ class SupernovaDevice:
       self.process_response_thread.start()
       self.driver = Supernova()
 
-      self.i2c = None
-      self.i3c = None
+      self.interfaces = {
+          "i2c": [None, SupernovaI2CBlockingInterface],
+          "i3c.controller": [None, SupernovaI3CBlockingInterface],
+      }
+
+      self.mounted = False
 
     def open(self, usb_address=None):
         result = self.driver.open(path=usb_address, activateLogger=False)
@@ -34,9 +39,6 @@ class SupernovaDevice:
             raise DeviceOpenError(result["message"])
 
         self.driver.onEvent(self._push_sdk_response)
-
-        self.i2c = SupernovaI2CBlockingInterface(self.driver, self.controller)
-        self.i3c = SupernovaI3CBlockingInterface(self.driver, self.controller)
 
         responses = self.controller.sync_submit([
             lambda id: self.driver.getUsbString(id, getattr(GetUsbStringSubCommand, 'HW_VERSION')),
@@ -60,6 +62,8 @@ class SupernovaDevice:
                 "manufacturer": manufacturer,
                 "product_name": product_name,
             }
+
+        self.mounted = True
 
         return _process_device_info(responses)
 
@@ -89,6 +93,18 @@ class SupernovaDevice:
 
         # Process non-sequenced responses
         # ...
+
+    def create_interface(self, interface_name):
+        if not self.mounted:
+            raise DeviceNotMountedError()
+
+        [interface, interface_class] = self.interfaces[interface_name]
+
+        if interface is None:
+            self.interfaces[interface_name][0] = interface_class(self.driver, self.controller)
+            interface = self.interfaces[interface_name][0]
+
+        return interface
 
     def invoke_sync(self, sequence):
         result = None
