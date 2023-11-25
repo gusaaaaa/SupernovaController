@@ -274,8 +274,8 @@ class SupernovaI3CBlockingInterface:
             match command_name:
                 case "write": return None
                 case "read": return response["data"]
-                case "ccc_GETPID": return [int(item[2:], 16) for item in response["pid"]]
-                case "ccc_GETBCR": return response["bcr"]["value"][2][2:].upper()
+                case "ccc_getpid": return [int(item[2:], 16) for item in response["pid"]]
+                case "ccc_getbcr": return response["bcr"]["value"][2][2:].upper()
 
             return None
 
@@ -368,7 +368,7 @@ class SupernovaI3CBlockingInterface:
                 self.push_pull_clock_freq_mhz,
             )
         ])
-        return self._process_response("ccc_GETBCR", responses)
+        return self._process_response("ccc_getbcr", responses)
 
     def ccc_getdcr(self, target_address):
         """
@@ -424,7 +424,7 @@ class SupernovaI3CBlockingInterface:
             )
         ])
 
-        return self._process_response("ccc_GETPID", responses)
+        return self._process_response("ccc_getpid", responses)
 
     def ccc_getacccr(self, target_address):
         """
