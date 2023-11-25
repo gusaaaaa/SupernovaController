@@ -12,6 +12,13 @@ class DeviceNotMountedError(Exception):
         self.message = message
         super().__init__(self.message)
 
+class UnknownInterfaceError(Exception):
+    """Exception raised when trying to create an unknown interface."""
+
+    def __init__(self, message="Unknown interface name"):
+        self.message = message
+        super().__init__(self.message)
+
 class BusVoltageError(Exception):
     """Exception raised when bus voltage is not set properly."""
 

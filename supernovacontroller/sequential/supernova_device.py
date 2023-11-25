@@ -3,6 +3,7 @@ from BinhoSupernova.Supernova import Supernova
 from BinhoSupernova.commands.definitions import GetUsbStringSubCommand
 from supernovacontroller.errors import DeviceOpenError
 from supernovacontroller.errors import DeviceNotMountedError
+from supernovacontroller.errors import UnknownInterfaceError
 import queue
 import threading
 from .i2c import SupernovaI2CBlockingInterface
@@ -97,6 +98,9 @@ class SupernovaDevice:
     def create_interface(self, interface_name):
         if not self.mounted:
             raise DeviceNotMountedError()
+
+        if not interface_name in self.interfaces:
+            raise UnknownInterfaceError()
 
         [interface, interface_class] = self.interfaces[interface_name]
 

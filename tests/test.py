@@ -7,6 +7,7 @@ from supernovacontroller.errors import DeviceOpenError
 from supernovacontroller.errors import DeviceNotMountedError
 from supernovacontroller.errors import BusVoltageError
 from supernovacontroller.errors import BusNotInitializedError
+from supernovacontroller.errors import UnknownInterfaceError
 
 sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
 from deviceSimulators.supernova import BinhoSupernovaSimulator
@@ -51,6 +52,14 @@ class TestSupernovaController(unittest.TestCase):
         instance_2 = self.device.create_interface("i3c.controller")
 
         self.assertEqual(instance_1, instance_2)
+
+        self.device.close()
+
+    def test_create_interface_wrong_name(self):
+        self.device.open()
+
+        with self.assertRaises(UnknownInterfaceError):
+            self.device.create_interface("foo")
 
         self.device.close()
 
