@@ -293,7 +293,10 @@ class SupernovaI3CBlockingInterface:
                 case "read": return response["data"]
                 case "ccc_getpid": return [int(item[2:], 16) for item in response["pid"]]
                 case "ccc_getbcr": return response["bcr"]["value"][2][2:].upper()
-
+                case "ccc_getdcr": return response["bcr"]["value"][2:].upper()
+                case "ccc_getmrl": return response["maxreadlength"]
+                case "ccc_getmwl": return response["maxwritelength"]
+                case "ccc_unicast_setmrl" | "ccc_unicast_setmwl" | "ccc_broadcast_setmwl" | "ccc_broadcast_setmrl" : return response["data"]
             return None
 
         response = responses[0]
@@ -433,7 +436,7 @@ class SupernovaI3CBlockingInterface:
         except Exception as e:
             raise BackendError(original_exception=e) from e
 
-        return self._process_response("ccc_GETDCR", responses)
+        return self._process_response("ccc_getdcr", responses)
 
     def ccc_getpid(self, target_address):
         """
@@ -495,7 +498,7 @@ class SupernovaI3CBlockingInterface:
         except Exception as e:
             raise BackendError(original_exception=e) from e
 
-        return self._process_response("ccc_GETACCCR", responses)
+        return self._process_response("ccc_getacccr", responses)
 
     def ccc_getmxds(self, target_address):
         """
@@ -526,7 +529,7 @@ class SupernovaI3CBlockingInterface:
         except Exception as e:
             raise BackendError(original_exception=e) from e
 
-        return self._process_response("ccc_GETMXDS", responses)
+        return self._process_response("ccc_getmxds", responses)
 
     def ccc_getmrl(self, target_address):
         """
@@ -557,7 +560,7 @@ class SupernovaI3CBlockingInterface:
         except Exception as e:
             raise BackendError(original_exception=e) from e
 
-        return self._process_response("ccc_GETMRL", responses)
+        return self._process_response("ccc_getmrl", responses)
 
     def ccc_getmwl(self, target_address):
         """
@@ -588,7 +591,7 @@ class SupernovaI3CBlockingInterface:
         except Exception as e:
             raise BackendError(original_exception=e) from e
 
-        return self._process_response("ccc_GETMWL", responses)
+        return self._process_response("ccc_getmwl", responses)
 
     def ccc_getxtime(self, target_address):
         """
@@ -619,7 +622,7 @@ class SupernovaI3CBlockingInterface:
         except Exception as e:
             raise BackendError(original_exception=e) from e
 
-        return self._process_response("ccc_GETXTIME", responses)
+        return self._process_response("ccc_getxtime", responses)
 
     def ccc_getcaps(self, target_address):
         """
@@ -650,7 +653,7 @@ class SupernovaI3CBlockingInterface:
         except Exception as e:
             raise BackendError(original_exception=e) from e
 
-        return self._process_response("ccc_GETCAPS", responses)
+        return self._process_response("ccc_getcaps", responses)
 
     def ccc_rstdaa(self, target_address):
         """
@@ -681,7 +684,7 @@ class SupernovaI3CBlockingInterface:
         except Exception as e:
             raise BackendError(original_exception=e) from e
 
-        return self._process_response("ccc_RSTDAA", responses)
+        return self._process_response("ccc_rstdaa", responses)
 
     def ccc_broadcast_enec(self):
         """
@@ -709,7 +712,7 @@ class SupernovaI3CBlockingInterface:
             raise BackendError(original_exception=e) from e
 
         # Note: The command name 'ccc_broadcast_ENEC' should be handled appropriately in _process_response
-        return self._process_response("ccc_broadcast_ENEC", responses)
+        return self._process_response("ccc_broadcast_enec", responses)
 
     def ccc_broadcast_disec(self):
         """
@@ -737,7 +740,7 @@ class SupernovaI3CBlockingInterface:
             raise BackendError(original_exception=e) from e
 
         # Note: The command name 'ccc_broadcast_DISEC' should be handled appropriately in _process_response
-        return self._process_response("ccc_broadcast_DISEC", responses)
+        return self._process_response("ccc_broadcast_disec", responses)
 
     def ccc_unicast_enec(self, target_address):
         """
@@ -768,7 +771,7 @@ class SupernovaI3CBlockingInterface:
         except Exception as e:
             raise BackendError(original_exception=e) from e
 
-        return self._process_response("ccc_unicast_ENEC", responses)
+        return self._process_response("ccc_unicast_enec", responses)
 
     def ccc_unicast_disec(self, target_address):
         """
@@ -799,7 +802,7 @@ class SupernovaI3CBlockingInterface:
         except Exception as e:
             raise BackendError(original_exception=e) from e
 
-        return self._process_response("ccc_unicast_DISEC", responses)
+        return self._process_response("ccc_unicast_disec", responses)
 
     def ccc_setdasa(self, static_address, dynamic_address):
         """
@@ -832,7 +835,7 @@ class SupernovaI3CBlockingInterface:
         except Exception as e:
             raise BackendError(original_exception=e) from e
 
-        return self._process_response("ccc_SETDASA", responses)
+        return self._process_response("ccc_setdasa", responses)
 
     def ccc_setnewda(self, current_address, new_address):
         """
@@ -865,7 +868,7 @@ class SupernovaI3CBlockingInterface:
         except Exception as e:
             raise BackendError(original_exception=e) from e
 
-        return self._process_response("ccc_SETNEWDA", responses)
+        return self._process_response("ccc_setnewda", responses)
 
     def ccc_unicast_setgrpa(self, target_address):
         """
@@ -896,7 +899,7 @@ class SupernovaI3CBlockingInterface:
         except Exception as e:
             raise BackendError(original_exception=e) from e
 
-        return self._process_response("ccc_unicast_SETGRPA", responses)
+        return self._process_response("ccc_unicast_setgrpa", responses)
 
     def ccc_unicast_rstgrpa(self, target_address):
         """
@@ -927,7 +930,7 @@ class SupernovaI3CBlockingInterface:
         except Exception as e:
             raise BackendError(original_exception=e) from e
 
-        return self._process_response("ccc_unicast_RSTGRPA", responses)
+        return self._process_response("ccc_unicast_rstgrpa", responses)
 
     def ccc_unicast_setmrl(self, target_address, max_read_length):
         """
@@ -960,7 +963,7 @@ class SupernovaI3CBlockingInterface:
         except Exception as e:
             raise BackendError(original_exception=e) from e
 
-        return self._process_response("ccc_unicast_SETMRL", responses)
+        return self._process_response("ccc_unicast_setmrl", responses)
 
     def ccc_unicast_setmwl(self, target_address, max_write_length):
         """
@@ -993,7 +996,7 @@ class SupernovaI3CBlockingInterface:
         except Exception as e:
             raise BackendError(original_exception=e) from e
 
-        return self._process_response("ccc_unicast_SETMWL", responses)
+        return self._process_response("ccc_unicast_setmwl", responses)
 
     def ccc_broadcast_setmwl(self, max_write_length):
         """
@@ -1024,7 +1027,7 @@ class SupernovaI3CBlockingInterface:
         except Exception as e:
             raise BackendError(original_exception=e) from e
 
-        return self._process_response("ccc_broadcast_SETMWL", responses)
+        return self._process_response("ccc_broadcast_setmwl", responses)
 
     def ccc_broadcast_setmrl(self, max_read_length):
         """
@@ -1055,7 +1058,7 @@ class SupernovaI3CBlockingInterface:
         except Exception as e:
             raise BackendError(original_exception=e) from e
 
-        return self._process_response("ccc_broadcast_SETMRL", responses)
+        return self._process_response("ccc_broadcast_setmrl", responses)
 
     def ccc_setaasa(self):
         """
@@ -1082,7 +1085,7 @@ class SupernovaI3CBlockingInterface:
         except Exception as e:
             raise BackendError(original_exception=e) from e
 
-        return self._process_response("ccc_SETAASA", responses)
+        return self._process_response("ccc_setaasa", responses)
 
     def ccc_broadcast_endxfed(self):
         """
@@ -1109,7 +1112,7 @@ class SupernovaI3CBlockingInterface:
         except Exception as e:
             raise BackendError(original_exception=e) from e
 
-        return self._process_response("ccc_broadcast_ENDXFED", responses)
+        return self._process_response("ccc_broadcast_endxfed", responses)
 
     def ccc_unicast_endxfer(self, target_address):
         """
@@ -1140,7 +1143,7 @@ class SupernovaI3CBlockingInterface:
         except Exception as e:
             raise BackendError(original_exception=e) from e
 
-        return self._process_response("ccc_unicast_ENDXFER", responses)
+        return self._process_response("ccc_unicast_endxfer", responses)
 
     def ccc_broadcast_setxtime(self, timing_parameter):
         """
@@ -1171,7 +1174,7 @@ class SupernovaI3CBlockingInterface:
         except Exception as e:
             raise BackendError(original_exception=e) from e
 
-        return self._process_response("ccc_broadcast_SETXTIME", responses)
+        return self._process_response("ccc_broadcast_setxtime", responses)
 
     def ccc_unicast_setxtime(self, target_address):
         pass
@@ -1208,7 +1211,7 @@ class SupernovaI3CBlockingInterface:
         except Exception as e:
             raise BackendError(original_exception=e) from e
 
-        return self._process_response("ccc_broadcast_SETBUSCON", responses)
+        return self._process_response("ccc_broadcast_setbuscon", responses)
 
     def ccc_broadcast_entas0(self):
         """
@@ -1239,7 +1242,7 @@ class SupernovaI3CBlockingInterface:
         except Exception as e:
             raise BackendError(original_exception=e) from e
 
-        return self._process_response("ccc_broadcast_ENTAS0", responses)
+        return self._process_response("ccc_broadcast_entas0", responses)
 
     def ccc_broadcast_entas1(self):
         """
@@ -1264,7 +1267,7 @@ class SupernovaI3CBlockingInterface:
         except Exception as e:
             raise BackendError(original_exception=e) from e
 
-        return self._process_response("ccc_broadcast_ENTAS1", responses)
+        return self._process_response("ccc_broadcast_entas1", responses)
 
     def ccc_broadcast_entas2(self):
         """
@@ -1289,7 +1292,7 @@ class SupernovaI3CBlockingInterface:
         except Exception as e:
             raise BackendError(original_exception=e) from e
 
-        return self._process_response("ccc_broadcast_ENTAS2", responses)
+        return self._process_response("ccc_broadcast_entas2", responses)
 
     def ccc_broadcast_entas3(self):
         """
@@ -1314,4 +1317,4 @@ class SupernovaI3CBlockingInterface:
         except Exception as e:
             raise BackendError(original_exception=e) from e
 
-        return self._process_response("ccc_broadcast_ENTAS3", responses)
+        return self._process_response("ccc_broadcast_entas3", responses)
