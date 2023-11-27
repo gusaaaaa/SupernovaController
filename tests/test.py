@@ -198,6 +198,25 @@ class TestSupernovaController(unittest.TestCase):
 
         self.device.close()
 
+    def test_i3c_write_operation_when_bus_not_initialized(self):
+        if not self.use_simulator:
+            self.skipTest("For simulator only")
+
+
+        self.device.open()
+
+        i3c = self.device.create_interface("i3c.controller")
+
+        with self.assertRaises(BusNotInitializedError):
+            i3c.write(
+                0x08,
+                i3c.TransferMode.I3C_SDR,
+                [0x00, 0x00],
+                [0xDE, 0xAD, 0xBE, 0xEF]
+            )
+
+        self.device.close()
+
     def test_i3c_successful_write_operation_on_target_should_return_none(self):
         if not self.use_simulator:
             self.skipTest("For simulator only")

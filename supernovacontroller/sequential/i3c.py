@@ -311,17 +311,23 @@ class SupernovaI3CBlockingInterface:
             - The second element is either a dictionary containing the data written and its length, indicating
                 success, or an error message detailing the failure.
         """
-        responses = self.controller.sync_submit([
-            lambda id: self.driver.i3cWrite(
-                id,
-                target_address,
-                mode,
-                self.push_pull_clock_freq_mhz,
-                self.push_pull_clock_freq_mhz,
-                subaddress,
-                buffer,
-            )
-        ])
+        if self.bus_voltage is None:
+            raise BusNotInitializedError()
+
+        try:
+            responses = self.controller.sync_submit([
+                lambda id: self.driver.i3cWrite(
+                    id,
+                    target_address,
+                    mode,
+                    self.push_pull_clock_freq_mhz,
+                    self.push_pull_clock_freq_mhz,
+                    subaddress,
+                    buffer,
+                )
+            ])
+        except Exception as e:
+            raise e
 
         return self._process_response("write", responses)
 
