@@ -4,6 +4,7 @@ from BinhoSupernova.commands.definitions import GetUsbStringSubCommand
 from supernovacontroller.errors import DeviceOpenError
 from supernovacontroller.errors import DeviceNotMountedError
 from supernovacontroller.errors import UnknownInterfaceError
+from supernovacontroller.errors import BackendError
 import queue
 import threading
 from .i2c import SupernovaI2CBlockingInterface
@@ -41,13 +42,16 @@ class SupernovaDevice:
 
         self.driver.onEvent(self._push_sdk_response)
 
-        responses = self.controller.sync_submit([
-            lambda id: self.driver.getUsbString(id, getattr(GetUsbStringSubCommand, 'HW_VERSION')),
-            lambda id: self.driver.getUsbString(id, getattr(GetUsbStringSubCommand, 'FW_VERSION')),
-            lambda id: self.driver.getUsbString(id, getattr(GetUsbStringSubCommand, 'SERIAL_NUMBER')),
-            lambda id: self.driver.getUsbString(id, getattr(GetUsbStringSubCommand, 'MANUFACTURER')),
-            lambda id: self.driver.getUsbString(id, getattr(GetUsbStringSubCommand, 'PRODUCT_NAME')),
-        ])
+        try:
+            responses = self.controller.sync_submit([
+                lambda id: self.driver.getUsbString(id, getattr(GetUsbStringSubCommand, 'HW_VERSION')),
+                lambda id: self.driver.getUsbString(id, getattr(GetUsbStringSubCommand, 'FW_VERSION')),
+                lambda id: self.driver.getUsbString(id, getattr(GetUsbStringSubCommand, 'SERIAL_NUMBER')),
+                lambda id: self.driver.getUsbString(id, getattr(GetUsbStringSubCommand, 'MANUFACTURER')),
+                lambda id: self.driver.getUsbString(id, getattr(GetUsbStringSubCommand, 'PRODUCT_NAME')),
+            ])
+        except Exception as e:
+            raise BackendError(original_exception=e) from e
 
         def _process_device_info(responses):
             hw_version = responses[0]['message'][3:]

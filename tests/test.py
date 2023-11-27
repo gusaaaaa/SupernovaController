@@ -1,13 +1,17 @@
 import unittest
 from unittest import mock
+from unittest.mock import patch
+from unittest.mock import MagicMock
 import sys
 import os
+from transfer_controller import TransferController
 from supernovacontroller.sequential import SupernovaDevice
 from supernovacontroller.errors import DeviceOpenError
 from supernovacontroller.errors import DeviceNotMountedError
 from supernovacontroller.errors import BusVoltageError
 from supernovacontroller.errors import BusNotInitializedError
 from supernovacontroller.errors import UnknownInterfaceError
+from supernovacontroller.errors import BackendError
 
 sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
 from deviceSimulators.supernova import BinhoSupernovaSimulator
@@ -202,7 +206,6 @@ class TestSupernovaController(unittest.TestCase):
         if not self.use_simulator:
             self.skipTest("For simulator only")
 
-
         self.device.open()
 
         i3c = self.device.create_interface("i3c.controller")
@@ -213,6 +216,24 @@ class TestSupernovaController(unittest.TestCase):
                 i3c.TransferMode.I3C_SDR,
                 [0x00, 0x00],
                 [0xDE, 0xAD, 0xBE, 0xEF]
+            )
+
+        self.device.close()
+
+    def test_i3c_read_operation_when_bus_not_initialized(self):
+        if not self.use_simulator:
+            self.skipTest("For simulator only")
+
+        self.device.open()
+
+        i3c = self.device.create_interface("i3c.controller")
+
+        with self.assertRaises(BusNotInitializedError):
+            i3c.read(
+                0x08,
+                i3c.TransferMode.I3C_SDR,
+                [0x00, 0x00],
+                1
             )
 
         self.device.close()
@@ -239,6 +260,17 @@ class TestSupernovaController(unittest.TestCase):
         self.assertTupleEqual((success, result), (True, None))
 
         self.device.close()
+
+    # Mock the controller's sync_submit method to simulate an exception.
+    # It's important to note that this approach makes the test somewhat dependent
+    # on the internal implementation of the device class.
+    @patch.object(TransferController, "sync_submit", MagicMock(side_effect=Exception("This is a mock exception from the backend")))
+    def test_backend_exception_is_wrapped(self):
+        if not self.use_simulator:
+            self.skipTest("For simulator only")
+
+        with self.assertRaises(BackendError):
+            self.device.open()
 
     def test_i3c_successful_write_read_operations_on_target(self):
         if not self.use_simulator:

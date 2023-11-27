@@ -32,3 +32,11 @@ class BusNotInitializedError(Exception):
     def __init__(self, message="Bus not initialized"):
         self.message = message
         super().__init__(self.message)
+
+class BackendError(Exception):
+    """Exception raised for errors in the backend."""
+
+    def __init__(self, message="An error occurred in the backend", original_exception=None):
+        self.message = f"{message}: {original_exception}" if original_exception else message
+        self.original_exception = original_exception
+        super().__init__(self.message)

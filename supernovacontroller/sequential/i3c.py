@@ -7,6 +7,7 @@ from BinhoSupernova.commands.definitions import I3cSetFeatureSelector
 from BinhoSupernova.commands.definitions import I3cClearFeatureSelector
 from supernovacontroller.errors import BusVoltageError
 from supernovacontroller.errors import BusNotInitializedError
+from supernovacontroller.errors import BackendError
 
 
 class SupernovaI3CBlockingInterface:
@@ -64,9 +65,12 @@ class SupernovaI3CBlockingInterface:
         - The method assumes that the input voltage value is valid and does not perform any validation.
         Users of this method should ensure that the provided voltage value is within acceptable limits.
         """
-        responses = self.controller.sync_submit([
-            lambda id: self.driver.setI3cBusVoltage(id, voltage)
-        ])
+        try:
+            responses = self.controller.sync_submit([
+                lambda id: self.driver.setI3cBusVoltage(id, voltage)
+            ])
+        except Exception as e:
+            raise BackendError(original_exception=e) from e
 
         response_ok = responses[0]["name"] == "SET I3C BUS VOLTAGE" and responses[0]["result"] == 0
         if response_ok:
@@ -111,9 +115,12 @@ class SupernovaI3CBlockingInterface:
             if not success:
                 return (False, set_bus_voltage_result)
 
-        responses = self.controller.sync_submit([
-            lambda id: self.driver.i3cInitBus(id, None)
-        ])
+        try:
+            responses = self.controller.sync_submit([
+                lambda id: self.driver.i3cInitBus(id, None)
+            ])
+        except Exception as e:
+            raise BackendError(original_exception=e) from e
 
         # TODO: Toggle IBIs off
 
@@ -142,9 +149,12 @@ class SupernovaI3CBlockingInterface:
         if self.bus_voltage is None:
             raise BusNotInitializedError()
 
-        responses = self.controller.sync_submit([
-            lambda id: self.driver.i3cClearFeature(id, I3cClearFeatureSelector.I3C_BUS, self.BROADCAST_ADDRESS)
-        ])
+        try:
+            responses = self.controller.sync_submit([
+                lambda id: self.driver.i3cClearFeature(id, I3cClearFeatureSelector.I3C_BUS, self.BROADCAST_ADDRESS)
+            ])
+        except Exception as e:
+            raise BackendError(original_exception=e) from e
 
         status = responses[0]["result"]
         if status == "I3C_CLEAR_FEATURE_SUCCESS":
@@ -174,9 +184,12 @@ class SupernovaI3CBlockingInterface:
         if self.bus_voltage is None:
             raise BusNotInitializedError()
 
-        responses = self.controller.sync_submit([
-            lambda id: self.driver.i3cGetTargetDeviceTable(id)
-        ])
+        try:
+            responses = self.controller.sync_submit([
+                lambda id: self.driver.i3cGetTargetDeviceTable(id)
+            ])
+        except Exception as e:
+            raise BackendError(original_exception=e) from e
 
         # Note: Borrowed from MissionControlBridge's Supernova Adaptor
         targets = []
@@ -221,13 +234,14 @@ class SupernovaI3CBlockingInterface:
                 detailing the failure, obtained from the controller's response.
         """
         if enable:
-            responses = self.controller.sync_submit([
-                lambda id: self.driver.i3cSetFeature(id, I3cSetFeatureSelector.REGULAR_IBI, target_address)
-            ])
+            seq = [ lambda id: self.driver.i3cSetFeature(id, I3cSetFeatureSelector.REGULAR_IBI, target_address) ]
         else:
-            responses = self.controller.sync_submit([
-                lambda id: self.driver.i3cClearFeature(id, I3cClearFeatureSelector.REGULAR_IBI, target_address)
-            ])
+            seq = [ lambda id: self.driver.i3cClearFeature(id, I3cClearFeatureSelector.REGULAR_IBI, target_address) ]
+
+        try:
+            responses = self.controller.sync_submit(seq)
+        except Exception as e:
+            raise BackendError(original_exception=e) from e
 
         status = responses[0]["result"]
         if status == "I3C_SET_FEATURE_SUCCESS" or status == "I3C_CLEAR_FEATURE_SUCCESS":
@@ -257,9 +271,12 @@ class SupernovaI3CBlockingInterface:
             - The second element is either the string "OK" indicating success, or an error message
                 detailing the failure, obtained from the controller's response.
         """
-        responses = self.controller.sync_submit([
-            lambda id: self.driver.i3cChangeDynamicAddress(id, current_address, new_address)
-        ])
+        try:
+            responses = self.controller.sync_submit([
+                lambda id: self.driver.i3cChangeDynamicAddress(id, current_address, new_address)
+            ])
+        except Exception as e:
+            raise BackendError(original_exception=e) from e
 
         status = responses[0]["errors"][0]
         if status == "NO_TRANSFER_ERROR":
@@ -327,7 +344,7 @@ class SupernovaI3CBlockingInterface:
                 )
             ])
         except Exception as e:
-            raise e
+            raise BackendError(original_exception=e) from e
 
         return self._process_response("write", responses)
 
@@ -352,28 +369,39 @@ class SupernovaI3CBlockingInterface:
             - The second element is either a dictionary containing the read data and its length, indicating
                 success, or an error message detailing the failure.
         """
-        responses = self.controller.sync_submit([
-            lambda id: self.driver.i3cRead(
-                id,
-                target_address,
-                mode,
-                self.push_pull_clock_freq_mhz,
-                self.push_pull_clock_freq_mhz,
-                subaddress,
-                length,
-            )
-        ])
+        if self.bus_voltage is None:
+            raise BusNotInitializedError()
+
+        try:
+            responses = self.controller.sync_submit([
+                lambda id: self.driver.i3cRead(
+                    id,
+                    target_address,
+                    mode,
+                    self.push_pull_clock_freq_mhz,
+                    self.push_pull_clock_freq_mhz,
+                    subaddress,
+                    length,
+                )
+            ])
+        except Exception as e:
+            raise BackendError(original_exception=e) from e
+
         return self._process_response("read", responses)
 
     def ccc_getbcr(self, target_address):
-        responses = self.controller.sync_submit([
-            lambda id: self.driver.i3cGETBCR(
-                id,
-                target_address,
-                self.push_pull_clock_freq_mhz,
-                self.push_pull_clock_freq_mhz,
-            )
-        ])
+        try:
+            responses = self.controller.sync_submit([
+                lambda id: self.driver.i3cGETBCR(
+                    id,
+                    target_address,
+                    self.push_pull_clock_freq_mhz,
+                    self.push_pull_clock_freq_mhz,
+                )
+            ])
+        except Exception as e:
+            raise BackendError(original_exception=e) from e
+
         return self._process_response("ccc_getbcr", responses)
 
     def ccc_getdcr(self, target_address):
@@ -393,14 +421,17 @@ class SupernovaI3CBlockingInterface:
             - The second element is either a dictionary containing the DCR data and its length, indicating
                 success, or an error message detailing the failure.
         """
-        responses = self.controller.sync_submit([
-            lambda id: self.driver.i3cGETDCR(
-                id,
-                target_address,
-                self.push_pull_clock_freq_mhz,
-                self.push_pull_clock_freq_mhz,
-            )
-        ])
+        try:
+            responses = self.controller.sync_submit([
+                lambda id: self.driver.i3cGETDCR(
+                    id,
+                    target_address,
+                    self.push_pull_clock_freq_mhz,
+                    self.push_pull_clock_freq_mhz,
+                )
+            ])
+        except Exception as e:
+            raise BackendError(original_exception=e) from e
 
         return self._process_response("ccc_GETDCR", responses)
 
@@ -421,14 +452,17 @@ class SupernovaI3CBlockingInterface:
             - The second element is either a dictionary containing the PID data and its length, indicating
                 success, or an error message detailing the failure.
         """
-        responses = self.controller.sync_submit([
-            lambda id: self.driver.i3cGETPID(
-                id,
-                target_address,
-                self.push_pull_clock_freq_mhz,
-                self.push_pull_clock_freq_mhz,
-            )
-        ])
+        try:
+            responses = self.controller.sync_submit([
+                lambda id: self.driver.i3cGETPID(
+                    id,
+                    target_address,
+                    self.push_pull_clock_freq_mhz,
+                    self.push_pull_clock_freq_mhz,
+                )
+            ])
+        except Exception as e:
+            raise BackendError(original_exception=e) from e
 
         return self._process_response("ccc_getpid", responses)
 
@@ -449,14 +483,17 @@ class SupernovaI3CBlockingInterface:
             - The second element is either a dictionary containing the ACCCR data and its length, indicating
                 success, or an error message detailing the failure.
         """
-        responses = self.controller.sync_submit([
-            lambda id: self.driver.i3cGETACCCR(
-                id,
-                target_address,
-                self.push_pull_clock_freq_mhz,
-                self.push_pull_clock_freq_mhz,
-            )
-        ])
+        try:
+            responses = self.controller.sync_submit([
+                lambda id: self.driver.i3cGETACCCR(
+                    id,
+                    target_address,
+                    self.push_pull_clock_freq_mhz,
+                    self.push_pull_clock_freq_mhz,
+                )
+            ])
+        except Exception as e:
+            raise BackendError(original_exception=e) from e
 
         return self._process_response("ccc_GETACCCR", responses)
 
@@ -477,14 +514,17 @@ class SupernovaI3CBlockingInterface:
             - The second element is either a dictionary containing the Max Data Speed information and its length, indicating
                 success, or an error message detailing the failure.
         """
-        responses = self.controller.sync_submit([
-            lambda id: self.driver.i3cGETMXDS(
-                id,
-                target_address,
-                self.push_pull_clock_freq_mhz,
-                self.push_pull_clock_freq_mhz,
-            )
-        ])
+        try:
+            responses = self.controller.sync_submit([
+                lambda id: self.driver.i3cGETMXDS(
+                    id,
+                    target_address,
+                    self.push_pull_clock_freq_mhz,
+                    self.push_pull_clock_freq_mhz,
+                )
+            ])
+        except Exception as e:
+            raise BackendError(original_exception=e) from e
 
         return self._process_response("ccc_GETMXDS", responses)
 
@@ -505,14 +545,17 @@ class SupernovaI3CBlockingInterface:
             - The second element is either a dictionary containing the Max Read Length information and its length, indicating
                 success, or an error message detailing the failure.
         """
-        responses = self.controller.sync_submit([
-            lambda id: self.driver.i3cGETMRL(
-                id,
-                target_address,
-                self.push_pull_clock_freq_mhz,
-                self.push_pull_clock_freq_mhz,
-            )
-        ])
+        try:
+            responses = self.controller.sync_submit([
+                lambda id: self.driver.i3cGETMRL(
+                    id,
+                    target_address,
+                    self.push_pull_clock_freq_mhz,
+                    self.push_pull_clock_freq_mhz,
+                )
+            ])
+        except Exception as e:
+            raise BackendError(original_exception=e) from e
 
         return self._process_response("ccc_GETMRL", responses)
 
@@ -533,14 +576,17 @@ class SupernovaI3CBlockingInterface:
             - The second element is either a dictionary containing the Maximum Write Length information and its length, indicating
                 success, or an error message detailing the failure.
         """
-        responses = self.controller.sync_submit([
-            lambda id: self.driver.i3cGETMWL(
-                id,
-                target_address,
-                self.push_pull_clock_freq_mhz,
-                self.push_pull_clock_freq_mhz,
-            )
-        ])
+        try:
+            responses = self.controller.sync_submit([
+                lambda id: self.driver.i3cGETMWL(
+                    id,
+                    target_address,
+                    self.push_pull_clock_freq_mhz,
+                    self.push_pull_clock_freq_mhz,
+                )
+            ])
+        except Exception as e:
+            raise BackendError(original_exception=e) from e
 
         return self._process_response("ccc_GETMWL", responses)
 
@@ -561,14 +607,17 @@ class SupernovaI3CBlockingInterface:
             - The second element is either a dictionary containing the Extra Timing Information and its length, indicating
                 success, or an error message detailing the failure.
         """
-        responses = self.controller.sync_submit([
-            lambda id: self.driver.i3cGETXTIME(
-                id,
-                target_address,
-                self.push_pull_clock_freq_mhz,
-                self.push_pull_clock_freq_mhz,
-            )
-        ])
+        try:
+            responses = self.controller.sync_submit([
+                lambda id: self.driver.i3cGETXTIME(
+                    id,
+                    target_address,
+                    self.push_pull_clock_freq_mhz,
+                    self.push_pull_clock_freq_mhz,
+                )
+            ])
+        except Exception as e:
+            raise BackendError(original_exception=e) from e
 
         return self._process_response("ccc_GETXTIME", responses)
 
@@ -589,14 +638,17 @@ class SupernovaI3CBlockingInterface:
             - The second element is either a dictionary containing the Capabilities information and its length, indicating
                 success, or an error message detailing the failure.
         """
-        responses = self.controller.sync_submit([
-            lambda id: self.driver.i3cGETCAPS(
-                id,
-                target_address,
-                self.push_pull_clock_freq_mhz,
-                self.push_pull_clock_freq_mhz,
-            )
-        ])
+        try:
+            responses = self.controller.sync_submit([
+                lambda id: self.driver.i3cGETCAPS(
+                    id,
+                    target_address,
+                    self.push_pull_clock_freq_mhz,
+                    self.push_pull_clock_freq_mhz,
+                )
+            ])
+        except Exception as e:
+            raise BackendError(original_exception=e) from e
 
         return self._process_response("ccc_GETCAPS", responses)
 
@@ -617,14 +669,17 @@ class SupernovaI3CBlockingInterface:
             - The second element is either an error message detailing the failure or a success message.
               Since RSTDAA does not typically return data, only success or failure is indicated.
         """
-        responses = self.controller.sync_submit([
-            lambda id: self.driver.i3cRSTDAA(
-                id,
-                target_address,
-                self.push_pull_clock_freq_mhz,
-                self.push_pull_clock_freq_mhz,
-            )
-        ])
+        try:
+            responses = self.controller.sync_submit([
+                lambda id: self.driver.i3cRSTDAA(
+                    id,
+                    target_address,
+                    self.push_pull_clock_freq_mhz,
+                    self.push_pull_clock_freq_mhz,
+                )
+            ])
+        except Exception as e:
+            raise BackendError(original_exception=e) from e
 
         return self._process_response("ccc_RSTDAA", responses)
 
@@ -642,13 +697,16 @@ class SupernovaI3CBlockingInterface:
             - The second element is either an error message detailing the failure or a success message.
               Since this is a broadcast command, no specific data is expected in return.
         """
-        responses = self.controller.sync_submit([
-            lambda id: self.driver.i3cBroadcastENEC(
-                id,
-                self.push_pull_clock_freq_mhz,
-                self.push_pull_clock_freq_mhz,
-            )
-        ])
+        try:
+            responses = self.controller.sync_submit([
+                lambda id: self.driver.i3cBroadcastENEC(
+                    id,
+                    self.push_pull_clock_freq_mhz,
+                    self.push_pull_clock_freq_mhz,
+                )
+            ])
+        except Exception as e:
+            raise BackendError(original_exception=e) from e
 
         # Note: The command name 'ccc_broadcast_ENEC' should be handled appropriately in _process_response
         return self._process_response("ccc_broadcast_ENEC", responses)
@@ -667,13 +725,16 @@ class SupernovaI3CBlockingInterface:
             - The second element is either an error message detailing the failure or a success message.
               Since this is a broadcast command, no specific data is expected in return.
         """
-        responses = self.controller.sync_submit([
-            lambda id: self.driver.i3cBroadcastDISEC(
-                id,
-                self.push_pull_clock_freq_mhz,
-                self.push_pull_clock_freq_mhz,
-            )
-        ])
+        try:
+            responses = self.controller.sync_submit([
+                lambda id: self.driver.i3cBroadcastDISEC(
+                    id,
+                    self.push_pull_clock_freq_mhz,
+                    self.push_pull_clock_freq_mhz,
+                )
+            ])
+        except Exception as e:
+            raise BackendError(original_exception=e) from e
 
         # Note: The command name 'ccc_broadcast_DISEC' should be handled appropriately in _process_response
         return self._process_response("ccc_broadcast_DISEC", responses)
@@ -695,14 +756,17 @@ class SupernovaI3CBlockingInterface:
             - The second element is either an error message detailing the failure or a success message.
               Specific data is usually not returned in this operation, only the success or failure status.
         """
-        responses = self.controller.sync_submit([
-            lambda id: self.driver.i3cDirectENEC(
-                id,
-                target_address,
-                self.push_pull_clock_freq_mhz,
-                self.push_pull_clock_freq_mhz,
-            )
-        ])
+        try:
+            responses = self.controller.sync_submit([
+                lambda id: self.driver.i3cDirectENEC(
+                    id,
+                    target_address,
+                    self.push_pull_clock_freq_mhz,
+                    self.push_pull_clock_freq_mhz,
+                )
+            ])
+        except Exception as e:
+            raise BackendError(original_exception=e) from e
 
         return self._process_response("ccc_unicast_ENEC", responses)
 
@@ -723,14 +787,17 @@ class SupernovaI3CBlockingInterface:
             - The second element is either an error message detailing the failure or a success message.
               Specific data is usually not returned in this operation, only the success or failure status.
         """
-        responses = self.controller.sync_submit([
-            lambda id: self.driver.i3cDirectDISEC(
-                id,
-                target_address,
-                self.push_pull_clock_freq_mhz,
-                self.push_pull_clock_freq_mhz,
-            )
-        ])
+        try:
+            responses = self.controller.sync_submit([
+                lambda id: self.driver.i3cDirectDISEC(
+                    id,
+                    target_address,
+                    self.push_pull_clock_freq_mhz,
+                    self.push_pull_clock_freq_mhz,
+                )
+            ])
+        except Exception as e:
+            raise BackendError(original_exception=e) from e
 
         return self._process_response("ccc_unicast_DISEC", responses)
 
@@ -752,15 +819,18 @@ class SupernovaI3CBlockingInterface:
             - The second element is either an error message detailing the failure or a success message.
               Specific data is usually not returned in this operation, only the success or failure status.
         """
-        responses = self.controller.sync_submit([
-            lambda id: self.driver.i3cSETDASA(
-                id,
-                static_address,
-                dynamic_address,
-                self.push_pull_clock_freq_mhz,
-                self.push_pull_clock_freq_mhz,
-            )
-        ])
+        try:
+            responses = self.controller.sync_submit([
+                lambda id: self.driver.i3cSETDASA(
+                    id,
+                    static_address,
+                    dynamic_address,
+                    self.push_pull_clock_freq_mhz,
+                    self.push_pull_clock_freq_mhz,
+                )
+            ])
+        except Exception as e:
+            raise BackendError(original_exception=e) from e
 
         return self._process_response("ccc_SETDASA", responses)
 
@@ -782,15 +852,18 @@ class SupernovaI3CBlockingInterface:
             - The second element is either an error message detailing the failure or a success message.
               Specific data is usually not returned in this operation, only the success or failure status.
         """
-        responses = self.controller.sync_submit([
-            lambda id: self.driver.i3cSETNEWDA(
-                id,
-                current_address,
-                new_address,
-                self.push_pull_clock_freq_mhz,
-                self.push_pull_clock_freq_mhz,
-            )
-        ])
+        try:
+            responses = self.controller.sync_submit([
+                lambda id: self.driver.i3cSETNEWDA(
+                    id,
+                    current_address,
+                    new_address,
+                    self.push_pull_clock_freq_mhz,
+                    self.push_pull_clock_freq_mhz,
+                )
+            ])
+        except Exception as e:
+            raise BackendError(original_exception=e) from e
 
         return self._process_response("ccc_SETNEWDA", responses)
 
@@ -811,14 +884,17 @@ class SupernovaI3CBlockingInterface:
             - The second element is either an error message detailing the failure or a success message.
               Specific data is usually not returned in this operation, only the success or failure status.
         """
-        responses = self.controller.sync_submit([
-            lambda id: self.driver.i3cDirectSETGRPA(
-                id,
-                target_address,
-                self.push_pull_clock_freq_mhz,
-                self.push_pull_clock_freq_mhz,
-            )
-        ])
+        try:
+            responses = self.controller.sync_submit([
+                lambda id: self.driver.i3cDirectSETGRPA(
+                    id,
+                    target_address,
+                    self.push_pull_clock_freq_mhz,
+                    self.push_pull_clock_freq_mhz,
+                )
+            ])
+        except Exception as e:
+            raise BackendError(original_exception=e) from e
 
         return self._process_response("ccc_unicast_SETGRPA", responses)
 
@@ -839,14 +915,17 @@ class SupernovaI3CBlockingInterface:
             - The second element is either an error message detailing the failure or a success message.
               Specific data is usually not returned in this operation, only the success or failure status.
         """
-        responses = self.controller.sync_submit([
-            lambda id: self.driver.i3cDirectRSTGRPA(
-                id,
-                target_address,
-                self.push_pull_clock_freq_mhz,
-                self.push_pull_clock_freq_mhz,
-            )
-        ])
+        try:
+            responses = self.controller.sync_submit([
+                lambda id: self.driver.i3cDirectRSTGRPA(
+                    id,
+                    target_address,
+                    self.push_pull_clock_freq_mhz,
+                    self.push_pull_clock_freq_mhz,
+                )
+            ])
+        except Exception as e:
+            raise BackendError(original_exception=e) from e
 
         return self._process_response("ccc_unicast_RSTGRPA", responses)
 
@@ -868,15 +947,18 @@ class SupernovaI3CBlockingInterface:
             - The second element is either an error message detailing the failure or a success message.
               Specific data is usually not returned in this operation, only the success or failure status.
         """
-        responses = self.controller.sync_submit([
-            lambda id: self.driver.i3cDirectSETMRL(
-                id,
-                target_address,
-                max_read_length,
-                self.push_pull_clock_freq_mhz,
-                self.push_pull_clock_freq_mhz,
-            )
-        ])
+        try:
+            responses = self.controller.sync_submit([
+                lambda id: self.driver.i3cDirectSETMRL(
+                    id,
+                    target_address,
+                    max_read_length,
+                    self.push_pull_clock_freq_mhz,
+                    self.push_pull_clock_freq_mhz,
+                )
+            ])
+        except Exception as e:
+            raise BackendError(original_exception=e) from e
 
         return self._process_response("ccc_unicast_SETMRL", responses)
 
@@ -898,15 +980,18 @@ class SupernovaI3CBlockingInterface:
             - The second element is either an error message detailing the failure or a success message.
               Specific data is usually not returned in this operation, only the success or failure status.
         """
-        responses = self.controller.sync_submit([
-            lambda id: self.driver.i3cDirectSETMWL(
-                id,
-                target_address,
-                max_write_length,
-                self.push_pull_clock_freq_mhz,
-                self.push_pull_clock_freq_mhz,
-            )
-        ])
+        try:
+            responses = self.controller.sync_submit([
+                lambda id: self.driver.i3cDirectSETMWL(
+                    id,
+                    target_address,
+                    max_write_length,
+                    self.push_pull_clock_freq_mhz,
+                    self.push_pull_clock_freq_mhz,
+                )
+            ])
+        except Exception as e:
+            raise BackendError(original_exception=e) from e
 
         return self._process_response("ccc_unicast_SETMWL", responses)
 
@@ -927,14 +1012,17 @@ class SupernovaI3CBlockingInterface:
             - The second element is either an error message detailing the failure or a success message.
               Specific data is usually not returned in this operation, only the success or failure status.
         """
-        responses = self.controller.sync_submit([
-            lambda id: self.driver.i3cBroadcastSETMWL(
-                id,
-                max_write_length,
-                self.push_pull_clock_freq_mhz,
-                self.push_pull_clock_freq_mhz,
-            )
-        ])
+        try:
+            responses = self.controller.sync_submit([
+                lambda id: self.driver.i3cBroadcastSETMWL(
+                    id,
+                    max_write_length,
+                    self.push_pull_clock_freq_mhz,
+                    self.push_pull_clock_freq_mhz,
+                )
+            ])
+        except Exception as e:
+            raise BackendError(original_exception=e) from e
 
         return self._process_response("ccc_broadcast_SETMWL", responses)
 
@@ -955,14 +1043,17 @@ class SupernovaI3CBlockingInterface:
             - The second element is either an error message detailing the failure or a success message.
               Specific data is usually not returned in this operation, only the success or failure status.
         """
-        responses = self.controller.sync_submit([
-            lambda id: self.driver.i3cBroadcastSETMWL(
-                id,
-                max_read_length,
-                self.push_pull_clock_freq_mhz,
-                self.push_pull_clock_freq_mhz,
-            )
-        ])
+        try:
+            responses = self.controller.sync_submit([
+                lambda id: self.driver.i3cBroadcastSETMWL(
+                    id,
+                    max_read_length,
+                    self.push_pull_clock_freq_mhz,
+                    self.push_pull_clock_freq_mhz,
+                )
+            ])
+        except Exception as e:
+            raise BackendError(original_exception=e) from e
 
         return self._process_response("ccc_broadcast_SETMRL", responses)
 
@@ -980,13 +1071,16 @@ class SupernovaI3CBlockingInterface:
             - The second element is either an error message detailing the failure or a success message.
               Specific data is usually not returned in this operation, only the success or failure status.
         """
-        responses = self.controller.sync_submit([
-            lambda id: self.driver.i3cSETAASA(
-                id,
-                self.push_pull_clock_freq_mhz,
-                self.push_pull_clock_freq_mhz,
-            )
-        ])
+        try:
+            responses = self.controller.sync_submit([
+                lambda id: self.driver.i3cSETAASA(
+                    id,
+                    self.push_pull_clock_freq_mhz,
+                    self.push_pull_clock_freq_mhz,
+                )
+            ])
+        except Exception as e:
+            raise BackendError(original_exception=e) from e
 
         return self._process_response("ccc_SETAASA", responses)
 
@@ -1004,13 +1098,16 @@ class SupernovaI3CBlockingInterface:
             - The second element is either an error message detailing the failure or a success message.
               Specific data is usually not returned in this operation, only the success or failure status.
         """
-        responses = self.controller.sync_submit([
-            lambda id: self.driver.i3cBroadcastENDXFED(
-                id,
-                self.push_pull_clock_freq_mhz,
-                self.push_pull_clock_freq_mhz,
-            )
-        ])
+        try:
+            responses = self.controller.sync_submit([
+                lambda id: self.driver.i3cBroadcastENDXFED(
+                    id,
+                    self.push_pull_clock_freq_mhz,
+                    self.push_pull_clock_freq_mhz,
+                )
+            ])
+        except Exception as e:
+            raise BackendError(original_exception=e) from e
 
         return self._process_response("ccc_broadcast_ENDXFED", responses)
 
@@ -1031,14 +1128,17 @@ class SupernovaI3CBlockingInterface:
             - The second element is either an error message detailing the failure or a success message.
               Specific data is usually not returned in this operation, only the success or failure status.
         """
-        responses = self.controller.sync_submit([
-            lambda id: self.driver.i3cDirectENDXFER(
-                id,
-                target_address,
-                self.push_pull_clock_freq_mhz,
-                self.push_pull_clock_freq_mhz,
-            )
-        ])
+        try:
+            responses = self.controller.sync_submit([
+                lambda id: self.driver.i3cDirectENDXFER(
+                    id,
+                    target_address,
+                    self.push_pull_clock_freq_mhz,
+                    self.push_pull_clock_freq_mhz,
+                )
+            ])
+        except Exception as e:
+            raise BackendError(original_exception=e) from e
 
         return self._process_response("ccc_unicast_ENDXFER", responses)
 
@@ -1059,14 +1159,17 @@ class SupernovaI3CBlockingInterface:
             - The second element is either an error message detailing the failure or a success message.
               Specific data is usually not returned in this operation, only the success or failure status.
         """
-        responses = self.controller.sync_submit([
-            lambda id: self.driver.i3cBroadcastSETXTIME(
-                id,
-                timing_parameter,
-                self.push_pull_clock_freq_mhz,
-                self.push_pull_clock_freq_mhz,
-            )
-        ])
+        try:
+            responses = self.controller.sync_submit([
+                lambda id: self.driver.i3cBroadcastSETXTIME(
+                    id,
+                    timing_parameter,
+                    self.push_pull_clock_freq_mhz,
+                    self.push_pull_clock_freq_mhz,
+                )
+            ])
+        except Exception as e:
+            raise BackendError(original_exception=e) from e
 
         return self._process_response("ccc_broadcast_SETXTIME", responses)
 
@@ -1092,15 +1195,18 @@ class SupernovaI3CBlockingInterface:
             - The second element is either an error message detailing the failure or a success message.
               Specific data is usually not returned in this operation, only the success or failure status.
         """
-        responses = self.controller.sync_submit([
-            lambda id: self.driver.i3cBroadcastSETBUSCON(
-                id,
-                self.push_pull_clock_freq_mhz,
-                self.push_pull_clock_freq_mhz,
-                context,
-                data
-            )
-        ])
+        try:
+            responses = self.controller.sync_submit([
+                lambda id: self.driver.i3cBroadcastSETBUSCON(
+                    id,
+                    self.push_pull_clock_freq_mhz,
+                    self.push_pull_clock_freq_mhz,
+                    context,
+                    data
+                )
+            ])
+        except Exception as e:
+            raise BackendError(original_exception=e) from e
 
         return self._process_response("ccc_broadcast_SETBUSCON", responses)
 
@@ -1122,13 +1228,16 @@ class SupernovaI3CBlockingInterface:
             - The second element is either an error message detailing the failure or a success message,
               reflecting the broadcast command's attempt to set the bus to the specified idle time.
         """
-        responses = self.controller.sync_submit([
-            lambda id: self.driver.i3cBroadcastENTAS0(
-                id,
-                self.push_pull_clock_freq_mhz,
-                self.push_pull_clock_freq_mhz,
-            )
-        ])
+        try:
+            responses = self.controller.sync_submit([
+                lambda id: self.driver.i3cBroadcastENTAS0(
+                    id,
+                    self.push_pull_clock_freq_mhz,
+                    self.push_pull_clock_freq_mhz,
+                )
+            ])
+        except Exception as e:
+            raise BackendError(original_exception=e) from e
 
         return self._process_response("ccc_broadcast_ENTAS0", responses)
 
@@ -1144,13 +1253,16 @@ class SupernovaI3CBlockingInterface:
             - The second element is either an error message detailing the failure or a success message,
               reflecting the broadcast command's attempt to set the bus to the specified idle time.
         """
-        responses = self.controller.sync_submit([
-            lambda id: self.driver.i3cBroadcastENTAS1(
-                id,
-                self.push_pull_clock_freq_mhz,
-                self.push_pull_clock_freq_mhz,
-            )
-        ])
+        try:
+            responses = self.controller.sync_submit([
+                lambda id: self.driver.i3cBroadcastENTAS1(
+                    id,
+                    self.push_pull_clock_freq_mhz,
+                    self.push_pull_clock_freq_mhz,
+                )
+            ])
+        except Exception as e:
+            raise BackendError(original_exception=e) from e
 
         return self._process_response("ccc_broadcast_ENTAS1", responses)
 
@@ -1166,13 +1278,16 @@ class SupernovaI3CBlockingInterface:
             - The second element is either an error message detailing the failure or a success message,
               reflecting the broadcast command's attempt to set the bus to the specified idle time.
         """
-        responses = self.controller.sync_submit([
-            lambda id: self.driver.i3cBroadcastENTAS2(
-                id,
-                self.push_pull_clock_freq_mhz,
-                self.push_pull_clock_freq_mhz,
-            )
-        ])
+        try:
+            responses = self.controller.sync_submit([
+                lambda id: self.driver.i3cBroadcastENTAS2(
+                    id,
+                    self.push_pull_clock_freq_mhz,
+                    self.push_pull_clock_freq_mhz,
+                )
+            ])
+        except Exception as e:
+            raise BackendError(original_exception=e) from e
 
         return self._process_response("ccc_broadcast_ENTAS2", responses)
 
@@ -1188,12 +1303,15 @@ class SupernovaI3CBlockingInterface:
             - The second element is either an error message detailing the failure or a success message,
               reflecting the broadcast command's attempt to set the bus to the specified idle time.
         """
-        responses = self.controller.sync_submit([
-            lambda id: self.driver.i3cBroadcastENTAS3(
-                id,
-                self.push_pull_clock_freq_mhz,
-                self.push_pull_clock_freq_mhz,
-            )
-        ])
+        try:
+            responses = self.controller.sync_submit([
+                lambda id: self.driver.i3cBroadcastENTAS3(
+                    id,
+                    self.push_pull_clock_freq_mhz,
+                    self.push_pull_clock_freq_mhz,
+                )
+            ])
+        except Exception as e:
+            raise BackendError(original_exception=e) from e
 
         return self._process_response("ccc_broadcast_ENTAS3", responses)
