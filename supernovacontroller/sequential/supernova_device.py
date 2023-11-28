@@ -23,10 +23,16 @@ class SupernovaDevice:
       self.controller = TransferController(id_gen(start_id))
       self.response_queue = queue.SimpleQueue()
       self.notification_queue = queue.SimpleQueue()
+      self.notification_handlers = {}
 
       self.process_response_thread = threading.Thread(target=self._pull_sdk_response, daemon=True)
+      self.process_notifications_thread = threading.Thread(target=self._pull_sdk_notification, daemon=True)
+
       self.running = True
+
       self.process_response_thread.start()
+      self.process_notifications_thread.start()
+
       self.driver = Supernova()
 
       self.interfaces = {
@@ -76,6 +82,10 @@ class SupernovaDevice:
 
         return _process_device_info(responses)
 
+    def on_notification(self, name, filter_func, handler_func):
+        if name not in self.notification_handlers:
+            self.notification_handlers[name] = (filter_func, handler_func)
+
     def _push_sdk_response(self, supernova_response, system_message):
         self.response_queue.put((supernova_response, system_message))
 
@@ -84,6 +94,14 @@ class SupernovaDevice:
             try:
                 supernova_response, system_message = self.response_queue.get(timeout=1)
                 self._process_sdk_response(supernova_response, system_message)
+            except queue.Empty:
+                continue
+
+    def _pull_sdk_notification(self):
+        while self.running:
+            try:
+                supernova_response, system_message = self.notification_queue.get(timeout=1)
+                self._process_sdk_notification(supernova_response, system_message)
             except queue.Empty:
                 continue
 
@@ -97,11 +115,17 @@ class SupernovaDevice:
         if is_handled:
             return
 
-        if supernova_response["name"] == "I3C TRANSFER":
+        if supernova_response["name"] == "I3C IBI NOTIFICATION":
             self.notification_queue.put((supernova_response, system_message))
 
         # Process non-sequenced responses
         # ...
+
+    def _process_sdk_notification(self, supernova_response, system_message):
+        for name, (filter_func, handler_func) in self.notification_handlers.items():
+            if filter_func(name, supernova_response):
+                handler_func(name, supernova_response)
+                break
 
     def create_interface(self, interface_name):
         if not self.mounted:
