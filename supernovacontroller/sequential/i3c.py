@@ -5,6 +5,8 @@ from BinhoSupernova.commands.definitions import I3cCommandType
 from BinhoSupernova.commands.definitions import TransferDirection
 from BinhoSupernova.commands.definitions import I3cSetFeatureSelector
 from BinhoSupernova.commands.definitions import I3cClearFeatureSelector
+from BinhoSupernova.commands.definitions import I3cPushPullTransferRate
+from BinhoSupernova.commands.definitions import I3cOpenDrainTransferRate
 from supernovacontroller.errors import BusVoltageError
 from supernovacontroller.errors import BusNotInitializedError
 from supernovacontroller.errors import BackendError
@@ -14,6 +16,9 @@ class SupernovaI3CBlockingInterface:
     # TODO: Replicate definitions (TransferMode, I3cCommandType, TransferDirection)
 
     TransferMode = TransferMode
+    I3cPushPullTransferRate = I3cPushPullTransferRate
+    I3cOpenDrainTransferRate = I3cOpenDrainTransferRate
+
     BROADCAST_ADDRESS = 0x7E
 
     def __init__(self, driver: Supernova, controller: TransferController):
@@ -24,28 +29,28 @@ class SupernovaI3CBlockingInterface:
         self.open_drain_clock_freq_mhz = None
         self.bus_voltage = None
 
-    def set_parameters(self, push_pull_clock_freq_mhz: float, open_drain_clock_freq_mhz: float):
+    def set_parameters(self, push_pull_clock_freq_mhz: I3cPushPullTransferRate, open_drain_clock_freq_mhz: I3cOpenDrainTransferRate):
         """
-        Sets the clock frequencies for push-pull and open-drain configurations.
+        Sets the clock frequencies for push-pull and open-drain configurations using enumerated values.
 
-        This method assigns the provided clock frequencies to the corresponding attributes of the instance.
-        These frequencies are used for controlling the operation modes of the device.
+        This method assigns the provided clock frequencies, selected from predefined enums, to the corresponding attributes of the instance.
+        These frequencies are utilized for controlling the operation modes of the device.
 
         Args:
-        push_pull_clock_freq_mhz (float): The clock frequency in MHz for the push-pull configuration.
-                                        This frequency should be specified as a floating-point number
-                                        indicating the desired frequency in megahertz.
-        open_drain_clock_freq_mhz (float): The clock frequency in MHz for the open-drain configuration.
-                                        Similar to the push-pull frequency, this should be a floating-point
-                                        number indicating the frequency in megahertz.
+        push_pull_clock_freq_mhz (I3cPushPullTransferRate): The clock frequency for the push-pull configuration.
+                                This is an enumerated value representing specific frequencies defined in the I3C specification.
+        open_drain_clock_freq_mhz (I3cOpenDrainTransferRate): The clock frequency for the open-drain configuration.
+                                This is an enumerated value representing specific frequencies defined in the I3C specification.
 
         Note:
-        - This method does not validate the input frequencies. It is the responsibility of the caller to ensure
-        that the provided frequencies are within the operational limits and specifications of the device.
+        - This method expects values from the I3cPushPullTransferRate and I3cOpenDrainTransferRate enums.
+        Passing any other types of values will result in an error.
         - The method directly updates the instance attributes without any further processing or side effects.
         """
         self.push_pull_clock_freq_mhz = push_pull_clock_freq_mhz
         self.open_drain_clock_freq_mhz = open_drain_clock_freq_mhz
+
+        return (True, (self.push_pull_clock_freq_mhz, self.open_drain_clock_freq_mhz))
 
     def set_bus_voltage(self, voltage: int):
         """

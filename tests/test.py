@@ -86,6 +86,20 @@ class TestSupernovaController(unittest.TestCase):
 
         self.device.close()
 
+    def test_set_i3c_frequencies(self):
+        self.device.open()
+
+        i3c = self.device.create_interface("i3c.controller")
+
+        (success, result) = i3c.set_parameters(
+            i3c.I3cPushPullTransferRate.PUSH_PULL_3_75_MHZ,
+            i3c.I3cOpenDrainTransferRate.OPEN_DRAIN_100_KHZ
+        )
+
+        self.assertEqual((success, result), (True, (i3c.I3cPushPullTransferRate.PUSH_PULL_3_75_MHZ, i3c.I3cOpenDrainTransferRate.OPEN_DRAIN_100_KHZ)))
+
+        self.device.close()
+
     def test_set_i3c_bus_voltage_attribute_error(self):
         self.device.open()
 
