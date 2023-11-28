@@ -25,8 +25,8 @@ class SupernovaI3CBlockingInterface:
         self.driver = driver
         self.controller = controller
 
-        self.push_pull_clock_freq_mhz = None
-        self.open_drain_clock_freq_mhz = None
+        self.push_pull_clock_freq_mhz = I3cPushPullTransferRate.PUSH_PULL_3_75_MHZ
+        self.open_drain_clock_freq_mhz = I3cOpenDrainTransferRate.OPEN_DRAIN_100_KHZ
         self.bus_voltage = None
 
     def set_parameters(self, push_pull_clock_freq_mhz: I3cPushPullTransferRate, open_drain_clock_freq_mhz: I3cOpenDrainTransferRate):
@@ -50,6 +50,19 @@ class SupernovaI3CBlockingInterface:
         self.push_pull_clock_freq_mhz = push_pull_clock_freq_mhz
         self.open_drain_clock_freq_mhz = open_drain_clock_freq_mhz
 
+        return (True, (self.push_pull_clock_freq_mhz, self.open_drain_clock_freq_mhz))
+
+    def get_parameters(self):
+        """
+        Retrieves the current clock frequencies for push-pull and open-drain configurations.
+
+        This method returns the values of the push-pull and open-drain clock frequencies that are currently set for the instance.
+
+        Returns:
+            tuple: A tuple containing two elements:
+                - The first element is an I3cPushPullTransferRate enum value representing the push-pull clock frequency.
+                - The second element is an I3cOpenDrainTransferRate enum value representing the open-drain clock frequency.
+        """
         return (True, (self.push_pull_clock_freq_mhz, self.open_drain_clock_freq_mhz))
 
     def set_bus_voltage(self, voltage: int):
