@@ -1,5 +1,5 @@
 from supernovacontroller.sequential import SupernovaDevice
-import time
+from threading import Event
 
 # Function to find the first item with the matching PID
 def find_matching_item(data, target_pid):
@@ -7,6 +7,9 @@ def find_matching_item(data, target_pid):
         if item.get('pid') == target_pid:
             return item
     return None
+
+counter = 0
+last_ibi = Event()
 
 def main():
     device = SupernovaDevice()
@@ -36,13 +39,24 @@ def main():
 
     target_address = icm_device["dynamic_address"]
 
+    # ---
+    # IBI configuration
+    # ---
+
     def is_icm_ibi(name, message):
         source_address = message["header"]["address"]
         return name == "icm_ibi" and source_address == target_address
 
     def handle_icm_ibi(name, message):
+        global counter
+        global last_ibi
+
         payload = message["payload"]
         print(payload)
+
+        counter += 1
+        if counter == 10:
+            last_ibi.set()
 
     device.on_notification(name="icm_ibi", filter_func=is_icm_ibi, handler_func=handle_icm_ibi)
 
@@ -67,7 +81,7 @@ def main():
 
     i3c.toggle_ibi(target_address, True)
 
-    time.sleep(10)
+    last_ibi.wait()
 
     device.close()
 
