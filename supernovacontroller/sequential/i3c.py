@@ -101,14 +101,23 @@ class SupernovaI3CBlockingInterface:
 
         return result
 
-    def init_bus(self, voltage: int = None):
+    def init_bus(self, voltage: int=None, targets=None):
         """
-        Initialize the bus with a given voltage (in mV).
+        Initialize the bus with a given voltage (in mV) and target devices.
 
         Args:
         voltage (int, optional): The voltage to initialize the bus with.
                                 Defaults to None, in which case the existing
                                 bus voltage is used.
+        targets (dict, optional): A dictionary where each key is an integer device identifier, and each value
+                                is a dictionary containing device properties. The device properties include:
+                                - 'staticAddress' (int): The static address of the device.
+                                - 'dynamicAddress' (int): The dynamic address of the device.
+                                - 'bcr' (int): Bus Characteristic Register value.
+                                - 'dcr' (int): Device Characteristic Register value.
+                                - 'pid' (list of int): An array of bytes representing the Product ID.
+                                - 'maxIbiPayloadLength' (int): Maximum length of the IBI payload.
+                                - 'i3cFeatures' (various): I3C features supported by the device.
 
         Raises:
         BusVoltageError: If 'voltage' is not provided or bus voltage was not set.
@@ -122,6 +131,7 @@ class SupernovaI3CBlockingInterface:
         Note:
         - The method assumes that the input voltage value is valid and does not perform any validation.
         Users of this method should ensure that the provided voltage value is within acceptable limits.
+        - The 'targets' dictionary structure should match the provided format for proper operation.
         """
 
         if voltage is None:
@@ -135,7 +145,7 @@ class SupernovaI3CBlockingInterface:
 
         try:
             responses = self.controller.sync_submit([
-                lambda id: self.driver.i3cInitBus(id, None)
+                lambda id: self.driver.i3cInitBus(id, targets)
             ])
         except Exception as e:
             raise BackendError(original_exception=e) from e
