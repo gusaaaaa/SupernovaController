@@ -8,6 +8,7 @@ from transfer_controller import TransferController
 from supernovacontroller.sequential import SupernovaDevice
 from supernovacontroller.errors import DeviceOpenError
 from supernovacontroller.errors import DeviceNotMountedError
+from supernovacontroller.errors import DeviceAlreadyMountedError
 from supernovacontroller.errors import BusVoltageError
 from supernovacontroller.errors import BusNotInitializedError
 from supernovacontroller.errors import UnknownInterfaceError
@@ -44,6 +45,12 @@ class TestSupernovaController(unittest.TestCase):
         self.assertEqual(info['product_name'], "Binho Supernova", "Invalid product name")
 
         self.device.close()
+
+    def test_open_device_more_than_once(self):
+        self.device.open()
+
+        with self.assertRaises(DeviceAlreadyMountedError):
+            self.device.open()
 
     def test_create_interface_before_open_throws_error(self):
         with self.assertRaises(DeviceNotMountedError):

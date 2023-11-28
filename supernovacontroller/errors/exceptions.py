@@ -12,6 +12,13 @@ class DeviceNotMountedError(Exception):
         self.message = message
         super().__init__(self.message)
 
+class DeviceAlreadyMountedError(Exception):
+    """Exception raised when trying to open an already-mounted device."""
+
+    def __init__(self, message="Device already mounted"):
+        self.message = message
+        super().__init__(self.message)
+
 class UnknownInterfaceError(Exception):
     """Exception raised when trying to create an unknown interface."""
 

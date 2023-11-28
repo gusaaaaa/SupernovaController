@@ -3,6 +3,7 @@ from BinhoSupernova.Supernova import Supernova
 from BinhoSupernova.commands.definitions import GetUsbStringSubCommand
 from supernovacontroller.errors import DeviceOpenError
 from supernovacontroller.errors import DeviceNotMountedError
+from supernovacontroller.errors import DeviceAlreadyMountedError
 from supernovacontroller.errors import UnknownInterfaceError
 from supernovacontroller.errors import BackendError
 import queue
@@ -36,6 +37,9 @@ class SupernovaDevice:
       self.mounted = False
 
     def open(self, usb_address=None):
+        if self.mounted:
+            raise DeviceAlreadyMountedError
+
         result = self.driver.open(path=usb_address, activateLogger=False)
         if result["code"] == "OPEN_CONNECTION_FAIL":
             raise DeviceOpenError(result["message"])
@@ -117,5 +121,3 @@ class SupernovaDevice:
     def close(self):
         self.driver.close()
         self.running = False
-
-
