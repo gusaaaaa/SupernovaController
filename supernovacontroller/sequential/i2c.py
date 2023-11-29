@@ -43,22 +43,6 @@ class SupernovaI2CBlockingInterface:
 
         return result
 
-    def write_non_stop(self, address, register, data):
-        try:
-            responses = self.controller.sync_submit([
-                lambda transfer_id: self.driver.i2cWriteNonStop(transfer_id, address, register, data),
-            ])
-        except Exception as e:
-            raise BackendError(original_exception=e) from e
-
-        response_ok = responses[0]["name"] == "I2C WRITE WITHOUT STOP" and responses[0]["status"] == 0
-        if response_ok:
-            result = (True, None)
-        else:
-            result = (False, None)
-
-        return result
-
     def read(self, address, length):
         try:
             responses = self.controller.sync_submit([
@@ -67,7 +51,13 @@ class SupernovaI2CBlockingInterface:
         except Exception as e:
             raise BackendError(original_exception=e) from e
 
-        return responses
+        response_ok = responses[0]["name"] == "I2C READ" and responses[0]["status"] == 0
+        if response_ok:
+            result = (True, responses[0]["data"])
+        else:
+            result = (False, None)
+
+        return result
 
     def read_from(self, address, register, length):
         try:
