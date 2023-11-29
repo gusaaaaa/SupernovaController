@@ -74,6 +74,18 @@ class TestSupernovaController(unittest.TestCase):
 
         self.device.close()
 
+    def test_i2c_set_parameters(self):
+        self.device.open()
+
+        i2c = self.device.create_interface("i2c")
+
+        (success, result) = i2c.set_parameters(1200, 500000)
+
+        self.assertEqual(success, True)
+        self.assertEqual(result, (1200, 500000))
+
+        self.device.close()
+
     def test_set_i3c_bus_voltage_attribute(self):
         self.device.open()
 

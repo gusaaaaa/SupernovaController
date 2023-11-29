@@ -8,15 +8,21 @@ class SupernovaI2CBlockingInterface:
         self.driver = driver
         self.controller = controller
 
-    def set_parameters(self, voltage: float, rate: int = 1000000):
-        voltage_int = voltage * 1000
+    def set_parameters(self, voltage: int, rate: int = 1000000):
+        responses = None
         try:
-            result = self.controller.sync_submit([
-                lambda transfer_id: self.driver.setI2cSpiUartBusVoltage(transfer_id, voltage_int),
+            responses = self.controller.sync_submit([
+                lambda transfer_id: self.driver.setI2cSpiUartBusVoltage(transfer_id, voltage),
                 lambda transfer_id: self.driver.i2cSetParameters(transfer_id, baudrate=rate),
             ])
         except Exception as e:
             raise BackendError(original_exception=e) from e
+
+        response_ok = responses[0]["name"] == "SET I2C-SPI-UART BUS VOLTAGE" and responses[0]["result"] == 0 and responses[1]["name"] == "I2C SET PARAMETERS" and responses[1]["completed"] == 0
+        if response_ok:
+            result = (True, (voltage, rate))
+        else:
+            result = (False, "Set bus voltage or  failed")
 
         return result
 
