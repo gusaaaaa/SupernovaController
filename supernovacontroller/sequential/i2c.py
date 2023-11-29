@@ -27,12 +27,19 @@ class SupernovaI2CBlockingInterface:
         return result
 
     def write(self, address, register, data):
+        responses = None
         try:
-            result = self.controller.sync_submit([
+            responses = self.controller.sync_submit([
                 lambda transfer_id: self.driver.i2cWrite(transfer_id, address, register, data),
             ])
         except Exception as e:
             raise BackendError(original_exception=e) from e
+
+        response_ok = responses[0]["name"] == "I2C WRITE" and responses[0]["status"] == 0
+        if response_ok:
+            result = (True, None)
+        else:
+            result = (False, None)
 
         return result
 
