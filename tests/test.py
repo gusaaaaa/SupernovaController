@@ -47,6 +47,9 @@ class TestSupernovaController(unittest.TestCase):
         self.device.close()
 
     def test_open_device_more_than_once(self):
+        if not self.use_simulator:
+            self.skipTest("For simulator only")
+
         self.device.open()
 
         with self.assertRaises(DeviceAlreadyMountedError):
@@ -79,10 +82,10 @@ class TestSupernovaController(unittest.TestCase):
 
         i2c = self.device.create_interface("i2c")
 
-        (success, result) = i2c.set_parameters(1200, 500000)
+        (success, result) = i2c.set_parameters(3300, 500000)
 
         self.assertEqual(success, True)
-        self.assertEqual(result, (1200, 500000))
+        self.assertEqual(result, (3300, 500000))
 
         self.device.close()
 
@@ -90,6 +93,8 @@ class TestSupernovaController(unittest.TestCase):
         self.device.open()
 
         i2c = self.device.create_interface("i2c")
+
+        i2c.set_parameters(3300, 500000)
 
         (success, result) = i2c.write(0x50, [0x00,0x00], [0xDE, 0xAD, 0xBE, 0xEF])
 
@@ -136,6 +141,9 @@ class TestSupernovaController(unittest.TestCase):
         self.device.close()
 
     def test_set_i3c_bus_voltage_attribute_error(self):
+        if not self.use_simulator:
+            self.skipTest("For simulator only")
+
         self.device.open()
 
         i3c = self.device.create_interface("i3c.controller")
