@@ -51,7 +51,13 @@ class SupernovaI2CBlockingInterface:
         except Exception as e:
             raise BackendError(original_exception=e) from e
 
-        return responses
+        response_ok = responses[0]["name"] == "I2C WRITE WITHOUT STOP" and responses[0]["status"] == 0
+        if response_ok:
+            result = (True, None)
+        else:
+            result = (False, None)
+
+        return result
 
     def read(self, address, length):
         try:

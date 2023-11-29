@@ -103,6 +103,20 @@ class TestSupernovaController(unittest.TestCase):
 
         self.device.close()
 
+    def test_i2c_write_non_stop(self):
+        self.device.open()
+
+        i2c = self.device.create_interface("i2c")
+
+        i2c.set_parameters(3300, 500000)
+
+        (success, result) = i2c.write_non_stop(0x50, [0x00,0x00], [0xDE, 0xAD, 0xBE, 0xEF])
+
+        self.assertEqual(success, True)
+        self.assertEqual(result, None)
+
+        self.device.close()
+
     def test_set_i3c_bus_voltage_attribute(self):
         self.device.open()
 
