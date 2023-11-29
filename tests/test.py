@@ -103,6 +103,21 @@ class TestSupernovaController(unittest.TestCase):
 
         self.device.close()
 
+    def test_i2c_write_read(self):
+        self.device.open()
+
+        i2c = self.device.create_interface("i2c")
+
+        i2c.set_parameters(3300, 500000)
+
+        i2c.write(0x50, [0x00,0x00], [0xDE, 0xAD, 0xBE, 0xEF])
+        (success, data) = i2c.read_from(0x50, [0x00,0x00], 4)
+
+        self.assertEqual(success, True)
+        self.assertEqual(data, [0xDE, 0xAD, 0xBE, 0xEF])
+
+        self.device.close()
+
     def test_i2c_write_non_stop(self):
         self.device.open()
 

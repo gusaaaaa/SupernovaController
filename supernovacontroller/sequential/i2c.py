@@ -77,4 +77,10 @@ class SupernovaI2CBlockingInterface:
         except Exception as e:
             raise BackendError(original_exception=e) from e
 
-        return responses
+        response_ok = responses[0]["name"] == "I2C READ FROM" and responses[0]["status"] == 0
+        if response_ok:
+            result = (True, responses[0]["data"])
+        else:
+            result = (False, None)
+
+        return result
