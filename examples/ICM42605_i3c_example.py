@@ -41,8 +41,7 @@ def main():
     target_address = icm_device["dynamic_address"]
 
     # Check Who I Am Register for ICMM42605
-    who_am_i = imu_response_format(i3c.read(target_address, i3c.TransferMode.I3C_SDR, [0x75], 1))
-
+    (_, who_am_i ) = i3c.read(target_address, i3c.TransferMode.I3C_SDR, [0x75], 1)
     print("Who Am I Register: ", who_am_i)
 
     # Define sensor resolutions
@@ -57,65 +56,65 @@ def main():
 
     # Enable gyro and accel in low noise mode
     ICM42605_PWR_MGMT0 = 0x4E
-    power_management_register = imu_response_format(i3c.read(target_address, i3c.TransferMode.I3C_SDR, [ICM42605_PWR_MGMT0], 1))
+    (_, power_management_register) = i3c.read(target_address, i3c.TransferMode.I3C_SDR, [ICM42605_PWR_MGMT0], 1)
     print("Power Management Register: ", power_management_register)
     i3c.write(target_address, i3c.TransferMode.I3C_SDR, [ICM42605_PWR_MGMT0], [power_management_register[0] | 0x0F])
     print("Power Management Register written.")
     # Gyro full scale and data rate
     ICM42605_GYRO_CONFIG0 = 0x4F
-    gyro_config_register0 = imu_response_format(i3c.read(target_address, i3c.TransferMode.I3C_SDR, [ICM42605_GYRO_CONFIG0], 1))
+    (_, gyro_config_register0) = i3c.read(target_address, i3c.TransferMode.I3C_SDR, [ICM42605_GYRO_CONFIG0], 1)
     print("Gyro Config Register: ", gyro_config_register0)
     i3c.write(target_address, i3c.TransferMode.I3C_SDR, [ICM42605_GYRO_CONFIG0], [gyro_config_register0[0] | GODR | Gscale << 5])
     print("Gyro Config Register written.")
 
     # Set accel full scale and data rate
     ICM42605_ACCEL_CONFIG0 = 0x50
-    accel_config = imu_response_format(i3c.read(target_address, i3c.TransferMode.I3C_SDR, [ICM42605_ACCEL_CONFIG0], 1))
+    (_, accel_config) = i3c.read(target_address, i3c.TransferMode.I3C_SDR, [ICM42605_ACCEL_CONFIG0], 1)
     i3c.write(target_address, i3c.TransferMode.I3C_SDR, [ICM42605_ACCEL_CONFIG0], [accel_config[0] | AODR | Ascale << 5])
 
     # Set temperature sensor low pass filter to 5Hz, use first order gyro filter
     ICM42605_GYRO_CONFIG1 = 0x56
-    gyro_config_register1 = imu_response_format(i3c.read(target_address, i3c.TransferMode.I3C_SDR, [ICM42605_GYRO_CONFIG1], 1))
+    (_, gyro_config_register1) = i3c.read(target_address, i3c.TransferMode.I3C_SDR, [ICM42605_GYRO_CONFIG1], 1)
     i3c.write(target_address, i3c.TransferMode.I3C_SDR, [ICM42605_GYRO_CONFIG1], [gyro_config_register1[0] | 0xD0])
 
     # Set both interrupts active high, push-pull, pulsed
     ICM42605_INT_CONFIG0 = 0x63
-    int_config0 = imu_response_format(i3c.read(target_address, i3c.TransferMode.I3C_SDR, [ICM42605_INT_CONFIG0], 1))
+    (_, int_config0) = i3c.read(target_address, i3c.TransferMode.I3C_SDR, [ICM42605_INT_CONFIG0], 1)
     i3c.write(target_address, i3c.TransferMode.I3C_SDR, [ICM42605_INT_CONFIG0], [int_config0[0] | 0x18 | 0x03])
 
     # Set bit 4 to zero for proper function of INT1 and INT2
     ICM42605_INT_CONFIG1 = 0x64
-    int_config1=imu_response_format(i3c.read(target_address, i3c.TransferMode.I3C_SDR, [ICM42605_INT_CONFIG1], 1))
+    (_, int_config1) = i3c.read(target_address, i3c.TransferMode.I3C_SDR, [ICM42605_INT_CONFIG1], 1)
     i3c.write(target_address, i3c.TransferMode.I3C_SDR, [ICM42605_INT_CONFIG1], [int_config1[0] & ~(0x10)])
 
     # Route data ready interrupt to INT1
     ICM42605_INT_SOURCE0 = 0x65
-    int_source0=imu_response_format(i3c.read(target_address, i3c.TransferMode.I3C_SDR, [ICM42605_INT_SOURCE0], 1))
+    (_, int_source0) = i3c.read(target_address, i3c.TransferMode.I3C_SDR, [ICM42605_INT_SOURCE0], 1)
     i3c.write(target_address, i3c.TransferMode.I3C_SDR, [ICM42605_INT_SOURCE0], [int_source0[0] | 0x08])
 
     # Route AGC interrupt interrupt to INT2
     ICM42605_INT_SOURCE3 = 0x68
-    int_source3=imu_response_format(i3c.read(target_address, i3c.TransferMode.I3C_SDR, [ICM42605_INT_SOURCE3], 1))
+    (_, int_source3) = i3c.read(target_address, i3c.TransferMode.I3C_SDR, [ICM42605_INT_SOURCE3], 1)
     i3c.write(target_address, i3c.TransferMode.I3C_SDR, [ICM42605_INT_SOURCE3], [int_source3[0] | 0x01])
 
     # Select Bank 4
     ICM42605_REG_BANK_SEL = 0x76
-    reg_bank_sel=imu_response_format(i3c.read(target_address, i3c.TransferMode.I3C_SDR, [ICM42605_REG_BANK_SEL], 1))
+    (_, reg_bank_sel) = i3c.read(target_address, i3c.TransferMode.I3C_SDR, [ICM42605_REG_BANK_SEL], 1)
     i3c.write(target_address, i3c.TransferMode.I3C_SDR, [ICM42605_REG_BANK_SEL], [reg_bank_sel[0] | 0x04])
 
     # Select unitary mounting matrix
     ICM42605_APEX_CONFIG5 = 0x7A
-    apex_config5=imu_response_format(i3c.read(target_address, i3c.TransferMode.I3C_SDR, [ICM42605_APEX_CONFIG5], 1))
+    (_, apex_config5) = i3c.read(target_address, i3c.TransferMode.I3C_SDR, [ICM42605_APEX_CONFIG5], 1)
     i3c.write(target_address, i3c.TransferMode.I3C_SDR, [ICM42605_APEX_CONFIG5], [apex_config5[0] & ~(0x07)])
 
     # Select Bank 0
     ICM42605_REG_BANK_SEL = 0x76
-    reg_bank_sel=imu_response_format(i3c.read(target_address, i3c.TransferMode.I3C_SDR, [ICM42605_REG_BANK_SEL], 1))
+    (_, reg_bank_sel) = i3c.read(target_address, i3c.TransferMode.I3C_SDR, [ICM42605_REG_BANK_SEL], 1)
     i3c.write(target_address, i3c.TransferMode.I3C_SDR, [ICM42605_REG_BANK_SEL], [reg_bank_sel[0] & ~(0x07)])
 
     ## Read Status
     ICM42605_INT_STATUS = 0x19
-    int_status=imu_response_format(i3c.read(target_address, i3c.TransferMode.I3C_SDR, [ICM42605_INT_STATUS], 1))
+    (_, int_status) = i3c.read(target_address, i3c.TransferMode.I3C_SDR, [ICM42605_INT_STATUS], 1)
     print("Status Register: ", int_status)
 
 
@@ -124,7 +123,7 @@ def main():
     import ctypes
 
     def readIMUData():
-        raw_data=imu_response_format(i3c.read(target_address, i3c.TransferMode.I3C_SDR, [ICM42605_TEMP_DATA1], 14))
+        (_, raw_data) = i3c.read(target_address, i3c.TransferMode.I3C_SDR, [ICM42605_TEMP_DATA1], 14)
         imuData = [0,0,0,0,0,0,0]
         imuData[0] = ctypes.c_int16((raw_data[0] << 8) | raw_data[1]).value
         imuData[1] = ctypes.c_int16((raw_data[2] << 8) | raw_data[3]).value 
@@ -194,3 +193,6 @@ def main():
     print(accel_data)
     print("Gyroscope data:")
     print(gyro_data)
+
+if __name__ == "__main__":
+    main()
