@@ -82,10 +82,20 @@ class TestSupernovaController(unittest.TestCase):
 
         i2c = self.device.create_interface("i2c")
 
-        (success, result) = i2c.set_parameters(3300, 500000)
+        (success, result) = i2c.set_parameters(500000)
 
         self.assertEqual(success, True)
-        self.assertEqual(result, (3300, 500000))
+        self.assertEqual(result, (500000))
+
+        self.device.close()
+
+    def test_i2c_throw_error_if_bus_voltage_is_not_set(self):
+        self.device.open()
+
+        i2c = self.device.create_interface("i2c")
+
+        with self.assertRaises(BusNotInitializedError):
+            i2c.read_from(0x50, [0x00,0x00], 4)
 
         self.device.close()
 
@@ -94,8 +104,8 @@ class TestSupernovaController(unittest.TestCase):
 
         i2c = self.device.create_interface("i2c")
 
-        i2c.set_parameters(3300, 500000)
-
+        i2c.init_bus(3300)
+        i2c.set_parameters(500000)
         (success, result) = i2c.write(0x50, [0x00,0x00], [0xDE, 0xAD, 0xBE, 0xEF])
 
         self.assertEqual(success, True)
@@ -108,7 +118,8 @@ class TestSupernovaController(unittest.TestCase):
 
         i2c = self.device.create_interface("i2c")
 
-        i2c.set_parameters(3300, 500000)
+        i2c.init_bus(3300)
+        i2c.set_parameters(500000)
 
         i2c.write(0x50, [0x00,0x00], [0xDE, 0xAD, 0xBE, 0xEF])
         (success, data) = i2c.read_from(0x50, [0x00,0x00], 4)
@@ -123,7 +134,8 @@ class TestSupernovaController(unittest.TestCase):
 
         i2c = self.device.create_interface("i2c")
 
-        i2c.set_parameters(3300, 500000)
+        i2c.init_bus(3300)
+        i2c.set_parameters(500000)
 
         i2c.write(0x50, [0x00, 0x00], [0x01, 0x02, 0x03, 0x04])
         i2c.write(0x50, [], [0x00, 0x00])
