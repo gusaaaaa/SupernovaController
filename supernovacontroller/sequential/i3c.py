@@ -321,9 +321,9 @@ class SupernovaI3CBlockingInterface:
                 case "read": return response["data"]
                 case "ccc_getpid": return [int(item[2:], 16) for item in response["pid"]]
                 case "ccc_getbcr": return response["bcr"]["value"][2][2:].upper()
-                case "ccc_getdcr": return response["bcr"]["value"][2:].upper()
-                case "ccc_getmrl": return response["maxreadlength"]
-                case "ccc_getmwl": return response["maxwritelength"]
+                case "ccc_getdcr": return response["dcr"][2:].upper()
+                case "ccc_getmrl": return response["maxReadLength"]
+                case "ccc_getmwl": return response["maxWriteLength"]
                 case "ccc_unicast_setmrl" | "ccc_unicast_setmwl" | "ccc_broadcast_setmwl" | "ccc_broadcast_setmrl" : return response["data"]
             return None
 
@@ -983,9 +983,9 @@ class SupernovaI3CBlockingInterface:
                 lambda id: self.driver.i3cDirectSETMRL(
                     id,
                     target_address,
+                    self.push_pull_clock_freq_mhz,
+                    self.push_pull_clock_freq_mhz,
                     max_read_length,
-                    self.push_pull_clock_freq_mhz,
-                    self.push_pull_clock_freq_mhz,
                 )
             ])
         except Exception as e:
@@ -1016,9 +1016,9 @@ class SupernovaI3CBlockingInterface:
                 lambda id: self.driver.i3cDirectSETMWL(
                     id,
                     target_address,
+                    self.push_pull_clock_freq_mhz,
+                    self.push_pull_clock_freq_mhz,
                     max_write_length,
-                    self.push_pull_clock_freq_mhz,
-                    self.push_pull_clock_freq_mhz,
                 )
             ])
         except Exception as e:
@@ -1047,9 +1047,9 @@ class SupernovaI3CBlockingInterface:
             responses = self.controller.sync_submit([
                 lambda id: self.driver.i3cBroadcastSETMWL(
                     id,
+                    self.push_pull_clock_freq_mhz,
+                    self.push_pull_clock_freq_mhz,
                     max_write_length,
-                    self.push_pull_clock_freq_mhz,
-                    self.push_pull_clock_freq_mhz,
                 )
             ])
         except Exception as e:
@@ -1078,9 +1078,9 @@ class SupernovaI3CBlockingInterface:
             responses = self.controller.sync_submit([
                 lambda id: self.driver.i3cBroadcastSETMWL(
                     id,
+                    self.push_pull_clock_freq_mhz,
+                    self.push_pull_clock_freq_mhz,
                     max_read_length,
-                    self.push_pull_clock_freq_mhz,
-                    self.push_pull_clock_freq_mhz,
                 )
             ])
         except Exception as e:
