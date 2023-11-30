@@ -16,9 +16,7 @@ setup(
     url='https://github.com/binhollc/SupernovaController',
     license='Private',
     install_requires=[
-      'transfer_controller @ file:///Users/gusa/Projects/Binho/TransferController', # Remove when transfer_controller v0.3.0 is approved
-      # f'transfer_controller @ git+https://{gh_token}@github.com/binhollc/TransferController.git@667-gus#egg=transfer_controller', # Remove when transfer_controller v0.3.0 is approved
-      # 'transfer_controller==0.3.0', # Replace previous line when transfer_controller v0.3.0 is approved
+      'transfer_controller==0.3.1',
       'BinhoSupernova==0.2.0'
     ],
     classifiers=[
