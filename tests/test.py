@@ -99,6 +99,21 @@ class TestSupernovaController(unittest.TestCase):
 
         self.device.close()
 
+    def test_i2c_set_bus_voltage_or_init_bus_are_equivalent(self):
+        self.device.open()
+
+        i2c = self.device.create_interface("i2c")
+
+        i2c.set_bus_voltage(3300)
+        i2c.set_parameters(500000)
+
+        try:
+            i2c.read_from(0x50, [0x00,0x00], 1)
+        except Exception as e:
+            self.fail(f"I2C read raised an exception {e}")
+
+        self.device.close()
+
     def test_i2c_write(self):
         self.device.open()
 
