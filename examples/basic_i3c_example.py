@@ -23,11 +23,11 @@ def main():
     - Close Device Connection: Closes the connection to the Supernova device.
     """
     device = SupernovaDevice()
-    print("Opening supernova device and creating i3c interface... ")
+    print("Opening Supernova host adapter device and getting access to the I3C protocol interface...")
     info = device.open()
     i3c = device.create_interface("i3c.controller")
 
-    print("Initiallizing the bus...\n")
+    print("Initializing the bus...\n")
     i3c.set_parameters(i3c.I3cPushPullTransferRate.PUSH_PULL_12_5_MHZ, i3c.I3cOpenDrainTransferRate.OPEN_DRAIN_4_17_MHZ)
     (success, _) = i3c.init_bus(3300)
     if not success:
