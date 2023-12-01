@@ -160,21 +160,6 @@ Replace `/path/to/examples/` with the actual path printed in the previous step a
 
 Each example is designed to provide insights into different aspects of the `SupernovaController` usage. By running and modifying these examples, you'll gain a deeper understanding of how to effectively use the package in various scenarios.
 
-## Usage
-After installation, you can run the example scripts to see how the SupernovaController works with the Supernova host-adapter. To run an example, use the following command from the project root directory:
-
-```sh
-python -m examples.<example_script_name>
-```
-
-Replace `<example_script_name>` with the name of the example you wish to run. For instance, to run the `basic_i2c_example.py` script, you would use:
-
-```sh
-python -m examples.basic_i2c_example
-```
-
-This ensures that the example runs with the correct package context, resolving the import of the `supernovacontroller` package correctly.
-
 ## Error Handling
 
 When using the `SupernovaController`, it's important to distinguish between two types of errors: regular errors and exceptions. Regular errors are those that result from 'non-successful' operations of the host adapter, typically indicated by the success status in the operation's return value. Exceptions, on the other hand, are more severe and usually indicate issues with the device communication or incorrect usage of the API.
