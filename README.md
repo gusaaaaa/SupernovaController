@@ -275,4 +275,10 @@ By understanding and properly handling both regular errors and exceptions, you c
 SupernovaController is licensed under a Proprietary License. See the [LICENSE](LICENSE) file for more details.
 
 ## Contact
-[TO DO]
+
+For any inquiries, support requests, or contributions regarding the `SupernovaController` package, please contact us:
+
+- **Organization:** Binho LLC
+- **Email:** [support@binho.io](mailto:support@binho.io)
+
+We welcome feedback and we are happy to provide assistance with any issues you may encounter.
