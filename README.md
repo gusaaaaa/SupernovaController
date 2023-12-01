@@ -272,7 +272,7 @@ except BackendError as e:
 By understanding and properly handling both regular errors and exceptions, you can ensure stable and reliable operation of applications that utilize the `SupernovaController`.
 
 ## License
-[TO DO]
+SupernovaController is licensed under a Proprietary License. See the [LICENSE](LICENSE) file for more details.
 
 ## Contact
 [TO DO]
