@@ -11,61 +11,34 @@ SupernovaController is a Python-based tool designed to interface with the Supern
 
 ## Installation
 
----
-### For Binho Developers (REMOVE WHEN PACKAGE IS READY)
-
 To install the SupernovaController package, follow these steps:
 
-1. Clone the repository to your local machine:
-    ```sh
-    git clone https://github.com/yourusername/SupernovaController.git
-    ```
+1. **Prerequisites:**
+   - Ensure that you have Python 3.5 or later installed on your system.
+   - It's recommended to use a virtual environment for the installation to avoid any conflicts with other Python packages. You can create a virtual environment using tools like `venv` or `conda`.
 
-2. Navigate to the project root directory:
-    ```sh
-    cd SupernovaController
-    ```
-
-3. Create and activate a virtual environment (optional but recommended):
-
-- On Unix-like systems:
-  ```sh
-  python3 -m venv .venv
-  source .venv/bin/activate
-  ```
-- On Windows:
-  ```sh
-  python -m venv .venv
-  .venv\Scripts\activate
-  ```
-
-4. Before installation, you need to set the `GH_TOKEN` environment variable, which is used for authentication with GitHub to pull a dependency. Generate a personal access token on GitHub with the necessary permissions and set the `GH_TOKEN`:
-
-   - On Unix-like systems:
-     ```bash
-     export GH_TOKEN=your_github_personal_access_token
-     ```
-   - On Windows (Command Prompt):
-     ```bash
-     set GH_TOKEN=your_github_personal_access_token
-     ```
-   - On Windows (PowerShell):
-     ```bash
-     $env:GH_TOKEN="your_github_personal_access_token"
+2. **Install the Package:**
+   - Open your command line interface (CLI).
+   - Navigate to your project directory or the directory where you want to install the SupernovaController.
+   - Run the following command:
+     ```sh
+     pip install supernovacontroller
      ```
 
-   Replace `your_github_personal_access_token` with your actual GitHub token.
+    This command will download and install the SupernovaController package along with its dependencies (`transfer_controller` and `BinhoSupernova`) from PyPI.
 
-   **Note:** This step is temporary and will not be necessary after `transfer_controller` version 0.3.0 is approved. Once the new version is available, you can install it directly from the package index without needing to use a GitHub token.
+3. **Updating the Package:**
+   - To update the SupernovaController to the latest version, run:
+     ```sh
+     pip install --upgrade supernovacontroller
+     ```
 
-5. Install the package:
-    ```sh
-    pip install -e .
-    ```
-
-    The -e flag will install the package in editable mode, which is helpful during development as it allows you to make changes to your code and have those changes immediately reflected without reinstalling the package.
-
----
+4. **Troubleshooting:**
+   - If you encounter any issues during the installation, make sure that your Python and pip are up to date. You can update pip using:
+     ```sh
+     pip install --upgrade pip
+     ```
+   - For any other issues or support, please contact [support@binho.io](mailto:support@binho.io).
 
 ## Usage
 After installation, you can run the example scripts to see how the SupernovaController works with the Supernova host-adapter. To run an example, use the following command from the project root directory:
