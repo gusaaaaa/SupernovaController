@@ -40,7 +40,6 @@ To install the SupernovaController package, follow these steps:
      ```
    - For any other issues or support, please contact [support@binho.io](mailto:support@binho.io).
 
----
 ## Getting Started
 
 This section provides a quick guide to get you started with the `SupernovaController`, focusing on using the I3C protocol. The example demonstrates how to initialize an I3C bus, set bus parameters, discover devices on the bus, and perform read/write operations.
