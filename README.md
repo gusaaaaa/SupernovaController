@@ -138,23 +138,26 @@ After installing the `SupernovaController` package, you can further explore its 
 
 #### Accessing the Examples
 
-To access the examples, you first need to find the installation directory of the `SupernovaController` package. This can be done using the following Python commands:
+The example scripts are installed in a directory named `SupernovaExamples`, which is located in your Python environment's directory. To find this directory, you can use the following Python commands:
 
 ```python
-import supernovacontroller
+import sys
 import os
 
-examples_path = os.path.join(supernovacontroller.__path__[0], 'examples')
+examples_dir_name = "SupernovaExamples"
+examples_path = os.path.join(sys.prefix, examples_dir_name)
 print(f"Examples are located in: {examples_path}")
 ```
 
-Navigate to this directory to find the example scripts. You can run an example directly from this directory using Python. For instance:
+This will print the path to the `SupernovaExamples` directory. Navigate to this directory to find the example scripts.
+
+You can run an example directly from this directory using Python. For instance:
 
 ```sh
-python /path/to/examples/basic_i2c_example.py
+python /path/to/SupernovaExamples/basic_i2c_example.py
 ```
 
-Replace `/path/to/examples/` with the actual path printed in the previous step and `basic_i2c_example.py` with the name of the example you wish to run.
+Replace `/path/to/SupernovaExamples/` with the actual path printed in the previous step and `basic_i2c_example.py` with the name of the example you wish to run.
 
 #### Exploring Further
 
