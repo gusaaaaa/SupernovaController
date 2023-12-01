@@ -3,11 +3,12 @@ from supernovacontroller.sequential import SupernovaDevice
 def main():
 
     device = SupernovaDevice()
-    print("Opening supernova device and creating i2c interface... ")
+    print("Opening Supernova host adapter device and getting access to the I2C protocol interface...")
     info = device.open()
     i2c = device.create_interface("i2c")
     print(info)
 
+    print("Initializing the bus...\n")
     (success, _) = i2c.init_bus(3300)
     if not success:
         print("I couldn't initialize the bus. Are you sure there's any target connected?")
