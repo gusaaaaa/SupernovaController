@@ -6,7 +6,7 @@ SupernovaController is a Python-based tool designed to interface with the Supern
 
 ## Features
 - **Blocking API:** A streamlined approach to interact with the Supernova device, minimizing the complexity of handling asynchronous callbacks.
-- **Communication** Seamlessly manages command responses and notifications, facilitating easier and more intuitive command sequencing.
+- **Communication:** Seamlessly manages command responses and notifications, facilitating easier and more intuitive command sequencing.
 - **Examples:** Comprehensive examples demonstrating the practical application of the blocking API.
 
 ## Installation
@@ -74,7 +74,7 @@ Before proceeding, make sure you have installed the `SupernovaController` packag
 
 3. **Setting Bus Voltage:**
 
-   Set the bus voltage for the I3C bus. This step is required before initializing the bus if you don't specify the voltage parameter in `init_bus`:
+   Set the bus voltage (in mV) for the I3C bus. This step is required before initializing the bus if you don't specify the voltage parameter in `init_bus`:
 
    ```python
    i3c.set_bus_voltage(3300)
@@ -110,10 +110,10 @@ Before proceeding, make sure you have installed the `SupernovaController` packag
    Perform write and read operations on a target device. Replace `0x08` with the dynamic address of the device:
 
    ```python
-   # Write data
+   # Write data specifying address, mode, register and a list of bytes.
    i3c.write(0x08, i3c.TransferMode.I3C_SDR, [0x00, 0x00], [0xDE, 0xAD, 0xBE, 0xEF])
 
-   # Read data
+   # Read data specifying address, mode, register and buffer length.
    success, data = i3c.read(0x08, i3c.TransferMode.I3C_SDR, [0x00, 0x00], 4)
    if success:
        print(f"Read data: {data}")
