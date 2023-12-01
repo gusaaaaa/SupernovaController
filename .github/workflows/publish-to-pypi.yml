@@ -1,0 +1,14 @@
+name: Publish Package to PyPI
+
+on:
+  workflow_dispatch
+
+jobs:
+
+  build-n-publish:
+    name: Build and publish to PyPI
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Do nothing
+      run: echo "This workflow does nothing"
