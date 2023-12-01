@@ -176,6 +176,101 @@ python -m examples.basic_i2c_example
 
 This ensures that the example runs with the correct package context, resolving the import of the `supernovacontroller` package correctly.
 
+## Error Handling
+
+When using the `SupernovaController`, it's important to distinguish between two types of errors: regular errors and exceptions. Regular errors are those that result from 'non-successful' operations of the host adapter, typically indicated by the success status in the operation's return value. Exceptions, on the other hand, are more severe and usually indicate issues with the device communication or incorrect usage of the API.
+
+### Handling Regular Errors
+Regular errors are part of normal operation and are often indicated by the return value of a method. For instance, an operation may return a success status of `False` to indicate a failure.
+
+**Example:**
+```python
+success, result = i2c.write(0x50, [0x00,0x00], [0xDE, 0xAD, 0xBE, 0xEF])
+if not success:
+    print(f"Operation failed with error: {result}")
+```
+
+Regular errors should be checked after each operation and handled appropriately based on the context of your application.
+
+### Handling Exceptions
+Exceptions are raised when there are issues with the device's communication or incorrect usage of the API. These are more critical and need to be addressed immediately, often requiring changes in the code or the hardware setup.
+
+Here are some common exceptions and how to handle them:
+
+#### 1. DeviceOpenError
+Occurs when the `open` method is called with an incorrect or inaccessible USB HID path.
+
+**Example Handling:**
+```python
+try:
+    device.open("incorrect_hid_path")
+except DeviceOpenError:
+    print("Failed to open device. Please check the HID path.")
+```
+
+#### 2. DeviceAlreadyMountedError
+Raised when attempting to open a device that is already open.
+
+**Example Handling:**
+```python
+try:
+    device.open()
+    device.open()
+except DeviceAlreadyMountedError:
+    print("Device is already open.")
+```
+
+#### 3. DeviceNotMountedError
+Thrown when trying to perform operations on a device that has not been opened yet.
+
+**Example Handling:**
+```python
+try:
+    device.create_interface("i3c.controller")
+except DeviceNotMountedError:
+    print("Device not opened. Please open the device first.")
+```
+
+#### 4. UnknownInterfaceError
+Occurs when an invalid interface name is passed to the `create_interface` method.
+
+**Example Handling:**
+```python
+try:
+    device.create_interface("invalid_interface")
+except UnknownInterfaceError:
+    print("Unknown interface. Please check the interface name.")
+```
+
+#### 5. BusNotInitializedError
+Raised when attempting to perform bus operations without proper initialization.
+
+**Example Handling:**
+```python
+try:
+    i2c.read_from(0x50, [0x00,0x00], 4)
+except BusNotInitializedError:
+    print("Bus not initialized. Please initialize the bus first.")
+```
+
+#### 6. BackendError
+Occurs when there is an issue at the backend level, often indicating deeper problems like hardware or driver issues.
+
+**Example Handling:**
+```python
+try:
+    # Some operation that might cause backend error
+except BackendError as e:
+    print(f"Backend error occurred: {e}")
+```
+
+### General Error Handling Advice
+- Always validate inputs and states before performing operations.
+- Use specific exception handling rather than a general catch-all where possible, as this leads to more informative error messages and debugging.
+- Ensure that any cleanup or state reset logic is executed in the event of errors.
+
+By understanding and properly handling both regular errors and exceptions, you can ensure stable and reliable operation of applications that utilize the `SupernovaController`.
+
 ## License
 [TO DO]
 
