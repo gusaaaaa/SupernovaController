@@ -23,14 +23,13 @@ def main():
     - Close Device Connection: Closes the connection to the Supernova device.
     """
     device = SupernovaDevice()
-
+    print("Opening supernova device and creating i3c interface... ")
     info = device.open()
-
     i3c = device.create_interface("i3c.controller")
 
+    print("Initiallizing the bus...\n")
     i3c.set_parameters(i3c.I3cPushPullTransferRate.PUSH_PULL_12_5_MHZ, i3c.I3cOpenDrainTransferRate.OPEN_DRAIN_4_17_MHZ)
     (success, _) = i3c.init_bus(3300)
-
     if not success:
         print("I couldn't initialize the bus. Are you sure there's any target connected?")
         exit(1)
@@ -46,52 +45,63 @@ def main():
         print("ICM device not found in the I3C bus")
         exit(1)
 
-    print(icm_device)
+    print(f'Targets in the I3C bus: {icm_device}')
 
     target_address = icm_device["dynamic_address"]
-    print("Address: ", target_address)
+    print(f'Target address: {target_address} \n')
 
-    # ---
-    # CCC Transfers
-    # ---
+    print("-------------")
+    print("CCC Transfers")
+    print("-------------")
     result = i3c.ccc_getpid(target_address)
-    print(result[1])
+    print(f'GETPID: {result[1]} \n')
     result = i3c.ccc_getbcr(target_address)
-    print(result[1])
+    print(f'GETBCR: {result[1]} \n')
     result = i3c.ccc_getdcr(target_address)
-    print(result[1])
+    print(f'GETDCR: {result[1]} \n')
     result = i3c.ccc_getcaps(target_address)
-    print(result[1])
+    print(f'GETCAPS (Get Capabilities): {result[1]} \n')
     result = i3c.ccc_getmxds(target_address)
-    print(result[1])
+    print(f'GETMXDS (Get Max Data Speed): {result[1]} \n')
     result = i3c.ccc_getmrl(target_address)
-    print(result[1])
-    result = i3c.ccc_unicast_setmrl(target_address, 1024)
-    print(result[1])
-    result = i3c.ccc_broadcast_setmrl(64)
-    print(result[1])
+    print(f'GETMRL (Get Max Read Length): {result[1]} \n')
+    MRL = 256
+    result = i3c.ccc_unicast_setmrl(target_address, MRL)
+    print(f'UNICAST SETMRL (Set Max Read Length) in: {MRL} \n')
+    result = i3c.ccc_getmrl(target_address)
+    print(f'GETMRL: {result[1]} \n')
     result = i3c.ccc_getmwl(target_address)
-    print(result[1])
-    result = i3c.ccc_unicast_setmwl(target_address, 80)
-    print(result[1])
-    result = i3c.ccc_broadcast_setmwl(256)
-    print(result[1])
+    print(f'GETMWL (Get Max Write Length): {result[1]} \n')
+    MWL = 128
+    result = i3c.ccc_broadcast_setmwl(MWL)
+    print(f'BROADCAST SETMWL (Set Max Write Length) in: {MWL} \n')
+    result = i3c.ccc_getmwl(target_address)
+    print(f'GETMWL: {result[1]} \n')
 
-    # ---
-    # Write/Read transfers
-    # ---
-    result = i3c.write(target_address, i3c.TransferMode.I3C_SDR, [0x16], [0x40])
-    print(result[1])
-    result = i3c.read(target_address, i3c.TransferMode.I3C_SDR, [0x16], 2)
-    print(result[1])
+    print("--------------------")
+    print("Write/Read transfers")
+    print("--------------------")
+    SUBADR = 0x16
+    DATA = [0x40] 
+    result = i3c.write(target_address, i3c.TransferMode.I3C_SDR, [SUBADR], DATA)
+    print(f'Write {DATA} in subaddress {SUBADR}')
+    LENGTH = 1
+    result = i3c.read(target_address, i3c.TransferMode.I3C_SDR, [SUBADR], LENGTH)
+    print(f'Read from subaddress {SUBADR}: {result[1]}\n')
+    DATA = [0xDE, 0xAD, 0xBE, 0xEF] 
+    result = i3c.write(target_address, i3c.TransferMode.I3C_SDR, [SUBADR], DATA)
+    print(f'Write {DATA} in subaddress {SUBADR}')
+    LENGTH = 4
+    result = i3c.read(target_address, i3c.TransferMode.I3C_SDR, [SUBADR], LENGTH)
+    print(f'Read from subaddress {SUBADR}: {result[1]}\n')
 
-    # ---
-    # Target reset
-    # ---
+    print("---------")
+    print("Reset bus")
+    print("---------")
     result = i3c.reset_bus()
-    print(result[1])
+    print("Resetting bus...")
     result = i3c.targets()
-    print(result[1])
+    print(f'Targets in the I3C bus: {result[1]}')
 
     device.close()
 
