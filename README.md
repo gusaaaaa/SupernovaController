@@ -282,3 +282,15 @@ For any inquiries, support requests, or contributions regarding the `SupernovaCo
 - **Email:** [support@binho.io](mailto:support@binho.io)
 
 We welcome feedback and we are happy to provide assistance with any issues you may encounter.
+
+## Limitation of Responsibility
+
+### Disclaimer
+
+The `SupernovaController` is provided "as is" without warranty of any kind, either express or implied, including, but not limited to, the implied warranties of merchantability and fitness for a particular purpose. The entire risk as to the quality and performance of the `SupernovaController` is with you. Should the `SupernovaController` prove defective, you assume the cost of all necessary servicing, repair, or correction.
+
+In no event will Binho LLC be liable to you for damages, including any general, special, incidental, or consequential damages arising out of the use or inability to use the `SupernovaController` (including but not limited to loss of data or data being rendered inaccurate or losses sustained by you or third parties or a failure of the `SupernovaController` to operate with any other software), even if Binho LLC has been advised of the possibility of such damages.
+
+### Acknowledgement
+
+By using the `SupernovaController`, you acknowledge that you have read this disclaimer, understood it, and agree to be bound by its terms.
