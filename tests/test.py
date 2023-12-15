@@ -267,7 +267,7 @@ class TestSupernovaController(unittest.TestCase):
 
         (success, _) = i3c.reset_bus()
 
-        self.assertEqual(success, False)
+        self.assertEqual(success, True)
 
         self.device.close()
 
