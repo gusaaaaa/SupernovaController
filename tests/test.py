@@ -9,8 +9,6 @@ from supernovacontroller.sequential import SupernovaDevice
 from supernovacontroller.errors import DeviceOpenError
 from supernovacontroller.errors import DeviceNotMountedError
 from supernovacontroller.errors import DeviceAlreadyMountedError
-from supernovacontroller.errors import BusVoltageError
-from supernovacontroller.errors import BusNotInitializedError
 from supernovacontroller.errors import UnknownInterfaceError
 from supernovacontroller.errors import BackendError
 
@@ -94,8 +92,9 @@ class TestSupernovaController(unittest.TestCase):
 
         i2c = self.device.create_interface("i2c")
 
-        with self.assertRaises(BusNotInitializedError):
-            i2c.read_from(0x50, [0x00,0x00], 4)
+        (success, _) = i2c.read_from(0x50, [0x00,0x00], 4)
+
+        self.assertEqual(success, False)
 
         self.device.close()
 
@@ -266,8 +265,9 @@ class TestSupernovaController(unittest.TestCase):
 
         i3c = self.device.create_interface("i3c.controller")
 
-        with self.assertRaises(BusNotInitializedError):
-            i3c.reset_bus()
+        (success, _) = i3c.reset_bus()
+
+        self.assertEqual(success, False)
 
         self.device.close()
 
@@ -323,8 +323,9 @@ class TestSupernovaController(unittest.TestCase):
 
         i3c = self.device.create_interface("i3c.controller")
 
-        with self.assertRaises(BusNotInitializedError):
-            i3c.targets()
+        (success, targets) = i3c.targets()
+
+        self.assertTupleEqual((success, targets), (True, []))
 
         self.device.close()
 
@@ -336,13 +337,14 @@ class TestSupernovaController(unittest.TestCase):
 
         i3c = self.device.create_interface("i3c.controller")
 
-        with self.assertRaises(BusNotInitializedError):
-            i3c.write(
-                0x08,
-                i3c.TransferMode.I3C_SDR,
-                [0x00, 0x00],
-                [0xDE, 0xAD, 0xBE, 0xEF]
-            )
+        (success, _) = i3c.write(
+            0x08,
+            i3c.TransferMode.I3C_SDR,
+            [0x00, 0x00],
+            [0xDE, 0xAD, 0xBE, 0xEF]
+        )
+
+        self.assertEqual(success, False)
 
         self.device.close()
 
@@ -354,13 +356,14 @@ class TestSupernovaController(unittest.TestCase):
 
         i3c = self.device.create_interface("i3c.controller")
 
-        with self.assertRaises(BusNotInitializedError):
-            i3c.read(
-                0x08,
-                i3c.TransferMode.I3C_SDR,
-                [0x00, 0x00],
-                1
-            )
+        (success, _) = i3c.read(
+            0x08,
+            i3c.TransferMode.I3C_SDR,
+            [0x00, 0x00],
+            1
+        )
+
+        self.assertEqual(success, False)
 
         self.device.close()
 
