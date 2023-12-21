@@ -2,7 +2,6 @@ from transfer_controller import TransferController
 from BinhoSupernova.Supernova import Supernova
 from supernovacontroller.errors import BackendError
 from supernovacontroller.errors import BusVoltageError
-from supernovacontroller.errors import BusNotInitializedError
 
 
 class SupernovaI2CBlockingInterface:
