@@ -10,13 +10,13 @@ import queue
 import threading
 from .i2c import SupernovaI2CBlockingInterface
 from .i3c import SupernovaI3CBlockingInterface
+from .uart import SupernovaUARTBlockingInterface
 
 def id_gen(start=0):
     i = start
     while True:
         i += 1
         yield i
-
 
 class SupernovaDevice:
     def __init__(self, start_id=0):
@@ -38,6 +38,7 @@ class SupernovaDevice:
       self.interfaces = {
           "i2c": [None, SupernovaI2CBlockingInterface],
           "i3c.controller": [None, SupernovaI3CBlockingInterface],
+          "uart":[None, SupernovaUARTBlockingInterface]
       }
 
       self.mounted = False
@@ -46,7 +47,7 @@ class SupernovaDevice:
         if self.mounted:
             raise DeviceAlreadyMountedError
 
-        result = self.driver.open(path=usb_address, activateLogger=False)
+        result = self.driver.open(path=usb_address)
         if result["code"] == "OPEN_CONNECTION_FAIL":
             raise DeviceOpenError(result["message"])
 
@@ -87,7 +88,12 @@ class SupernovaDevice:
             self.notification_handlers[name] = (filter_func, handler_func)
 
     def _push_sdk_response(self, supernova_response, system_message):
-        self.response_queue.put((supernova_response, system_message))
+
+        if(supernova_response and supernova_response["id"] !=0):
+            self.response_queue.put((supernova_response, system_message))
+        elif (supernova_response and supernova_response["id"] == 0):
+            self.notification_queue.put((supernova_response, system_message))
+
 
     def _pull_sdk_response(self):
         while self.running:
@@ -137,7 +143,7 @@ class SupernovaDevice:
         [interface, interface_class] = self.interfaces[interface_name]
 
         if interface is None:
-            self.interfaces[interface_name][0] = interface_class(self.driver, self.controller)
+            self.interfaces[interface_name][0] = interface_class(self.driver, self.controller, self.on_notification)
             interface = self.interfaces[interface_name][0]
 
         return interface

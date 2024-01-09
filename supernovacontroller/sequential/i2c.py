@@ -6,7 +6,7 @@ from supernovacontroller.errors import BusNotInitializedError
 
 
 class SupernovaI2CBlockingInterface:
-    def __init__(self, driver: Supernova, controller: TransferController):
+    def __init__(self, driver: Supernova, controller: TransferController, notification_subscription):
         self.driver = driver
         self.controller = controller
 
