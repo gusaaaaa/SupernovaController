@@ -46,7 +46,7 @@ class SupernovaDevice:
         if self.mounted:
             raise DeviceAlreadyMountedError
 
-        result = self.driver.open(path=usb_address, activateLogger=False)
+        result = self.driver.open(path=usb_address)
         if result["code"] == "OPEN_CONNECTION_FAIL":
             raise DeviceOpenError(result["message"])
 
