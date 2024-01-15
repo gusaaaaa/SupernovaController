@@ -87,7 +87,14 @@ class SupernovaDevice:
             self.notification_handlers[name] = (filter_func, handler_func)
 
     def _push_sdk_response(self, supernova_response, system_message):
-        self.response_queue.put((supernova_response, system_message))
+        if supernova_response:
+            # Check if the id is non-zero (zero is reserved for notifications)
+            if supernova_response["id"] != 0:
+                # Add the response to the response queue
+                self.response_queue.put((supernova_response, system_message))
+            else:
+                # Add the response to the notification queue for id zero
+                self.notification_queue.put((supernova_response, system_message))
 
     def _pull_sdk_response(self):
         while self.running:
@@ -114,12 +121,6 @@ class SupernovaDevice:
 
         if is_handled:
             return
-
-        if supernova_response["name"] == "I3C IBI NOTIFICATION":
-            self.notification_queue.put((supernova_response, system_message))
-
-        # Process non-sequenced responses
-        # ...
 
     def _process_sdk_notification(self, supernova_response, system_message):
         for name, (filter_func, handler_func) in self.notification_handlers.items():
