@@ -138,7 +138,7 @@ class SupernovaDevice:
         [interface, interface_class] = self.interfaces[interface_name]
 
         if interface is None:
-            self.interfaces[interface_name][0] = interface_class(self.driver, self.controller)
+            self.interfaces[interface_name][0] = interface_class(self.driver, self.controller, self.on_notification)
             interface = self.interfaces[interface_name][0]
 
         return interface
