@@ -20,7 +20,7 @@ class SupernovaI3CBlockingInterface:
 
     BROADCAST_ADDRESS = 0x7E
 
-    def __init__(self, driver: Supernova, controller: TransferController):
+    def __init__(self, driver: Supernova, controller: TransferController, notification_subscription):
         self.driver = driver
         self.controller = controller
 
