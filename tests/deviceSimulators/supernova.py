@@ -194,44 +194,67 @@ class BinhoSupernovaSimulator:
         }, None)
 
     def i3cWrite(self, id, targetAddress, mode, pushPullRate, openDrainRate, registerAddress, data):
-        staticAddress = self.i3cTargetTable[str(targetAddress)]["staticAddress"]
-        self.i3cTargets[str(staticAddress)].write(registerAddress + data)
-        self.callback({
+        # Base response structure
+        response = {
             "id": id,
             "command": 12,
             "name": "I3C TRANSFER",
             "header": {
                 "tag": "RESPONSE_TO_REGULAR_REQUEST",
-                "result": "I3C_TRANSFER_SUCCESS",
-                "hasData": False
             },
             "descriptor": {
                 "dataLength": 0,
-                "errors": ["NO_TRANSFER_ERROR"]
+                "errors": []
             },
-            "data": []
-        }, None)
+        }
+
+        # Check if i3cTargetTable is None or the specific targetAddress entry is None
+        if self.i3cTargetTable is None or self.i3cTargetTable.get(str(targetAddress)) is None:
+            response["header"]["result"] = "I3C_TRANSFER_FAIL"
+            response["header"]["hasData"] = False
+            response["descriptor"]["errors"].append("NACK_ERROR")
+            response["descriptor"]["dataLength"] = 0
+        else:
+            staticAddress = self.i3cTargetTable[str(targetAddress)]["staticAddress"]
+            self.i3cTargets[str(staticAddress)].write(registerAddress + data)
+            response["header"]["result"] = "I3C_TRANSFER_SUCCESS"
+            response["header"]["hasData"] = False
+            response["descriptor"]["errors"].append("NO_TRANSFER_ERROR")
+            response["data"] = []
+
+        self.callback(response, None)
 
     def i3cRead(self, id, targetAddress, mode, pushPullRate, openDrainRate, registerAddress, length):
-        staticAddress = self.i3cTargetTable[str(targetAddress)]["staticAddress"]
-        if (len(registerAddress) > 0):
-            self.i3cTargets[str(staticAddress)].write(registerAddress)
-        data = self.i3cTargets[str(staticAddress)].read(length)
-        self.callback({
+        # Base response structure
+        response = {
             "id": id,
             "command": 12,
             "name": "I3C TRANSFER",
             "header": {
                 "tag": "RESPONSE_TO_REGULAR_REQUEST",
-                "result": "I3C_TRANSFER_SUCCESS",
-                "hasData": True
             },
             "descriptor": {
-                "dataLength": length,
-                "errors": ["NO_TRANSFER_ERROR"]
+                "errors": []
             },
-            "data": data
-        }, None)
+        }
+
+        # Check if i3cTargetTable is None or the specific targetAddress entry is None
+        if self.i3cTargetTable is None or self.i3cTargetTable.get(str(targetAddress)) is None:
+            response["header"]["result"] = "I3C_TRANSFER_FAIL"
+            response["header"]["hasData"] = False
+            response["descriptor"]["errors"].append("NACK_ERROR")
+            response["descriptor"]["dataLength"] = 0
+        else:
+            staticAddress = self.i3cTargetTable[str(targetAddress)]["staticAddress"]
+            if (len(registerAddress) > 0):
+                self.i3cTargets[str(staticAddress)].write(registerAddress)
+            data = self.i3cTargets[str(staticAddress)].read(length)
+            response["header"]["result"] = "I3C_TRANSFER_SUCCESS"
+            response["header"]["hasData"] = True
+            response["descriptor"]["errors"].append("NO_TRANSFER_ERROR")
+            response["data"] = data
+
+        self.callback(response, None)
 
     def i3cGETPID(self, id, targetAddress, pushPullRate, openDrainRate):
         staticAddress = self.helperGetStaticFromDynamicAddress(targetAddress)
