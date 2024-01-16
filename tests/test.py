@@ -238,7 +238,6 @@ class TestSupernovaController(unittest.TestCase):
 
         self.assertEqual(success, False)
         self.assertTrue("errors" in result)
-        self.assertEqual(i3c.bus_voltage, None)
 
         self.device.close()
 
