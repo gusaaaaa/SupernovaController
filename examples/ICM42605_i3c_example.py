@@ -29,7 +29,10 @@ def main():
     (_, targets) = i3c.targets()
 
     # Target PID in hexadecimal format
-    target_pid = [0x04, 0x6A, 0x00, 0x00, 0x00, 0x00]
+    target_pid = [0x00, 0x00, 0x00, 0x00, 0x6A, 0x04]
+
+    # IMPORTANT: Remove the following line when the SupernovaSDK is updated to return a list of numbers
+    target_pid = [f"0x{num:02x}" for num in target_pid]
 
     icm_device = find_matching_item(targets, target_pid)
 
