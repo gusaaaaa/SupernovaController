@@ -8,7 +8,6 @@ from BinhoSupernova.commands.definitions import I3cClearFeatureSelector
 from BinhoSupernova.commands.definitions import I3cPushPullTransferRate
 from BinhoSupernova.commands.definitions import I3cOpenDrainTransferRate
 from supernovacontroller.errors import BusVoltageError
-from supernovacontroller.errors import BusNotInitializedError
 from supernovacontroller.errors import BackendError
 
 
@@ -157,7 +156,6 @@ class SupernovaI3CBlockingInterface:
             result = (True, voltage)
         else:
             result = (False, {"errors": responses[0]["errors"]})
-            self.bus_voltage = None
 
         return result
 
@@ -174,9 +172,6 @@ class SupernovaI3CBlockingInterface:
             - The second element is either the bus voltage indicating success, or an error message
                 detailing the failure, obtained from the device's response.
         """
-        if self.bus_voltage is None:
-            raise BusNotInitializedError()
-
         try:
             responses = self.controller.sync_submit([
                 lambda id: self.driver.i3cClearFeature(id, I3cClearFeatureSelector.I3C_BUS, self.BROADCAST_ADDRESS)
@@ -208,10 +203,6 @@ class SupernovaI3CBlockingInterface:
                 - 'dcr': The Device Characteristics Register.
                 - 'pid': Unique ID (Provisional ID) containing a manufacturer ID, a part ID and an instance ID.
         """
-
-        if self.bus_voltage is None:
-            raise BusNotInitializedError()
-
         try:
             responses = self.controller.sync_submit([
                 lambda id: self.driver.i3cGetTargetDeviceTable(id)
@@ -359,9 +350,6 @@ class SupernovaI3CBlockingInterface:
             - The second element is either a dictionary containing the data written and its length, indicating
                 success, or an error message detailing the failure.
         """
-        if self.bus_voltage is None:
-            raise BusNotInitializedError()
-
         try:
             responses = self.controller.sync_submit([
                 lambda id: self.driver.i3cWrite(
@@ -400,9 +388,6 @@ class SupernovaI3CBlockingInterface:
             - The second element is either a dictionary containing the read data and its length, indicating
                 success, or an error message detailing the failure.
         """
-        if self.bus_voltage is None:
-            raise BusNotInitializedError()
-
         try:
             responses = self.controller.sync_submit([
                 lambda id: self.driver.i3cRead(
