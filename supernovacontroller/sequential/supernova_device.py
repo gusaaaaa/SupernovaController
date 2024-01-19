@@ -1,6 +1,7 @@
 from transfer_controller import TransferController
 from BinhoSupernova.Supernova import Supernova
 from BinhoSupernova.commands.definitions import GetUsbStringSubCommand
+from BinhoSupernova.utils.system_message import SystemOpcode
 from supernovacontroller.errors import DeviceOpenError
 from supernovacontroller.errors import DeviceNotMountedError
 from supernovacontroller.errors import DeviceAlreadyMountedError
@@ -47,7 +48,7 @@ class SupernovaDevice:
             raise DeviceAlreadyMountedError
 
         result = self.driver.open(path=usb_address)
-        if result["code"] == "OPEN_CONNECTION_FAIL":
+        if result["opcode"] != SystemOpcode.OK.value:
             raise DeviceOpenError(result["message"])
 
         self.driver.onEvent(self._push_sdk_response)
