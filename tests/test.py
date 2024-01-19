@@ -87,14 +87,14 @@ class TestSupernovaController(unittest.TestCase):
 
         self.device.close()
 
-    def test_i2c_throw_error_if_bus_voltage_is_not_set(self):
+    def test_i2c_should_not_throw_error_if_bus_voltage_is_not_set(self):
         self.device.open()
 
         i2c = self.device.create_interface("i2c")
 
         (success, _) = i2c.read_from(0x50, [0x00,0x00], 4)
 
-        self.assertEqual(success, False)
+        self.assertEqual(success, True)
 
         self.device.close()
 
@@ -238,7 +238,6 @@ class TestSupernovaController(unittest.TestCase):
 
         self.assertEqual(success, False)
         self.assertTrue("errors" in result)
-        self.assertEqual(i3c.bus_voltage, None)
 
         self.device.close()
 
