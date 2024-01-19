@@ -104,11 +104,11 @@ class SupernovaI3CBlockingInterface:
 
     def controller_init(self):
         """
-        Initialize the I3C peripheral in controller mode.
+        Initialize the Supernova in controller mode.
         Returns:
         tuple: A tuple containing two elements:
             - The first element is a Boolean indicating the success (True) or failure (False) of the operation.
-            - The second element is either the bus voltage indicating success, or an error message
+            - The second element is the result coming from the SDK, or an error message
                 detailing the failure, obtained from the device's response.
         """
         try:
