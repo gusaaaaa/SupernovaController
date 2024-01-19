@@ -20,7 +20,7 @@ setup(
     license='Private',
     install_requires=[
       'transfer_controller==0.3.1',
-      'BinhoSupernova==0.2.0'
+      'BinhoSupernova==1.3.0'
     ],
     classifiers=[
         'Development Status :: 3 - Alpha',

@@ -46,7 +46,7 @@ class SupernovaDevice:
         if self.mounted:
             raise DeviceAlreadyMountedError
 
-        result = self.driver.open(path=usb_address, activateLogger=False)
+        result = self.driver.open(path=usb_address)
         if result["code"] == "OPEN_CONNECTION_FAIL":
             raise DeviceOpenError(result["message"])
 
@@ -87,7 +87,14 @@ class SupernovaDevice:
             self.notification_handlers[name] = (filter_func, handler_func)
 
     def _push_sdk_response(self, supernova_response, system_message):
-        self.response_queue.put((supernova_response, system_message))
+        if supernova_response:
+            # Check if the id is non-zero (zero is reserved for notifications)
+            if supernova_response["id"] != 0:
+                # Add the response to the response queue
+                self.response_queue.put((supernova_response, system_message))
+            else:
+                # Add the response to the notification queue for id zero
+                self.notification_queue.put((supernova_response, system_message))
 
     def _pull_sdk_response(self):
         while self.running:
@@ -115,12 +122,6 @@ class SupernovaDevice:
         if is_handled:
             return
 
-        if supernova_response["name"] == "I3C IBI NOTIFICATION":
-            self.notification_queue.put((supernova_response, system_message))
-
-        # Process non-sequenced responses
-        # ...
-
     def _process_sdk_notification(self, supernova_response, system_message):
         for name, (filter_func, handler_func) in self.notification_handlers.items():
             if filter_func(name, supernova_response):
@@ -137,7 +138,7 @@ class SupernovaDevice:
         [interface, interface_class] = self.interfaces[interface_name]
 
         if interface is None:
-            self.interfaces[interface_name][0] = interface_class(self.driver, self.controller)
+            self.interfaces[interface_name][0] = interface_class(self.driver, self.controller, self.on_notification)
             interface = self.interfaces[interface_name][0]
 
         return interface

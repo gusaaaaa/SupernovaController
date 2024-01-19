@@ -2,11 +2,10 @@ from transfer_controller import TransferController
 from BinhoSupernova.Supernova import Supernova
 from supernovacontroller.errors import BackendError
 from supernovacontroller.errors import BusVoltageError
-from supernovacontroller.errors import BusNotInitializedError
 
 
 class SupernovaI2CBlockingInterface:
-    def __init__(self, driver: Supernova, controller: TransferController):
+    def __init__(self, driver: Supernova, controller: TransferController, notification_subscription):
         self.driver = driver
         self.controller = controller
 
@@ -175,18 +174,12 @@ class SupernovaI2CBlockingInterface:
             - The second element is None. It is reserved for future use where additional information
               might be returned in case of success or failure.
 
-        Raises:
-        BusNotInitializedError: If the bus voltage has not been initialized prior to the write operation.
-
         Note:
         - It is important to ensure that the bus voltage is correctly set before attempting a write operation,
           as the correct voltage is crucial for the proper functioning of I2C communications.
         - The method does not perform any validation on the input parameters (address, register, data). Users
           should ensure these parameters are correct and within the acceptable range for the intended device.
         """
-        if self.bus_voltage is None:
-            raise BusNotInitializedError()
-
         responses = None
         try:
             responses = self.controller.sync_submit([
@@ -224,18 +217,12 @@ class SupernovaI2CBlockingInterface:
             - The second element is the data read in bytes if the operation is successful,
               or None in case of failure.
 
-        Raises:
-        BusNotInitializedError: If the bus voltage has not been initialized prior to the read operation.
-
         Note:
         - It is crucial to ensure that the bus voltage is correctly set before attempting a read operation,
           as the correct voltage is necessary for proper I2C communication.
         - The method does not perform any validation on the input parameters (address, length). Users
           should ensure these parameters are correct and within the acceptable range for the intended device.
         """
-        if self.bus_voltage is None:
-            raise BusNotInitializedError()
-
         try:
             responses = self.controller.sync_submit([
                 lambda transfer_id: self.driver.i2cRead(transfer_id, address, length),
@@ -273,18 +260,12 @@ class SupernovaI2CBlockingInterface:
             - The second element is the data read in bytes if the operation is successful,
             or None in case of failure.
 
-        Raises:
-        BusNotInitializedError: If the bus voltage has not been initialized prior to the read operation.
-
         Note:
         - It is important to ensure that the bus voltage is correctly set before attempting a read operation,
           as the correct voltage is essential for proper I2C communication.
         - The method does not perform any validation on the input parameters (address, register, length). Users
           should ensure these parameters are correct and within the acceptable range for the intended device.
         """
-        if self.bus_voltage is None:
-            raise BusNotInitializedError()
-
         try:
             responses = self.controller.sync_submit([
                 lambda transfer_id: self.driver.i2cReadFrom(transfer_id, address, register, length),
