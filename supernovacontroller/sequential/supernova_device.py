@@ -89,11 +89,14 @@ class SupernovaDevice:
 
     def _push_sdk_response(self, supernova_response, system_message):
 
-        if(supernova_response and supernova_response["id"] !=0):
-            self.response_queue.put((supernova_response, system_message))
-        elif (supernova_response and supernova_response["id"] == 0):
-            self.notification_queue.put((supernova_response, system_message))
-
+        if supernova_response:
+            # Check if the id is non-zero (zero is reserved for notifications)
+            if supernova_response["id"] != 0:
+                # Add the response to the response queue
+                self.response_queue.put((supernova_response, system_message))
+            else:
+                # Add the response to the notification queue for id zero
+                self.notification_queue.put((supernova_response, system_message))
 
     def _pull_sdk_response(self):
         while self.running:
