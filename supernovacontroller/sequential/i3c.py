@@ -1360,6 +1360,9 @@ class SupernovaI3CBlockingInterface:
         Sends a unicast GET_STATUS command to the device with target_address dynamic address
 
         Returns:
+        tuple: A tuple containing two elements:
+            - The first element is a Boolean indicating the success (True) or failure (False) of the operation.
+            - The second element is the two bytes that represent the status.
 
         """
         try:
