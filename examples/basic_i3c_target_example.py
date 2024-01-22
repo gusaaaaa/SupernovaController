@@ -68,8 +68,11 @@ def main():
     success, message = i3c_target.target_init(MEMORY_LAYOUT, USECONDS_TO_WAIT_FOR_IBI, MRL, MWL, TARGET_CONF)
     print(message)
 
-    success, message = i3c_controller.controller_init()
-    print(message)
+    success, status = i3c_controller.controller_init()
+    if success is True:
+        print('Controller initialized correctly')
+    else:
+        print('Could not initialize the controller')
 
     print("--------------------")
     print("Bus initialization")
