@@ -11,13 +11,13 @@ import queue
 import threading
 from .i2c import SupernovaI2CBlockingInterface
 from .i3c import SupernovaI3CBlockingInterface
+from .i3c_target import SupernovaI3CTargetBlockingInterface
 
 def id_gen(start=0):
     i = start
     while True:
         i += 1
         yield i
-
 
 class SupernovaDevice:
     def __init__(self, start_id=0):
@@ -39,6 +39,7 @@ class SupernovaDevice:
       self.interfaces = {
           "i2c": [None, SupernovaI2CBlockingInterface],
           "i3c.controller": [None, SupernovaI3CBlockingInterface],
+          "i3c.target": [None, SupernovaI3CTargetBlockingInterface],
       }
 
       self.mounted = False
