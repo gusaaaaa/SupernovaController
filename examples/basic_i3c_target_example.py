@@ -43,11 +43,11 @@ def main():
     print("-----------------------")
 
     target_device = SupernovaDevice()
-    info = target_device.open(usb_address ='\\\\?\\HID#VID_1FC9&PID_82FC#6&2fcfc8d8&0&0000#{4d1e55b2-f16f-11cf-88cb-001111000030}')
+    info = target_device.open(usb_address ="\\\\?\\HID#VID_1FC9&PID_82FC#6&2fcfc8d8&0&0000#{4d1e55b2-f16f-11cf-88cb-001111000030}")
     i3c_target = target_device.create_interface("i3c.target")
 
     controller_device = SupernovaDevice()
-    info = controller_device.open(usb_address ='\\\\?\\HID#VID_1FC9&PID_82FC#7&f321146&0&0000#{4d1e55b2-f16f-11cf-88cb-001111000030}')
+    info = controller_device.open(usb_address ="\\\\?\\HID#VID_1FC9&PID_82FC#7&f321146&0&0000#{4d1e55b2-f16f-11cf-88cb-001111000030}")
     i3c_controller = controller_device.create_interface("i3c.controller")
 
     print("--------------------------------------------------------------------------------------------------------")
@@ -65,14 +65,11 @@ def main():
                                   MatchStartStop.NOT_MATCH.value |  \
                                   AlwaysNack.NOT_ALWAYS_NACK.value    
     
-    success, message = i3c_target.target_init(MEMORY_LAYOUT, USECONDS_TO_WAIT_FOR_IBI, MRL, MWL, TARGET_CONF)
-    print(message)
+    success, status = i3c_target.target_init(MEMORY_LAYOUT, USECONDS_TO_WAIT_FOR_IBI, MRL, MWL, TARGET_CONF)
+    print("Target initialized correctly" if success else "Could not initialize the target")
 
     success, status = i3c_controller.controller_init()
-    if success is True:
-        print('Controller initialized correctly')
-    else:
-        print('Could not initialize the controller')
+    print("Controller initialized correctly" if success else "Could not initialize the controller")
 
     print("--------------------")
     print("Bus initialization")
@@ -80,11 +77,11 @@ def main():
 
     i3c_controller.set_parameters(i3c_controller.I3cPushPullTransferRate.PUSH_PULL_5_MHZ, i3c_controller.I3cOpenDrainTransferRate.OPEN_DRAIN_1_25_MHZ)
     (success, _) = i3c_controller.init_bus(3300)
-    if not success:
-        print("I couldn't initialize the bus. Are you sure there's any target connected?")
-        exit(1)
-    else:
+    if success:
         print("Bus successfully initialized")
+    else:
+        print("Bus initialization fail. Make sure that there is at least one target connected")
+        exit(1)
 
     (_, targets) = i3c_controller.targets()
     
@@ -95,25 +92,36 @@ def main():
     print("--------------------")
 
     (_, result) = i3c_controller.ccc_getpid(target_address)
-    print(f'PID: {result}')
+    print(f"PID: {result}")
     (_, result) = i3c_controller.ccc_getbcr(target_address)
-    print(f'BCR: {result}')
+    print(f"BCR: {result}")
     (_, result) = i3c_controller.ccc_getdcr(target_address)    
-    print(f'DCR: {result}')
+    print(f"DCR: {result}")
     (_, result) = i3c_controller.ccc_getmwl(target_address)
-    print(f'MWL: {result}')
+    print(f"MWL: {result}")
     MWL = 1024
     i3c_controller.ccc_unicast_setmwl(target_address, MWL)
     (_, result) = i3c_controller.ccc_getmwl(target_address)
-    print(f'MWL: {result}')
+    print(f"MWL: {result}")
     (_, result) = i3c_controller.ccc_getmrl(target_address)
-    print(f'MRL: {result}')
+    print(f"MRL: {result}")
     MRL = 512
     i3c_controller.ccc_unicast_setmrl(target_address, MRL)
     (_, result) = i3c_controller.ccc_getmrl(target_address)
-    print(f'MRL: {result}')
+    print(f"MRL: {result}")
     (_, data) = i3c_controller.ccc_unicast_get_status(target_address)
-    print(f'STATUS: {data}')    
+    print(f"STATUS: {data}")
+    (success, _) = i3c_controller.toggle_ibi(target_address, True)
+    print("Successfully performed an ENEC" if success else "ENEC failed")
+    (success, _) = i3c_controller.toggle_ibi(target_address, False)
+    print("Successfully performed a DISEC" if success else "DISEC failed")
+    new_target_address = 0x0A    
+    (_, data) = i3c_controller.ccc_setnewda(target_address, new_target_address)
+    if success is True:
+        print(f"Successfully set new dynamic address")
+        target_address = new_target_address
+    else:
+        print(f"Could not set new dynamic address") 
 
     print("--------------------------------")
     print("I3C_TARGET_SET_CONFIGURATION")
@@ -128,13 +136,13 @@ def main():
                                   IgnoreTE0TE1Errors.IGNORE_ERRORS.value |  \
                                   MatchStartStop.NOT_MATCH.value |  \
                                   AlwaysNack.NOT_ALWAYS_NACK.value   
-    success, message = i3c_target.set_configuration(USECONDS_TO_WAIT_FOR_IBI, MRL, MWL, TARGET_CONF)
-    print(message)
+    success, status = i3c_target.set_configuration(USECONDS_TO_WAIT_FOR_IBI, MRL, MWL, TARGET_CONF)
+    print("Configuration set correctly" if success else "Could not configure the target")
 
     (_, result) = i3c_controller.ccc_getmrl(target_address)
-    print(f'MRL with new configuration: {result}')
+    print(f"MRL with new configuration: {result}")
     (_, result) = i3c_controller.ccc_getmwl(target_address)
-    print(f'MWL with new configuration: {result}')
+    print(f"MWL with new configuration: {result}")
 
     print("-------------------------------------------------------")
     print("I3C_TARGET_WRITE_MEMORY and I3C_TARGET_READ_MEMORY")
@@ -144,15 +152,10 @@ def main():
     DATA = [i%0xFA for i in range(0,1024)]
     LENGTH = 100
     (success, error) = i3c_target.write_memory(SUBADDR, DATA)
-    if success == False:
-        print(f'Could not write the memory, error: {error}')
-    else:
-        print('Memory was written successfully')
+    print("Memory was written successfully" if success else f"Could not write the memory, error: {error}")
+
     (success, data) = i3c_target.read_memory(SUBADDR, LENGTH)
-    if success == False:
-        print(f'An error arose for reading memory: {data}')
-    else:
-        print(f'Successfully read data: {data}') 
+    print(f"Successfully read data: {data}" if success else f"An error arose while reading memory: {data}")
 
     print("--------------------")
     print("Write/Read transfers")
@@ -227,22 +230,23 @@ def main():
                                   MatchStartStop.NOT_MATCH.value |  \
                                   AlwaysNack.NOT_ALWAYS_NACK.value    
     
-    success, message = i3c_target.target_init(MEMORY_LAYOUT, USECONDS_TO_WAIT_FOR_IBI, MRL, MWL, TARGET_CONF)
-    print(message)
+    success, status = i3c_target.target_init(MEMORY_LAYOUT, USECONDS_TO_WAIT_FOR_IBI, MRL, MWL, TARGET_CONF)
+    print("Target initialized correctly" if success else "Could not initialize the target")
 
     print("--------------------")
     print("Bus initialization")
     print("--------------------")
 
     (success, _) = i3c_controller.init_bus(3300)
-    if not success:
-        print("I couldn't initialize the bus. Are you sure there's any target connected?")
-        exit(1)
-    else:
+    if success:
         print("Bus successfully initialized")
+    else:
+        print("Bus initialization fail. Make sure that there is at least one target connected")
+        exit(1)
         
-    (_, targets) = i3c_controller.targets()
-
+    (_, targets) = i3c_controller.targets()    
+    target_address = targets[0]["dynamic_address"]
+    
     print("-------------------------------------------------------")
     print("I3C_TARGET_WRITE_MEMORY and I3C_TARGET_READ_MEMORY")
     print("-------------------------------------------------------")
@@ -253,20 +257,13 @@ def main():
     DATA_1 = [0xFF for i in range(0,8)]
     LENGTH = 100
     (success, error) = i3c_target.write_memory(SUBADDR_0, DATA_0)
-    if success == False:
-        print(f'Could not write the memory, error: {error}')
-    else:
-        print('Memory was written successfully')
+    print("Memory was written successfully" if success else f"Could not write the memory, error: {error}")
+
     (success, error) = i3c_target.write_memory(SUBADDR_1, DATA_1)
-    if success == False:
-        print(f'Could not write the memory, error: {error}')
-    else:
-        print('Memory was written successfully')
+    print("Memory was written successfully" if success else f"Could not write the memory, error: {error}")
+
     (success, data) = i3c_target.read_memory(SUBADDR_0, LENGTH)
-    if success == False:
-        print(f'An error arose for reading memory: {data}')
-    else:
-        print(f'Successfully read data: {data}')    
+    print(f"Successfully read data: {data}" if success else f"An error arose while reading memory: {data}")
     
     print("--------------------")
     print("Write/Read transfers")

@@ -7,11 +7,11 @@ from supernovacontroller.errors import BackendError
 from threading import Event
 import queue
 
-class I3C_target_notification_handler:
+class I3CTargetNotificationHandler:
 
     def __init__(self,notification_subscription):
         """
-        Initializes the I3C_target_notification_handler.
+        Initializes the I3CTargetNotificationHandler.
 
         Args:
         notification_subscription: A subscription object for receiving notifications.
@@ -48,19 +48,19 @@ class I3C_target_notification_handler:
         already occurred and just returns its associated message in that case. 
         """
 
-        received_data_flag = False
+        data_has_been_received = False
         if self.high_notification_queue.empty():
-            received_data_flag = self.notification.wait(timeout)
+            data_has_been_received = self.notification.wait(timeout)
             self.notification.clear()
-            if (received_data_flag is False):
+            if (data_has_been_received is False):
                 self.notification_message = None
             else:
                 self.notification_message = self.high_notification_queue.get()
         else:
-            received_data_flag = True
+            data_has_been_received = True
             self.notification_message = self.high_notification_queue.get()
 
-        return received_data_flag, self.notification_message
+        return data_has_been_received, self.notification_message
     
     def is_i3c_target_notification(self, name, message):
         """
@@ -75,7 +75,7 @@ class I3C_target_notification_handler:
         """
  
         # Hot-Fix to solve extra space in the firmware release
-        if message['name'] != "I3C TARGET NOTIFICATION":
+        if message["name"] != "I3C TARGET NOTIFICATION":
             return False
         return True
     
@@ -104,7 +104,7 @@ class SupernovaI3CTargetBlockingInterface:
         self.controller = controller
         self.mem_layout = I3cTargetMemoryLayout_t.MEM_2_BYTES
         # I3C target notification handler
-        self.i3c_notification = I3C_target_notification_handler(notification_subscription)
+        self.i3c_notification = I3CTargetNotificationHandler(notification_subscription)
  
     def target_init(self, memory_layout: I3cTargetMemoryLayout_t, useconds_to_wait_for_ibi, max_read_length, max_write_length, features):
         """
@@ -138,12 +138,8 @@ class SupernovaI3CTargetBlockingInterface:
             raise BackendError(original_exception=e) from e
 
         status = responses[0]["result"]
-        if status == "I3C_TARGET_INIT_SUCCESS":
-            result = (True, "Target intialized correctly")
-        else:
-            result = (False, "Couldn't intialize target")
-
-        return result
+        return (status == "I3C_TARGET_INIT_SUCCESS", status)
+    
     
     def set_configuration(self, useconds_to_wait_for_ibi, max_read_length, max_write_length, features):
         """
@@ -175,12 +171,7 @@ class SupernovaI3CTargetBlockingInterface:
             raise BackendError(original_exception=e) from e
 
         status = responses[0]["result"]
-        if status == "I3C_TARGET_SET_CONF_SUCCESS":
-            result = (True, "Target configured correctly")
-        else:
-            result = (False, "Couldn't configure target")
-
-        return result
+        return (status == "I3C_TARGET_SET_CONF_SUCCESS", status)
     
     def write_memory(self, subaddress: [], buffer: list):
         """
@@ -208,12 +199,8 @@ class SupernovaI3CTargetBlockingInterface:
             raise BackendError(original_exception=e) from e
 
         status = responses[0]["result"]
-        if status == "I3C_TARGET_WRITE_MEM_SUCCESS":
-            result = (True, None)
-        else:
-            result = (False, responses[0]["error"])
 
-        return result
+        return((True, None) if (status == "I3C_TARGET_WRITE_MEM_SUCCESS") else (False, responses[0]["error"]))
         
     def read_memory(self, subaddress: [], length):
         """
@@ -241,12 +228,8 @@ class SupernovaI3CTargetBlockingInterface:
             raise BackendError(original_exception=e) from e
 
         status = responses[0]["result"]
-        if status == "I3C_TARGET_READ_MEM_SUCCESS":
-            result = (True, responses[0]["data"])
-        else:
-            result = (False, responses[0]["error"])
 
-        return result
+        return((True, responses[0]["data"]) if (status == "I3C_TARGET_READ_MEM_SUCCESS") else (False, responses[0]["error"]))
         
     def wait_for_notification(self, timeout):
         """
@@ -265,15 +248,15 @@ class SupernovaI3CTargetBlockingInterface:
 
         # Wait for an I3C notification 
         # with the specified timeout
-        received_data_flag, notification =  self.i3c_notification.wait_for_notification(timeout)
+        data_has_been_received, notification =  self.i3c_notification.wait_for_notification(timeout)
 
         # Check if the notification was received within the timeout
-        if received_data_flag is False:
-            return (received_data_flag, "Timeout occurred while waiting for the I3C Target notification")
+        if not data_has_been_received:
+            return (data_has_been_received, "Timeout occurred while waiting for the I3C Target notification")
 
-        keys_to_remove = {'id', 'command', 'name', 'target_address'}
+        keys_to_remove = {"id", "command", "name", "target_address"}
         new_dict = {key: notification[key] for key in notification if key not in keys_to_remove}
 
         # Return the received payload if the notification is correct
-        return (received_data_flag, new_dict)    
+        return (data_has_been_received, new_dict)    
     
