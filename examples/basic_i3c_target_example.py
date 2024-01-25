@@ -162,14 +162,14 @@ def main():
     SUBADDR     = [0x00, 0x00]
     DATA        = [0xEE for i in range(5)]
     result = i3c_controller.write(target_address, i3c_controller.TransferMode.I3C_SDR, SUBADDR, DATA)
-    notification_flag, notification_message = i3c_target.wait_for_notification(5)
+    notification_flag, notification_message = i3c_target.wait_for_notification(1)
     print(notification_message)
 
     # I3C READ WITHOUT INDICATING START REGISTER ADDRESS
     SUBADDR     = []
     LENGTH      = 10
     result = i3c_controller.read(target_address, i3c_controller.TransferMode.I3C_SDR, SUBADDR, LENGTH)
-    notification_flag, notification_message = i3c_target.wait_for_notification(5)
+    notification_flag, notification_message = i3c_target.wait_for_notification(1)
     print(notification_message)
 
     # I3C READ INDICATING START REGISTER ADDRESS
@@ -177,7 +177,7 @@ def main():
     SUBADDR     = [0xBC, 0x02] # 700
     LENGTH      = 5 # in bytes
     result = i3c_controller.read(target_address, i3c_controller.TransferMode.I3C_SDR, SUBADDR, LENGTH)
-    notification_flag, notification_message = i3c_target.wait_for_notification(5)
+    notification_flag, notification_message = i3c_target.wait_for_notification(1)
     print(notification_message)
 
     # I3C WRITE INDICATING THE START ADDRESS FOLLOWED BY A READ WITHOUT ADDRESS
@@ -185,11 +185,11 @@ def main():
     DATA        = []
     LENGTH      = 6
     result = i3c_controller.write(target_address, i3c_controller.TransferMode.I3C_SDR, SUBADDR, DATA)
-    notification_flag, notification_message = i3c_target.wait_for_notification(5)
+    notification_flag, notification_message = i3c_target.wait_for_notification(1)
     print(notification_message)
 
     result = i3c_controller.read(target_address, i3c_controller.TransferMode.I3C_SDR, [], LENGTH)
-    notification_flag, notification_message = i3c_target.wait_for_notification(5)
+    notification_flag, notification_message = i3c_target.wait_for_notification(1)
     print(notification_message)
 
     # BORDER CASE: USER TRIES TO START A TRANSFER SURPASSING THE MEMORY RANGE
@@ -197,7 +197,7 @@ def main():
     SUBADDR     = [0x01, 0x04] # 1025
     DATA        = [0xEE for i in range(4)]
     result = i3c_controller.write(target_address, i3c_controller.TransferMode.I3C_SDR, SUBADDR, DATA)
-    notification_flag, notification_message = i3c_target.wait_for_notification(5)
+    notification_flag, notification_message = i3c_target.wait_for_notification(1)
     print(notification_message)
 
     # BORDER CASE: THE TRANSFER STARTS IN AN ALLOWED ADDRESS BUT TRIES TO SURPASS THE MEMORY RANGE ON THE GO
@@ -206,10 +206,10 @@ def main():
     DATA        = []
     LENGTH      = 30
     result = i3c_controller.write(target_address, i3c_controller.TransferMode.I3C_SDR, SUBADDR, DATA)
-    notification_flag, notification_message = i3c_target.wait_for_notification(5)
+    notification_flag, notification_message = i3c_target.wait_for_notification(1)
     print(notification_message)
     result = i3c_controller.read(target_address, i3c_controller.TransferMode.I3C_SDR, [], LENGTH)
-    notification_flag, notification_message = i3c_target.wait_for_notification(5)
+    notification_flag, notification_message = i3c_target.wait_for_notification(1)
     print(notification_message)
     
     print("-------------------------------------------------------------------------------")
@@ -276,14 +276,13 @@ def main():
     SUBADDR     = [0x3B] # register 59 = byte 236
     DATA        = [0xEE for i in range(8)]
     result = i3c_controller.write(target_address, i3c_controller.TransferMode.I3C_SDR, SUBADDR, DATA)
-    notification_flag, notification_message = i3c_target.wait_for_notification(5)
-    print(notification_message)
+    notification_flag, notification_message = i3c_target.wait_for_notification(1)
 
     # I3C READ WITHOUT INDICATING START REGISTER ADDRESS
     SUBADDR     = []
     LENGTH      = 4 # in bytes
     result = i3c_controller.read(target_address, i3c_controller.TransferMode.I3C_SDR, SUBADDR, LENGTH)
-    notification_flag, notification_message = i3c_target.wait_for_notification(5)
+    notification_flag, notification_message = i3c_target.wait_for_notification(1)
     print(notification_message)
 
     # I3C READ INDICATING START REGISTER ADDRESS
@@ -291,7 +290,7 @@ def main():
     SUBADDR     = [0x7D] # register 125 = byte 500
     LENGTH      = 8 # in bytes
     result = i3c_controller.read(target_address, i3c_controller.TransferMode.I3C_SDR, SUBADDR, LENGTH)
-    notification_flag, notification_message = i3c_target.wait_for_notification(5)
+    notification_flag, notification_message = i3c_target.wait_for_notification(1)
     print(notification_message)
 
     # I3C WRITE INDICATING THE START ADDRESS FOLLOWED BY A READ WITHOUT ADDRESS
@@ -299,10 +298,10 @@ def main():
     DATA        = []
     LENGTH      = 4 # in bytes
     result = i3c_controller.write(target_address, i3c_controller.TransferMode.I3C_SDR, SUBADDR, DATA)
-    notification_flag, notification_message = i3c_target.wait_for_notification(5)
+    notification_flag, notification_message = i3c_target.wait_for_notification(1)
     print(notification_message)
     result = i3c_controller.read(target_address, i3c_controller.TransferMode.I3C_SDR, [], LENGTH)
-    notification_flag, notification_message = i3c_target.wait_for_notification(5)
+    notification_flag, notification_message = i3c_target.wait_for_notification(1)
     print(notification_message)
 
     # BORDER CASE: THE TRANSFER STARTS IN AN ALLOWED ADDRESS BUT TRIES TO SURPASS THE MEMORY RANGE ON THE GO
@@ -311,10 +310,12 @@ def main():
     DATA        = []
     LENGTH      = 40 # in bytes
     result = i3c_controller.write(target_address, i3c_controller.TransferMode.I3C_SDR, SUBADDR, DATA)
-    notification_flag, notification_message = i3c_target.wait_for_notification(5)
+    notification_flag, notification_message = i3c_target.wait_for_notification(1)
     print(notification_message)
     result = i3c_controller.read(target_address, i3c_controller.TransferMode.I3C_SDR, [], LENGTH)
-    notification_flag, notification_message = i3c_target.wait_for_notification(5)
+    notification_flag, notification_message = i3c_target.wait_for_notification(1)
+    print(notification_message)
+    notification_flag, notification_message = i3c_target.wait_for_notification(1)
     print(notification_message)
 
     print("-------------------------------------------------------")

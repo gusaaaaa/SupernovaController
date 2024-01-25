@@ -5,6 +5,7 @@ from supernovacontroller.errors import BusVoltageError
 from supernovacontroller.errors import BusNotInitializedError
 from supernovacontroller.errors import BackendError
 from threading import Event
+import queue
 
 class I3C_target_notification_handler:
 
@@ -24,6 +25,8 @@ class I3C_target_notification_handler:
         self.notification_message = None
         self.modified = False
         notification_subscription("I3C TARGET NOTIFICATION", filter_func=self.is_i3c_target_notification, handler_func=self.handle_i3c_target_notification)
+        # High level notification handling queue to pass message from handle_i3c_target_notification to wait_for_notification
+        self.high_notification_queue = queue.SimpleQueue()
 
     def wait_for_notification(self, timeout):
         """
@@ -46,14 +49,16 @@ class I3C_target_notification_handler:
         """
 
         received_data_flag = False
-        if self.modified is False:
+        if self.high_notification_queue.empty():
             received_data_flag = self.notification.wait(timeout)
             self.notification.clear()
             if (received_data_flag is False):
                 self.notification_message = None
-        else: 
+            else:
+                self.notification_message = self.high_notification_queue.get()
+        else:
             received_data_flag = True
-        self.modified = False      
+            self.notification_message = self.high_notification_queue.get()
 
         return received_data_flag, self.notification_message
     
@@ -88,8 +93,8 @@ class I3C_target_notification_handler:
         i3c_notification does not see the set event. By adding the modified flag, handle_i3c_target_notification indicates to 
         wait_for_notification function that an event was raised before it was called.
         """
-        self.modified = True
         self.notification_message = message
+        self.high_notification_queue.put(message)
         self.notification.set()
         
 class SupernovaI3CTargetBlockingInterface:
