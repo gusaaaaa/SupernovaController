@@ -1,19 +1,12 @@
+
 from transfer_controller import TransferController
 from BinhoSupernova.Supernova import Supernova
-from BinhoSupernova.commands.definitions import UartControllerBaudRate
-from BinhoSupernova.commands.definitions import UartControllerParity
-from BinhoSupernova.commands.definitions import UartControllerDataSize
-from BinhoSupernova.commands.definitions import UartControllerStopBit
-from BinhoSupernova.commands.definitions import UsbCommandResponseStatus
-from BinhoSupernova.commands.definitions import COMMANDS_DICTIONARY
-from BinhoSupernova.commands.definitions import UART_CONTROLLER_INIT  
-from BinhoSupernova.commands.definitions import UART_CONTROLLER_SET_PARAMETERS
-from BinhoSupernova.commands.definitions import UART_CONTROLLER_SEND
-from BinhoSupernova.commands.definitions import UART_CONTROLLER_RECEIVE_NOTIFICATION
-
+from BinhoSupernova.commands.definitions import (
+    UartControllerBaudRate, UartControllerParity, UartControllerDataSize,
+    UartControllerStopBit, COMMANDS_DICTIONARY,
+    UART_CONTROLLER_INIT, UART_CONTROLLER_SET_PARAMETERS, UART_CONTROLLER_SEND
+)
 from supernovacontroller.errors import BackendError
-from supernovacontroller.errors import BusVoltageError
-from supernovacontroller.errors import BusNotInitializedError
 from threading import Event
 
 class UARTNotificationHandler:
@@ -32,7 +25,7 @@ class UARTNotificationHandler:
 
         self.last_notification = Event()
         self.last_notification_message = None
-        notification_subscription(name="UART Receive Notification", filter_func=self._is_uart_receive, handler_func=self._handle_uart_receive)
+        notification_subscription(name="UART Receive Notification", filter_func=self.__is_uart_receive, handler_func=self.__handle_uart_receive)
 
     def wait_for_notification(self, time_out):
         """
@@ -49,15 +42,15 @@ class UARTNotificationHandler:
             - The second element is either the received message if successful or None if no notification is received.
         """
 
-        received_data_flag = self.last_notification.wait(time_out)
+        data_has_been_received = self.last_notification.wait(time_out)
         self.last_notification.clear()
 
-        if received_data_flag is False:
+        if not data_has_been_received:
             self.last_notification_message = None
 
-        return received_data_flag, self.last_notification_message
+        return data_has_been_received, self.last_notification_message
     
-    def _is_uart_receive(self, name, message):
+    def __is_uart_receive(self, name, message):
         """
         Checks if the received notification is related to UART reception.
 
@@ -72,7 +65,7 @@ class UARTNotificationHandler:
         # Hot-Fix to solve extra space in the firmware release
         return message['name'].strip() == "UART CONTROLLER RECEIVE MESSAGE"
     
-    def _handle_uart_receive(self, name, message):
+    def __handle_uart_receive(self, name, message):
         """
         This method handles the UART received notification by setting the last received message and
         triggering the last notification event.
@@ -112,7 +105,7 @@ class SupernovaUARTBlockingInterface:
         # UART receive notification handler
         self.uart_notification = UARTNotificationHandler(notification_subscription)
 
-    def _store_parameters(self, baudrate: UartControllerBaudRate=None, hardware_handshake: bool=None , parity: UartControllerParity=None, data_size: UartControllerDataSize=None, stop_bit: UartControllerStopBit=None):
+    def __store_parameters(self, baudrate: UartControllerBaudRate=None, hardware_handshake: bool=None , parity: UartControllerParity=None, data_size: UartControllerDataSize=None, stop_bit: UartControllerStopBit=None):
         """
         Stores the UART communication parameters.
 
@@ -134,7 +127,7 @@ class SupernovaUARTBlockingInterface:
         self.data_size = data_size or self.data_size
         self.stop_bit = stop_bit or self.stop_bit
 
-    def _check_data_complete(self):
+    def __check_data_complete(self):
         """
         Checks if all required UART communication parameters are complete.
 
@@ -154,7 +147,7 @@ class SupernovaUARTBlockingInterface:
             self.stop_bit is not None
         ])
 
-    def _check_if_response_is_correct(self, response):
+    def __check_if_response_is_correct(self, response):
         """
         Checks if the response received from the Supernova indicates successful execution of the UART method.
 
@@ -250,9 +243,9 @@ class SupernovaUARTBlockingInterface:
         """
 
         # Update the UART class attributes with the provided data
-        self._store_parameters(baudrate = baudrate, hardware_handshake = hardware_handshake, parity = parity, data_size = data_size, stop_bit = stop_bit)
+        self.__store_parameters(baudrate = baudrate, hardware_handshake = hardware_handshake, parity = parity, data_size = data_size, stop_bit = stop_bit)
         # Check if all the needed configurations for UART communication are correctly set
-        is_data_complete = self._check_data_complete()
+        is_data_complete = self.__check_data_complete()
         # Return failure if data is incomplete
         if not is_data_complete: 
             return (False, "Init failed, incomplete parameters to initialize bus")
@@ -267,15 +260,9 @@ class SupernovaUARTBlockingInterface:
             raise BackendError(original_exception=e) from e
         
         # Check if the response is of the expected type (by name) and it was successful 
-        response_success = responses[0]["name"] == COMMANDS_DICTIONARY[UART_CONTROLLER_INIT]["name"] and self._check_if_response_is_correct(responses[0])
+        response_success = responses[0]["name"] == COMMANDS_DICTIONARY[UART_CONTROLLER_INIT]["name"] and self.__check_if_response_is_correct(responses[0])
 
-        # Update result accordingly 
-        if response_success:
-            result = (True, "Success")
-        else:
-            result = (False, "Init failed, error from the Supernova")
-
-        return result
+        return (response_success, "Success" if response_success else "Init failed, error from the Supernova")
 
     def set_parameters(self, baudrate: UartControllerBaudRate=None, hardware_handshake: bool=None , parity: UartControllerParity=None, data_size: UartControllerDataSize=None, stop_bit: UartControllerStopBit=None):
         """
@@ -306,9 +293,9 @@ class SupernovaUARTBlockingInterface:
         """
 
         # Update the UART class attributes with the provided data
-        self._store_parameters(baudrate = baudrate, hardware_handshake = hardware_handshake, parity = parity, data_size = data_size, stop_bit = stop_bit)
+        self.__store_parameters(baudrate = baudrate, hardware_handshake = hardware_handshake, parity = parity, data_size = data_size, stop_bit = stop_bit)
         # Check if all the needed configurations for UART communication are correctly set
-        is_data_complete = self._check_data_complete()
+        is_data_complete = self.__check_data_complete()
         # Return failure if data is incomplete
         if not is_data_complete: 
             return (False, "Set parameters failed, incomplete parameters to do set parameters")
@@ -323,15 +310,9 @@ class SupernovaUARTBlockingInterface:
             raise BackendError(original_exception=e) from e
 
         # Check if the response is of the expected type (by name) and it was successful 
-        response_success = responses[0]["name"] == COMMANDS_DICTIONARY[UART_CONTROLLER_SET_PARAMETERS]["name"] and self._check_if_response_is_correct(responses[0])
+        response_success = responses[0]["name"] == COMMANDS_DICTIONARY[UART_CONTROLLER_SET_PARAMETERS]["name"] and self.__check_if_response_is_correct(responses[0])
 
-        # Update result accordingly 
-        if response_success:
-            result = (True, "Success")
-        else:
-            result = (False, "Set Parameters failed, error from the Supernova")
-
-        return result
+        return (response_success, "Success" if response_success else "Set Parameters failed, error from the Supernova")
 
     def get_parameters(self):
         """
@@ -378,15 +359,9 @@ class SupernovaUARTBlockingInterface:
             raise BackendError(original_exception=e) from e
         
         # Check if the response is of the expected type (by name) and it was successful 
-        response_success =  responses[0]["name"] == COMMANDS_DICTIONARY[UART_CONTROLLER_SEND]["name"] and self._check_if_response_is_correct(responses[0])
-
-        # Update result accordingly 
-        if response_success:
-            result = (True, "Success")
-        else:
-            result = (False, "Send request failed, error from the Supernova")
-
-        return result
+        response_success =  responses[0]["name"] == COMMANDS_DICTIONARY[UART_CONTROLLER_SEND]["name"] and self.__check_if_response_is_correct(responses[0])
+            
+        return (response_success, "Success" if response_success else "Send request failed, error from the Supernova")
     
     def wait_for_notification(self, timeout):
         """
@@ -412,7 +387,7 @@ class SupernovaUARTBlockingInterface:
             return (received_data_flag, "Timeout occurred while waiting for the UART receive notification")
         
         # Check if the reception of the UART message was successful
-        response_ok = self._check_if_response_is_correct(notification)
+        response_ok = self.__check_if_response_is_correct(notification)
         # If there's an error in the received notification, return an error message
         if response_ok is False:
             return (response_ok, "Error from Supernova while receiving UART data")

@@ -27,18 +27,28 @@ def main():
 
     print("Initializing UART peripheral.")
     (success, _) = uart.set_bus_voltage(3300)
-    (success, _) = uart.init_bus()
+    if not success:
+        print("Couldn't set the UART bus voltage.")
+        exit(1)
 
+    (success, _) = uart.init_bus()
     if not success:
         print("Couldn't initialize UART peripheral.")
         exit(1)
 
     # Change baudrate to 115200bps
     print("Changing the baudrate to 115200bps.")
-    uart.set_parameters(baudrate = UartControllerBaudRate.UART_BAUD_115200)
+    (success, response) = uart.set_parameters(baudrate = UartControllerBaudRate.UART_BAUD_115200)
+    if not success:
+        print("Couldn't set the UART parameters correctly.")
+        exit(1)
 
     (success, response) = uart.get_parameters()
-    print(f"The configured parameters are: {response}")
+    if success:
+        print(f"The configured parameters are:")
+        print(f"Baudrate: {response[0].name}, Parity: {response[1].name}, Data Size: {response[2].name}, Stop Bit: {response[3].name}, Hardware Handshake: {response[4]}")
+    else:
+        print("Failed to retrieve UART parameters.")
 
     # Send data over UART
     data = [0x00, 0x01, 0x02, 0x3, 0x04, 0x05, 0x06]
