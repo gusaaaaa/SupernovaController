@@ -337,6 +337,8 @@ class SupernovaI3CBlockingInterface:
                 case "ccc_getdcr": return response["dcr"][2:].upper()
                 case "ccc_getmrl": return response["maxReadLength"]
                 case "ccc_getmwl": return response["maxWriteLength"]
+                case "ccc_get_status": return response["data"]
+                case "ccc_setnewda": return None
                 case "ccc_unicast_setmrl" | "ccc_unicast_setmwl" | "ccc_broadcast_setmwl" | "ccc_broadcast_setmrl" : return response["data"]
             return None
 
@@ -1353,3 +1355,28 @@ class SupernovaI3CBlockingInterface:
             raise BackendError(original_exception=e) from e
 
         return self._process_response("ccc_broadcast_entas3", responses)
+
+    def ccc_unicast_get_status(self, target_address):
+        """
+        Sends a unicast GET_STATUS command to the device with target_address dynamic address
+
+        Returns:
+        tuple: A tuple containing two elements:
+            - The first element is a Boolean indicating the success (True) or failure (False) of the operation.
+            - The second element is the two bytes that represent the status.
+
+        """
+        try:
+            responses = self.controller.sync_submit([
+                lambda id: self.driver.i3cGETSTATUS(
+                    id,
+                    target_address,
+                    self.push_pull_clock_freq_mhz,
+                    self.open_drain_clock_freq_mhz,
+                )
+            ])
+        except Exception as e:
+            raise BackendError(original_exception=e) from e
+
+        return self._process_response("ccc_get_status", responses)
+    
