@@ -6,6 +6,7 @@ SupernovaController is a Python-based tool designed to interface with the Supern
 
 ## Features
 - **Blocking API:** A streamlined approach to interact with the Supernova device, minimizing the complexity of handling asynchronous callbacks.
+- **Multi-Interface:** Easily communicate with UART, I2C and I3C Devices in an All-In-One package.
 - **Communication:** Seamlessly manages command responses and notifications, facilitating easier and more intuitive command sequencing.
 - **Examples:** Comprehensive examples demonstrating the practical application of the blocking API.
 
@@ -129,10 +130,11 @@ Before proceeding, make sure you have installed the `SupernovaController` packag
 
 ### Next Steps
 
-After installing the `SupernovaController` package, you can further explore its capabilities by trying out the examples included in the installation. These examples demonstrate practical applications of both I2C and I3C protocols:
+After installing the `SupernovaController` package, you can further explore its capabilities by trying out the examples included in the installation. These examples demonstrate practical applications of UART, I2C and I3C protocols:
 
 - **Basic I3C Example (`basic_i3c_example.py`):** Learn the basics of I3C bus initialization and device communication.
 - **Basic I2C Example (`basic_i2c_example.py`):** Get started with fundamental I2C operations.
+- **Basic UART Example (`basic_uart_example.py`):** Try out the UART protocol Hands-On.
 - **IBI Example (`ibi_example.py`):** Understand handling In-Band Interrupts (IBI) in I3C.
 - **ICM42605 I3C Example (`ICM42605_i3c_example.py`):** Explore a real-world application of I3C with the ICM42605 sensor.
 
