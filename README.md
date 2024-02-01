@@ -54,7 +54,7 @@ Before proceeding, make sure you have installed the `SupernovaController` packag
 ### I3C features
 
 This section provides a quick guide to get you started with the `SupernovaController` focusing on the I3C protocol.
-In an I3C bus, the Supernova can act either as a controller or a target.
+In an I3C bus, the Supernova can act either as a controller or as a target.
 
 * In controller mode the Supernova supports several features: 
     * Supernova initialization in I3C controller mode.
@@ -69,7 +69,7 @@ In an I3C bus, the Supernova can act either as a controller or a target.
     - memory of 512 registers of 2 bytes size
     - memory of 256 registers of 4 bytes size
 
-    It supports several features: 
+    In this mode, it supports several features: 
     * Supernova initialization in I3C target mode.
     * Command to change its configuration after its initialization.
     * Write and Read commands to modify the memory via USB.
@@ -123,7 +123,7 @@ In an I3C bus, the Supernova can act either as a controller or a target.
     ```python
    success, status = device.controller_init()
    ```
-    The peripheral is initialized in controller mode by default, so it may not be needed to call it in most cases.
+    By default, the peripheral is initialized by the open() method in controller mode, so it may not be needed to call it in most cases.
 
 2. ***Setting Bus Voltage:***
 
@@ -192,7 +192,7 @@ In an I3C bus, the Supernova can act either as a controller or a target.
 
     * SUBADDR indicates the address of the memory to start reading. If the memory layout (defined in target_init) is MEM_1_BYTE this field is a c_uint16 variable type, c_uint8 otherwise.
     * DATA is the list of bytes that represents the data the user wants to write.
-    * LENGTH is a cuint16_t that indictates the data length the user intends to read, in bytes. 
+    * LENGTH is a c_uint16 that indicates the data length the user intends to read, in bytes. 
     
 6. ***Performing CCCs:***
 
@@ -231,7 +231,7 @@ In an I3C bus, the Supernova can act either as a controller or a target.
     
     * MWL: c_uint16 that indicates the maximum write length that the user wants the Supernova to handle
     
-    * TARGET_CONF: c_uint8 that represents a series of flags that describe the features of the Supernova in target mode. If no TARGET_CONF is assigned, it aquires its default value 12.
+    * TARGET_CONF: c_uint8 that represents a series of flags that describe the features of the Supernova in target mode. If no TARGET_CONF is assigned, it acquires its default value 12.
     
         The byte is formed joining fields from the following enums by the logical OR operation:
 
@@ -241,7 +241,7 @@ In an I3C bus, the Supernova can act either as a controller or a target.
             OFFLINE_CAPABLE     = 0x01
         ```
 
-        If I3cOffline = 0x01 when the target enable (SCONFIG[SLVENA]) is set to 1, then the I3C module waits for either 60 s of bus quiet or an HDR Exit Pattern. This waiting ensures that the bus is not in HDR mode, and so can safely monitor for the next activity in Single Data Rate (SDR) mode.
+        If `I3cOffline = 0x01` when the target enable (`SCONFIG[SLVENA]) is set to 1, then the I3C module waits for either 60 s of bus quiet or an HDR Exit Pattern. This waiting ensures that the bus is not in HDR mode, and so can safely monitor for the next activity in Single Data Rate (SDR) mode.
     
         
         ```python
@@ -249,36 +249,36 @@ In an I3C bus, the Supernova can act either as a controller or a target.
             PART_NUMB_DEFINED      = 0x00
             PART_NUMB_RANDOM       = 0x02
         ```
-        If PartNOramdom = 0x00, SIDPARTNO[PARTNO] is a part number and an instance.  
-        If PartNOrandom = 0x02, SIDPARTNO[PARTNO] is a random number
-        
+        If `PartNOramdom = 0x00`, `SIDPARTNO[PARTNO]` is a part number and an instance.  
+        If `PartNOrandom = 0x02`, `SIDPARTNO[PARTNO]` is a random number
+
         ```python
         class DdrOk(Enum):
             PROHIBITED_DDR      = 0x00
             ALLOWED_DDR         = 0x04
         ```
-        Indicates whether HDR-DDR is allowed (DdrOk = 0x04) or not (DdrOk = 0x00).
+        Indicates whether HDR-DDR is allowed (`DdrOk = 0x04`) or not (`DdrOk = 0x00`).
 
         ```python
         class IgnoreTE0TE1Errors(Enum):
             NOT_IGNORE_ERRORS    = 0x00
             IGNORE_ERRORS        = 0x08
         ```
-        If IgnoreTE0TE1Errors = 0x08 the target does not detect TE0 or TE1 errors, so it does not lock up waiting on an Exit Pattern.
+        If `IgnoreTE0TE1Errors = 0x08` the target does not detect TE0 or TE1 errors, so it does not lock up waiting on an Exit Pattern.
         
         ```python
         class MatchStartStop(Enum):
             NOT_MATCH   = 0x00
             MATCH       = 0x10
         ```
-        This setting allows START and STOP to be used to detect the end of a message to/from this target if MatchStartStop = 0x10.
+        This setting allows START and STOP to be used to detect the end of a message to/from this target if `MatchStartStop = 0x10`.
         
         ```python
         class AlwaysNack(Enum):
             NOT_ALWAYS_NACK     = 0x00
             ALWAYS_NACK         = 0x20
         ```
-        If AlwaysNack = 0x20 the target rejects all requests to it, except for broadcast Common Command Codes (CCCs).
+        If `AlwaysNack = 0x20` the target rejects all requests to it, except for broadcast Common Command Codes (CCCs).
         
 2. ***Set Supernova configuration:***
 
@@ -310,16 +310,22 @@ In an I3C bus, the Supernova can act either as a controller or a target.
 
     * SUBADDR indicates the address of the memory to start reading. 
     If the memory layout (defined in target_init) is MEM_1_BYTE this field is a c_uint16 variable type, c_uint8 otherwise.
-    * LENGTH is a cuint16_t that indictaes the data length the user intends to read, in bytes.
+    * LENGTH is a c_uint16 that indicates the data length the user intends to read, in bytes.
     
 
 ***Target Notification:***
 
 When the Supernova acts in I3C target mode, it notifies everytime it detects the end of an I3C transfer it was involved in (not including CCCs).
 
-The notification retrieves info about the last I3C transaction directed to the target Supernova:
+The notification reports info about the last I3C transaction directed to the target Supernova.
 
-* The transfer type indicates if the transfer was a read or write operation from the target point of view. It holds a value belonging to I3cTargetTransferType_t:
+A typical target notification looks like:
+
+```python
+{'transfer_type': 'I3C_TARGET_READ', 'memory_address': 7, 'transfer_length': 5, 'usb_result': 'CMD_SUCCESSFUL', 'manager_result': 'I3C_TARGET_TRANSFER_SUCCESS', 'driver_result': ['NO_ERROR'], 'data': [238, 238, 238, 238, 238]}
+```
+
+* The transfer_type indicates if the transfer was a read or write operation from the target point of view. It holds a value belonging to I3cTargetTransferType_t:
 
 ```python
 class I3cTargetTransferType_t(Enum):
@@ -330,10 +336,9 @@ class I3cTargetTransferType_t(Enum):
     I3C_TARGET_READ     = 2
 ```
 
-* The target address (c_uint8): indicates the dynamic address of the Supernova that sent the notification (useful if we have more than one in the bus and we want to easily identify which one sent it).
-* The memory address (c_uint8 or c_uint16 depending on the memory layout): memory address where the transfer started to work with.  
-* The transfer length (c_uint16): the length, in bytes, of the data transfered.
-* The USB result indicates if there was an error on the USB module or not. It holds a value belonging to UsbCommandResponseStatus:
+* The memory_address (c_uint8 or c_uint16 depending on the memory layout) indicates the memory address where the transfer started to work with.  
+* The transfer_length (c_uint16) represents the length, in bytes, of the data transferred.
+* The usb_result indicates if there was an error on the USB module or not. It holds a value belonging to UsbCommandResponseStatus:
 
 ```python
 class UsbCommandResponseStatus(Enum):
@@ -348,7 +353,7 @@ class UsbCommandResponseStatus(Enum):
     CMD_NOT_AVAILABLE       = 0x02
 ```    
     
-* The manager result indicates if there was an error on the manager side of the I3C module (not driver related). It holds a value belonging to I3cTargetTransferType_t:
+* The manager_result indicates if there was an error on the manager side of the I3C module (not driver related). It holds a value belonging to I3cTargetTransferType_t:
 
 ```python
 class I3cTargetTransferResult_t(Enum):
@@ -359,7 +364,7 @@ class I3cTargetTransferResult_t(Enum):
     I3C_TARGET_TRANSFER_FAIL        = 1
 ```    
     
-* The driver result indicates if there was no error, if there was an abort condition or a list of all the driver errors that arose during the transfer. It can take values belonging to I3cTargetTransferError_t:
+* The driver_result indicates if there was no error, if there was an abort condition or a list of all the driver errors that arose during the transfer. It can take values belonging to I3cTargetTransferError_t:
 
 ```python
 class I3cTargetTransferError_t(Enum):
@@ -379,19 +384,13 @@ class I3cTargetTransferError_t(Enum):
     OREAD_ERROR         = 0x1000
     OWRITE_ERROR        = 0x2000
 ```
-
-A typical target notification looks like:
-
-
-```python
-{'name': 'I3C TARGET NOTIFICATION', 'transfer_type': 'I3C_TARGET_READ', 'target_address': 8, 'memory_address': 7, 'transfer_length': 5, 'usb_result': 'CMD_SUCCESSFUL', 'manager_result': 'I3C_TARGET_TRANSFER_SUCCESS', 'driver_result': ['NO_ERROR'], 'data': [238, 238, 238, 238, 238]}
-```
+* The data field shows the list of bytes that were transferred during the transaction. 
 
 **Border Cases**
 
-The fact that the memory is not cirular obligates to take into account border cases:
+The fact that the memory is not circular obligates to take into account border cases:
 
-* If the user tries to start the transfer in an address surpassing the target memory range, the target will ignore the bytes of address and will start performing the transfer starting from the end of the the previous one.
+* If the user tries to start the transfer in an address surpassing the target memory range, the target will ignore the address and will start the transfer from the end of the the previous one.
 
 * If the transfer starts in an allowed memory address but tries to surpass the range during the transaction, it will only modify the bytes in the allowed range and discard the rest. The end of the transfer is taken as the end of the memory.
 
