@@ -117,14 +117,14 @@ In an I3C bus, the Supernova can act either as a controller or as a target.
 
 ### Operations intended for the Supernova in I3C controller mode
 
-1. ***Initializing the I3C peripheral:***
+1. ***Initializing the Supernova as an I3C controller:***
 
-    Initializes the Supernova I3C peripheral in controller mode:
+    Initializes the Supernova in controller mode:
 
     ```python
    success, status = i3c_controller.controller_init()
    ```
-    By default, the peripheral is initialized by the open() method in controller mode, so it may not be needed to call it in most cases.
+    By default, the Supernova is initialized by the open() method in controller mode, so it may not be needed to call it in most cases.
 
 2. ***Setting Bus Voltage:***
 
@@ -191,9 +191,9 @@ In an I3C bus, the Supernova can act either as a controller or as a target.
 
 ### Operations intended for the Supernova in I3C target mode
 
-1. ***Initializing the I3C peripheral:***
+1. ***Initializing the Supernova as an I3C target:***
 
-    Initializes the Supernova I3C peripheral in target mode and sets its initial configuration which includes the internal memory layout, its maximum write length, maximum read length, seconds waited to allow an In-Band Interrupt (IBI) to drive SDA low when the controller is not doing so and some flags regarding the target behaviour in the I3C bus:
+    Initializes the Supernova in target mode and sets its initial configuration which includes the internal memory layout, its maximum write length, maximum read length, seconds waited to allow an In-Band Interrupt (IBI) to drive SDA low when the controller is not doing so and some flags regarding the target behaviour in the I3C bus:
 
     ```python
     TARGET_CONF                 = I3cOffline.OFFLINE_UNFIT.value |  \
@@ -203,7 +203,7 @@ In an I3C bus, the Supernova can act either as a controller or as a target.
                                   MatchStartStop.NOT_MATCH.value |  \
                                   AlwaysNack.NOT_ALWAYS_NACK.value    
     
-    # Init the I3C peripheral in target mode specifying:
+    # Init Supernova in target mode specifying:
     # memory layout, uSeconds to wait for IBI, MRL, MWL and configuration.
     success, status = i3c_target.target_init(I3cTargetMemoryLayout_t.MEM_1_BYTE, 0x69, 0x100, 0x100, TARGET_CONF)   
    ```
