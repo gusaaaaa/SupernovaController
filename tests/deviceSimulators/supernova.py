@@ -118,7 +118,7 @@ class BinhoSupernovaSimulator:
         if(self.i3cBusStarted == False):
             raise BackendError(message="Bus was not initialized")
         
-        if(self.i3cTargetTable[str(targetAddress)] == None):
+        if(self.i3cTargetTable.get(str(targetAddress), None) == None):
             raise BackendError(message="NACK_ERROR")
         
         return self.i3cTargetTable[str(targetAddress)]["staticAddress"]
@@ -278,6 +278,7 @@ class BinhoSupernovaSimulator:
         self.callback(response, None)
 
     def i3cGETPID(self, id, targetAddress, pushPullRate, openDrainRate):
+        response = self.getI3cTransferResponseTemplate(id, 0)
         try:
             deviceInfo = self.helperGetDeviceInfoFromDynamicAddress(targetAddress)
             pid = list(map(lambda num: hex(num), deviceInfo["pid"]))
@@ -288,12 +289,13 @@ class BinhoSupernovaSimulator:
         except BackendError as e:
             response["header"]["result"] = "I3C_TRANSFER_FAIL"
             response["header"]["hasData"] = False
-            response["descriptor"]["errors"].append(e.message)
+            response["descriptor"]["errors"] = [(e.message)]
             response["descriptor"]["dataLength"] = 0
         
         self.callback(response, None)
 
     def i3cGETBCR(self, id, targetAddress, pushPullRate, openDrainRate):
+        response = self.getI3cTransferResponseTemplate(id, 0)
         try:
             deviceInfo = self.helperGetDeviceInfoFromDynamicAddress(targetAddress)
             bcr = deviceInfo["bcr"]
@@ -304,12 +306,13 @@ class BinhoSupernovaSimulator:
         except BackendError as e:
             response["header"]["result"] = "I3C_TRANSFER_FAIL"
             response["header"]["hasData"] = False
-            response["descriptor"]["errors"].append(e.message)
+            response["descriptor"]["errors"] = [(e.message)]
             response["descriptor"]["dataLength"] = 0
             
         self.callback(response, None)
 
     def i3cGETDCR(self, id, targetAddress, pushPullRate, openDrainRate):
+        response = self.getI3cTransferResponseTemplate(id, 0)
         try:
             deviceInfo = self.helperGetDeviceInfoFromDynamicAddress(targetAddress)
             dcr = hex(deviceInfo["dcr"])
@@ -326,6 +329,7 @@ class BinhoSupernovaSimulator:
         self.callback(response, None)
 
     def i3cGETMRL(self, id, targetAddress, pushPullRate, openDrainRate):
+        response = self.getI3cTransferResponseTemplate(id, 0)
         try:
             targets = self.__get_i3c_targets()
             staticAddress = self.helperGetStaticFromDynamicAddress(targetAddress)       
@@ -336,12 +340,13 @@ class BinhoSupernovaSimulator:
         except BackendError as e:
             response["header"]["result"] = "I3C_TRANSFER_FAIL"
             response["header"]["hasData"] = False
-            response["descriptor"]["errors"].append(e.message)
+            response["descriptor"]["errors"] = [(e.message)]
             response["descriptor"]["dataLength"] = 0
 
         self.callback(response, None)
 
     def i3cDirectSETMRL(self, id, targetAddress, pushPullRate, openDrainRate, mrl):
+        response = self.getI3cTransferResponseTemplate(id, 0)
         try:
             targets = self.__get_i3c_targets()
             staticAddress = self.helperGetStaticFromDynamicAddress(targetAddress)
@@ -352,12 +357,13 @@ class BinhoSupernovaSimulator:
         except BackendError as e:
             response["header"]["result"] = "I3C_TRANSFER_FAIL"
             response["header"]["hasData"] = False
-            response["descriptor"]["errors"].append(e.message)
+            response["descriptor"]["errors"] = [(e.message)]
             response["descriptor"]["dataLength"] = 0
 
         self.callback(response, None)
 
     def i3cBroadcastSETMRL(self, id, pushPullRate, openDrainRate, mrl):
+        response = self.getI3cTransferResponseTemplate(id, 0)
         try:
             targets = self.__get_i3c_targets()
             [target.setMRL(mrl) for target in targets.values()]
@@ -367,12 +373,13 @@ class BinhoSupernovaSimulator:
         except BackendError as e:
             response["header"]["result"] = "I3C_TRANSFER_FAIL"
             response["header"]["hasData"] = False
-            response["descriptor"]["errors"].append(e.message)
+            response["descriptor"]["errors"] = [(e.message)]
             response["descriptor"]["dataLength"] = 0
 
         self.callback(response, None)
 
     def i3cGETMWL(self, id, targetAddress, pushPullRate, openDrainRate):
+        response = self.getI3cTransferResponseTemplate(id, 0)
         try:
             targets = self.__get_i3c_targets()
             staticAddress = self.helperGetStaticFromDynamicAddress(targetAddress)
@@ -382,11 +389,12 @@ class BinhoSupernovaSimulator:
         except BackendError as e:
             response["header"]["result"] = "I3C_TRANSFER_FAIL"
             response["header"]["hasData"] = False
-            response["descriptor"]["errors"].append(e.message)
+            response["descriptor"]["errors"] = [(e.message)]
             response["descriptor"]["dataLength"] = 0
         self.callback(response, None)
 
     def i3cDirectSETMWL(self, id, targetAddress, pushPullRate, openDrainRate, mwl):
+        response = self.getI3cTransferResponseTemplate(id, 0)
         try:
             targets = self.__get_i3c_targets()
             staticAddress = self.helperGetStaticFromDynamicAddress(targetAddress)
@@ -396,12 +404,13 @@ class BinhoSupernovaSimulator:
         except BackendError as e:
             response["header"]["result"] = "I3C_TRANSFER_FAIL"
             response["header"]["hasData"] = False
-            response["descriptor"]["errors"].append(e.message)
+            response["descriptor"]["errors"] = [(e.message)]
             response["descriptor"]["dataLength"] = 0
 
         self.callback(response, None)
 
     def i3cBroadcastSETMWL(self, id, pushPullRate, openDrainRate, mwl):
+        response = self.getI3cTransferResponseTemplate(id, 0)
         try:
             targets = self.__get_i3c_targets()
             [target.setMWL(mwl) for target in targets.values()]
@@ -411,7 +420,7 @@ class BinhoSupernovaSimulator:
         except BackendError as e:
             response["header"]["result"] = "I3C_TRANSFER_FAIL"
             response["header"]["hasData"] = False
-            response["descriptor"]["errors"].append(e.message)
+            response["descriptor"]["errors"] = [(e.message)]
             response["descriptor"]["dataLength"] = 0
 
         self.callback(response, None)
