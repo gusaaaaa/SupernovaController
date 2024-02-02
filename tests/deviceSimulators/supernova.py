@@ -115,6 +115,9 @@ class BinhoSupernovaSimulator:
     # I3C management --------------------------------------------------------------------
 
     def helperGetStaticFromDynamicAddress(self, targetAddress):
+        if(self.i3cBusStarted == False):
+            raise BackendError(message="Bus was not initialized")
+        
         if(self.i3cTargetTable[str(targetAddress)] == None):
             raise BackendError(message="NACK_ERROR")
         
@@ -324,8 +327,8 @@ class BinhoSupernovaSimulator:
 
     def i3cGETMRL(self, id, targetAddress, pushPullRate, openDrainRate):
         try:
-            staticAddress = self.helperGetStaticFromDynamicAddress(targetAddress)       
             targets = self.__get_i3c_targets()
+            staticAddress = self.helperGetStaticFromDynamicAddress(targetAddress)       
             mrl = targets[str(staticAddress)].getMRL()
             response = self.getI3cTransferResponseTemplate(id, 2)
             response["maxReadLength"] = mrl
@@ -340,8 +343,8 @@ class BinhoSupernovaSimulator:
 
     def i3cDirectSETMRL(self, id, targetAddress, pushPullRate, openDrainRate, mrl):
         try:
-            staticAddress = self.helperGetStaticFromDynamicAddress(targetAddress)
             targets = self.__get_i3c_targets()
+            staticAddress = self.helperGetStaticFromDynamicAddress(targetAddress)
             targets[str(staticAddress)].setMRL(mrl)
             response = self.getI3cTransferResponseTemplate(id, 2)
             response["data"] = [0, 0]
@@ -371,8 +374,8 @@ class BinhoSupernovaSimulator:
 
     def i3cGETMWL(self, id, targetAddress, pushPullRate, openDrainRate):
         try:
-            staticAddress = self.helperGetStaticFromDynamicAddress(targetAddress)
             targets = self.__get_i3c_targets()
+            staticAddress = self.helperGetStaticFromDynamicAddress(targetAddress)
             mwl = targets[str(staticAddress)].getMWL()
             response = self.getI3cTransferResponseTemplate(id, 2)
             response["maxWriteLength"] = mwl
