@@ -73,6 +73,7 @@ In an I3C bus, the Supernova can act either as a controller or as a target.
     * Supernova initialization in I3C target mode.
     * Command to change its configuration after its initialization.
     * Write and Read commands to modify the memory via USB.
+    * I3C Write and Read transfers of up to 1024 bytes.
     * Notifications that indicate the end of a transfer (that involves the Supernova) detection.
 
 ### Basic I3C Communication
@@ -98,12 +99,12 @@ In an I3C bus, the Supernova can act either as a controller or as a target.
    Creates an I3C controller interface:
 
    ```python
-   i3c = device.create_interface("i3c.controller")
+   i3c_controller = device.create_interface("i3c.controller")
    ```
     Or an I3C target interface:
 
    ```python
-   i3c = device.create_interface("i3c.target")
+   i3c_target = device.create_interface("i3c.target")
    ```    
 
 3. ***Closing the Device:***
@@ -121,7 +122,7 @@ In an I3C bus, the Supernova can act either as a controller or as a target.
     Initializes the Supernova I3C peripheral in controller mode:
 
     ```python
-   success, status = device.controller_init()
+   success, status = i3c_controller.controller_init()
    ```
     By default, the peripheral is initialized by the open() method in controller mode, so it may not be needed to call it in most cases.
 
@@ -130,7 +131,7 @@ In an I3C bus, the Supernova can act either as a controller or as a target.
    Sets the bus voltage (in mV) for the I3C bus. This step is required before initializing the bus if you don't specify the voltage parameter in `init_bus`:
 
    ```python
-   success, data = i3c.set_bus_voltage(3300)
+   success, data = i3c_controller.set_bus_voltage(3300)
    ```
 
 3. ***Initializing the I3C Bus:***
@@ -138,13 +139,13 @@ In an I3C bus, the Supernova can act either as a controller or as a target.
    Initializes the I3C bus. The voltage parameter is optional here if already set via `set_bus_voltage`:
 
    ```python
-   success, data = i3c.init_bus()  # Voltage already set, so no need to specify it here
+   success, data = i3c_controller.init_bus()  # Voltage already set, so no need to specify it here
    ```
 
    If the bus voltage wasn't set earlier, you can initialize the bus with the voltage parameter:
 
    ```python
-   success, data = i3c.init_bus(3300)  # Setting the voltage directly in init_bus
+   success, data = i3c_controller.init_bus(3300)  # Setting the voltage directly in init_bus
    ```
 
 4. ***Discovering Devices on the Bus:***
@@ -152,167 +153,94 @@ In an I3C bus, the Supernova can act either as a controller or as a target.
    Retrieves a list of connected I3C devices:
 
    ```python
-   success, targets = i3c.targets()
+   success, targets = i3c_controller.targets()
    if success:
        for target in targets:
            print(f"Found device: {target}")
    ```
 
 5. ***Reading and Writing to a Device:***
-
-   Performs I3C write and read operations on a target device:
+   
+   Performs I3C write and read operations on a target device: 
 
    ```python
    # Write data specifying address, mode, register and a list of bytes.
-    result = i3c_controller.write(TARGET_ADDRESS, TRANSFER_MODE, SUBADDR, DATA)
+   i3c.write(0x08, i3c.TransferMode.I3C_SDR, [0x00, 0x00], [0xDE, 0xAD, 0xBE, 0xEF])
 
    # Read data specifying address, mode, register and buffer length.
-   success, data = i3c_controller.read(TARGET_ADDRESS, TRANSFER_MODE, SUBADDR, LENGTH)
+   success, data = i3c.read(0x08, i3c.TransferMode.I3C_SDR, [0x00, 0x00], 4)
    if success:
        print(f"Read data: {data}")
    ```
+    Replace `0x08` with the dynamic address of the device.
 
-    * TARGET_ADDRESS is a c_uint8 variable that specifies the dynamic address of the target this transfer is directed to.
-    * TRANSFER_MODE: variable of type TransferMode that indicates the mode of the transaction.
-    
-
-   ```python
-    class TransferMode(Enum):
-        '''
-        This enum represents the possible values to be assgined to the transfer mode bits in the command descriptor.
-        Defined in the USB I3C Device class specification V1.0
-        '''
-        I3C_SDR     = 0x00
-        I3C_HDR_DDR = 0x01
-        I3C_HDR_TS  = 0x02        # Not supported.
-        I3C_HDR_BT  = 0x03        # Not supported.
-        I2C_MODE    = 0x08
-        # 0x04 - 0x07 Reserved for future HDR modes.
-   ```
-
-    * SUBADDR indicates the address of the memory to start reading. If the memory layout (defined in target_init) is MEM_1_BYTE this field is a c_uint16 variable type, c_uint8 otherwise.
-    * DATA is the list of bytes that represents the data the user wants to write.
-    * LENGTH is a c_uint16 that indicates the data length the user intends to read, in bytes. 
-    
 6. ***Performing CCCs:***
 
    Requests CCCs on the I3C bus, directed to an specific target or broadcast. They take different parameters depending on the command, examples of them can be:
 
    ```python
-    success, result = i3c_controller.ccc_getpid(TARGET_ADDRESS)
+    # Send a GETPID CCC specifying the dynamic address.
+    success, result = i3c_controller.ccc_getpid(0x08)
 
-    MWL = 1024
-    i3c_controller.ccc_unicast_setmwl(TARGET_ADDRESS, MWL)
-    success, result = i3c_controller.ccc_getmwl(TARGET_ADDRESS)
+    # Send a SETMWL CCC specifying the dynamic address and maximum write length.
+    i3c_controller.ccc_unicast_setmwl(0x08, 1024)
+    # Send a GETMWL CCC specifying the dynamic address
+    success, result = i3c_controller.ccc_getmwl(0x08)
    ```
+    Replace `0x08` with the dynamic address of the device.
 
 ### Operations intended for the Supernova in I3C target mode
 
 1. ***Initializing the I3C peripheral:***
 
-    Initializes the Supernova I3C peripheral in target mode and sets its initial configuration which includes: the internal memory layout, its maximum write length, maximum read length, seconds waited to allow an In-Band Interrupt (IBI) to drive SDA low when the controller is not doing so and some flags regarding the target behaviour in the I3C bus.
+    Initializes the Supernova I3C peripheral in target mode and sets its initial configuration which includes the internal memory layout, its maximum write length, maximum read length, seconds waited to allow an In-Band Interrupt (IBI) to drive SDA low when the controller is not doing so and some flags regarding the target behaviour in the I3C bus:
 
     ```python
-   success, status = device.target_init(MEMORY_LAYOUT, USECONDS_TO_WAIT_FOR_IBI, MRL, MWL, TARGET_CONF)
+    TARGET_CONF                 = I3cOffline.OFFLINE_UNFIT.value |  \
+                                  PartNOrandom.PART_NUMB_DEFINED.value |  \
+                                  DdrOk.ALLOWED_DDR.value |  \
+                                  IgnoreTE0TE1Errors.IGNORE_ERRORS.value |  \
+                                  MatchStartStop.NOT_MATCH.value |  \
+                                  AlwaysNack.NOT_ALWAYS_NACK.value    
+    
+    # Init the I3C peripheral in target mode specifying:
+    # memory layout, uSeconds to wait for IBI, MRL, MWL and configuration.
+    success, status = i3c_target.target_init(I3cTargetMemoryLayout_t.MEM_1_BYTE, 0x69, 0x100, 0x100, TARGET_CONF)   
    ```
-
-    * MEMORY_LAYOUT indicates the layout of the Supernova internal memory, of I3cTargetMemoryLayout_t class:
-    
-        ```python
-        class I3cTargetMemoryLayout_t(Enum):
-            MEM_1_BYTE  = 0x00
-            MEM_2_BYTES = 0x01
-            MEM_4_BYTES = 0x02
-        ```
-
-    * USECONDS_TO_WAIT_FOR_IBI: c_uint16 that represents the micro seconds to allow an In-Band Interrupt (IBI) to drive SDA low when the controller is not doing so
-    
-    * MRL: c_uint16 that indicates the maximum read length that the user wants the Supernova to handle
-    
-    * MWL: c_uint16 that indicates the maximum write length that the user wants the Supernova to handle
-    
-    * TARGET_CONF: c_uint8 that represents a series of flags that describe the features of the Supernova in target mode. If no TARGET_CONF is assigned, it acquires its default value 12.
-    
-        The byte is formed joining fields from the following enums by the logical OR operation:
-
-        ```python
-        class I3cOffline(Enum):
-            OFFLINE_UNFIT       = 0x00
-            OFFLINE_CAPABLE     = 0x01
-        ```
-
-        If `I3cOffline = 0x01` when the target enable (`SCONFIG[SLVENA]) is set to 1, then the I3C module waits for either 60 s of bus quiet or an HDR Exit Pattern. This waiting ensures that the bus is not in HDR mode, and so can safely monitor for the next activity in Single Data Rate (SDR) mode.
-    
-        
-        ```python
-        class PartNOrandom(Enum):
-            PART_NUMB_DEFINED      = 0x00
-            PART_NUMB_RANDOM       = 0x02
-        ```
-        If `PartNOramdom = 0x00`, `SIDPARTNO[PARTNO]` is a part number and an instance.  
-        If `PartNOrandom = 0x02`, `SIDPARTNO[PARTNO]` is a random number
-
-        ```python
-        class DdrOk(Enum):
-            PROHIBITED_DDR      = 0x00
-            ALLOWED_DDR         = 0x04
-        ```
-        Indicates whether HDR-DDR is allowed (`DdrOk = 0x04`) or not (`DdrOk = 0x00`).
-
-        ```python
-        class IgnoreTE0TE1Errors(Enum):
-            NOT_IGNORE_ERRORS    = 0x00
-            IGNORE_ERRORS        = 0x08
-        ```
-        If `IgnoreTE0TE1Errors = 0x08` the target does not detect TE0 or TE1 errors, so it does not lock up waiting on an Exit Pattern.
-        
-        ```python
-        class MatchStartStop(Enum):
-            NOT_MATCH   = 0x00
-            MATCH       = 0x10
-        ```
-        This setting allows START and STOP to be used to detect the end of a message to/from this target if `MatchStartStop = 0x10`.
-        
-        ```python
-        class AlwaysNack(Enum):
-            NOT_ALWAYS_NACK     = 0x00
-            ALWAYS_NACK         = 0x20
-        ```
-        If `AlwaysNack = 0x20` the target rejects all requests to it, except for broadcast Common Command Codes (CCCs).
+   The memory layout field can take MEM_1_BYTE, MEM_2_BYTES or MEM_4_BYTES value.
         
 2. ***Set Supernova configuration:***
 
     Sets the configuration of the Supernova such as its maximum write length, maximum read length, seconds waited to allow an In-Band Interrupt (IBI) to drive SDA low when the controller is not doing so and some flags regarding the target behaviour in the I3C bus:
 
     ```python
-   success, status = device.set_configuration(USECONDS_TO_WAIT_FOR_IBI, MRL, MWL, TARGET_CONF)
-   ```
-    All the input parameters hold the same meaning as the ones for target_init command described above.
+    TARGET_CONF                 = I3cOffline.OFFLINE_UNFIT.value |  \
+                                  PartNOrandom.PART_NUMB_DEFINED.value |  \
+                                  DdrOk.ALLOWED_DDR.value |  \
+                                  IgnoreTE0TE1Errors.IGNORE_ERRORS.value |  \
+                                  MatchStartStop.NOT_MATCH.value |  \
+                                  AlwaysNack.NOT_ALWAYS_NACK.value
+
+    # Configure the memory layout, uSeconds to wait for IBI, MRL, MWL and configuration of the target. 
+    success, status = i3c_target.set_configuration(0x69, 0x300, 0x250, TARGET_CONF)
+    ```
 
 3. ***Write memory:***
 
-    Writes the internal memory of the Supernova:
+    Writes the internal memory of the Supernova via USB:
 
     ```python
-   success, error = device.write_memory(SUBADDR, DATA)
+   success, error = device.write_memory(0x010A, [0xFF for i in range(0,10)])
    ```
-    * SUBADDR indicates the address of the memory to start writing. 
-    If the memory layout (defined in target_init) is MEM_1_BYTE this field is a c_uint16 variable type, c_uint8 otherwise.
-    * DATA is the list of bytes that represents the data the user wants to write
     
 4. ***Read memory:***
 
-    Retrieves data from the Supernova internal memory:
+    Retrieves data from the Supernova internal memory via USB:
 
     ```python
-   success, data = device.read_memory(SUBADDR, LENGTH)
+   success, data = device.read_memory(0x0000, 255)
    ```
-
-    * SUBADDR indicates the address of the memory to start reading. 
-    If the memory layout (defined in target_init) is MEM_1_BYTE this field is a c_uint16 variable type, c_uint8 otherwise.
-    * LENGTH is a c_uint16 that indicates the data length the user intends to read, in bytes.
     
-
 ***Target Notification:***
 
 When the Supernova acts in I3C target mode, it notifies everytime it detects the end of an I3C transfer it was involved in (not including CCCs).
@@ -325,66 +253,7 @@ A typical target notification looks like:
 {'transfer_type': 'I3C_TARGET_READ', 'memory_address': 7, 'transfer_length': 5, 'usb_result': 'CMD_SUCCESSFUL', 'manager_result': 'I3C_TARGET_TRANSFER_SUCCESS', 'driver_result': ['NO_ERROR'], 'data': [238, 238, 238, 238, 238]}
 ```
 
-* The transfer_type indicates if the transfer was a read or write operation from the target point of view. It holds a value belonging to I3cTargetTransferType_t:
-
-```python
-class I3cTargetTransferType_t(Enum):
-    '''
-    This enum represents the type of transfer when the Supernova acts an I3C target
-    '''
-    I3C_TARGET_WRITE    = 1
-    I3C_TARGET_READ     = 2
-```
-
-* The memory_address (c_uint8 or c_uint16 depending on the memory layout) indicates the memory address where the transfer started to work with.  
-* The transfer_length (c_uint16) represents the length, in bytes, of the data transferred.
-* The usb_result indicates if there was an error on the USB module or not. It holds a value belonging to UsbCommandResponseStatus:
-
-```python
-class UsbCommandResponseStatus(Enum):
-    '''
-    This enum identifies different response status
-    CMD_SUCCESSFUL: The command was successfully requested to the corresponding module manager
-    CMD_DESTINATARY_BUSY: The destinatary module could not receive the command because it was busy
-    CMD_NOT_AVAILABLE: The command does not belong to the list of available commands
-    '''
-    CMD_SUCCESSFUL          = 0x00
-    CMD_DESTINATARY_BUSY    = 0x01  
-    CMD_NOT_AVAILABLE       = 0x02
-```    
-    
-* The manager_result indicates if there was an error on the manager side of the I3C module (not driver related). It holds a value belonging to I3cTargetTransferType_t:
-
-```python
-class I3cTargetTransferResult_t(Enum):
-    '''
-    Represents the result of a transfer from the Supernova in I3C target mode
-    '''
-    I3C_TARGET_TRANSFER_SUCCESS     = 0
-    I3C_TARGET_TRANSFER_FAIL        = 1
-```    
-    
-* The driver_result indicates if there was no error, if there was an abort condition or a list of all the driver errors that arose during the transfer. It can take values belonging to I3cTargetTransferError_t:
-
-```python
-class I3cTargetTransferError_t(Enum):
-    '''
-    Represents the error of a transfer from the Supernova in I3C target mode
-    '''
-    NO_ERROR            = 0x0000
-    ORUN_ERROR          = 0x0001
-    URUN_ERROR          = 0x0002
-    URUNNACK_ERROR      = 0x0004
-    ABORT_CONDITION     = 0x0008
-    INVSTART_ERROR      = 0x0010
-    SPAR_ERROR          = 0x0020
-    HPAR_ERROR          = 0x0040
-    HCRC_ERROR          = 0x0080
-    S0S1_ERROR          = 0x0100
-    OREAD_ERROR         = 0x1000
-    OWRITE_ERROR        = 0x2000
-```
-* The data field shows the list of bytes that were transferred during the transaction. 
+  The transfer_type indicates if the transfer was a read or write operation from the target point of view, can take the values I3C_TARGET_READ or I3C_TARGET_WRITE.
 
 **Border Cases**
 
