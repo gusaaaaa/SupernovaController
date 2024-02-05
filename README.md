@@ -15,7 +15,7 @@ SupernovaController is a Python-based tool designed to interface with the Supern
 To install the SupernovaController package, follow these steps:
 
 1. **Prerequisites:**
-   - Ensure that you have Python 3.5 or later installed on your system.
+   - Ensure that you have Python 3.10 or later installed on your system.
    - It's recommended to use a virtual environment for the installation to avoid any conflicts with other Python packages. You can create a virtual environment using tools like `venv` or `conda`.
 
 2. **Install the Package:**
@@ -64,6 +64,7 @@ In an I3C bus, the Supernova can act either as a controller or as a target.
     * I3C read operations of up to 255 bytes and I3C write operations of up to 1024 bytes.
     * CCCs.
     * Handling of IBIs.
+
 * In target mode the Supernova acts as non-circular and addressable memory that can have different layouts:
     - memory of 1024 registers of 1 byte size
     - memory of 512 registers of 2 bytes size
@@ -75,6 +76,14 @@ In an I3C bus, the Supernova can act either as a controller or as a target.
     * Write and Read commands to modify the memory via USB.
     * I3C Write and Read transfers of up to 1024 bytes.
     * Notifications that indicate the end of a transfer (that involves the Supernova) detection.
+  
+* Coming soon:
+  * For the I3C controller mode:
+    - Handling of Hot-Joins requests
+    - Target Reset Pattern
+  * For the I3C target mode:
+    - Normal IBIs request
+    - Hot-Join request
 
 ### Basic I3C Communication
 
@@ -207,7 +216,7 @@ In an I3C bus, the Supernova can act either as a controller or as a target.
     # memory layout, uSeconds to wait for IBI, MRL, MWL and configuration.
     success, status = i3c_target.target_init(I3cTargetMemoryLayout_t.MEM_1_BYTE, 0x69, 0x100, 0x100, TARGET_CONF)   
    ```
-   The memory layout field can take MEM_1_BYTE, MEM_2_BYTES or MEM_4_BYTES value.
+   The memory layout field can take `MEM_1_BYTE`, `MEM_2_BYTES` or `MEM_4_BYTES` value.
         
 2. ***Set Supernova configuration:***
 
@@ -245,7 +254,7 @@ In an I3C bus, the Supernova can act either as a controller or as a target.
 
 When the Supernova acts in I3C target mode, it notifies everytime it detects the end of an I3C transfer it was involved in (not including CCCs).
 
-The notification reports info about the last I3C transaction directed to the target Supernova.
+The notification reports info about the last I3C transaction addressed to the target Supernova.
 
 A typical target notification looks like:
 
@@ -253,7 +262,7 @@ A typical target notification looks like:
 {'transfer_type': 'I3C_TARGET_READ', 'memory_address': 7, 'transfer_length': 5, 'usb_result': 'CMD_SUCCESSFUL', 'manager_result': 'I3C_TARGET_TRANSFER_SUCCESS', 'driver_result': ['NO_ERROR'], 'data': [238, 238, 238, 238, 238]}
 ```
 
-  The transfer_type indicates if the transfer was a read or write operation from the target point of view, can take the values I3C_TARGET_READ or I3C_TARGET_WRITE.
+  The `transfer_type` indicates if the transfer was a read or write operation from the target point of view, can take the values `I3C_TARGET_READ` or `I3C_TARGET_WRITE`.
 
 **Border Cases**
 
