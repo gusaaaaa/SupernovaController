@@ -1,6 +1,7 @@
 from transfer_controller import TransferController
 from BinhoSupernova.Supernova import Supernova
 from BinhoSupernova.commands.definitions import GetUsbStringSubCommand
+from BinhoSupernova.utils.system_message import SystemOpcode
 from supernovacontroller.errors import DeviceOpenError
 from supernovacontroller.errors import DeviceNotMountedError
 from supernovacontroller.errors import DeviceAlreadyMountedError
@@ -11,6 +12,7 @@ import threading
 from .i2c import SupernovaI2CBlockingInterface
 from .i3c import SupernovaI3CBlockingInterface
 from .uart import SupernovaUARTBlockingInterface
+from .i3c_target import SupernovaI3CTargetBlockingInterface
 
 def id_gen(start=0):
     i = start
@@ -38,7 +40,8 @@ class SupernovaDevice:
       self.interfaces = {
           "i2c": [None, SupernovaI2CBlockingInterface],
           "i3c.controller": [None, SupernovaI3CBlockingInterface],
-          "uart":[None, SupernovaUARTBlockingInterface]
+          "uart":[None, SupernovaUARTBlockingInterface],
+          "i3c.target": [None, SupernovaI3CTargetBlockingInterface],
       }
 
       self.mounted = False
@@ -48,7 +51,7 @@ class SupernovaDevice:
             raise DeviceAlreadyMountedError
 
         result = self.driver.open(path=usb_address)
-        if result["code"] == "OPEN_CONNECTION_FAIL":
+        if result["opcode"] != SystemOpcode.OK.value:
             raise DeviceOpenError(result["message"])
 
         self.driver.onEvent(self._push_sdk_response)

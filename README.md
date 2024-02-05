@@ -15,7 +15,7 @@ SupernovaController is a Python-based tool designed to interface with the Supern
 To install the SupernovaController package, follow these steps:
 
 1. **Prerequisites:**
-   - Ensure that you have Python 3.5 or later installed on your system.
+   - Ensure that you have Python 3.10 or later installed on your system.
    - It's recommended to use a virtual environment for the installation to avoid any conflicts with other Python packages. You can create a virtual environment using tools like `venv` or `conda`.
 
 2. **Install the Package:**
@@ -41,19 +41,57 @@ To install the SupernovaController package, follow these steps:
      ```
    - For any other issues or support, please contact [support@binho.io](mailto:support@binho.io).
 
-## Getting Started
+## Getting started
 
-This section provides a quick guide to get you started with the `SupernovaController`, focusing on using the I3C protocol. The example demonstrates how to initialize an I3C bus, set bus parameters, discover devices on the bus, and perform read/write operations.
+This section provides a quick guide to get you started with the `SupernovaController`.
 
 ### Prerequisites
 
 Before proceeding, make sure you have installed the `SupernovaController` package as outlined in the Installation section.
 
+## I3C protocol
+
+### I3C features
+
+This section provides a quick guide to get you started with the `SupernovaController` focusing on the I3C protocol.
+In an I3C bus, the Supernova can act either as a controller or as a target.
+
+* In controller mode the Supernova supports several features: 
+    * Supernova initialization in I3C controller mode.
+    * Bus initialization.
+    * Setting of bus parameters.
+    * Discovery of devices on the bus.
+    * I3C read operations of up to 255 bytes and I3C write operations of up to 1024 bytes.
+    * CCCs.
+    * Handling of IBIs.
+
+* In target mode the Supernova acts as non-circular and addressable memory that can have different layouts:
+    - memory of 1024 registers of 1 byte size
+    - memory of 512 registers of 2 bytes size
+    - memory of 256 registers of 4 bytes size
+
+    In this mode, it supports several features: 
+    * Supernova initialization in I3C target mode.
+    * Command to change its configuration after its initialization.
+    * Write and Read commands to modify the memory via USB.
+    * I3C Write and Read transfers of up to 1024 bytes.
+    * Notifications that indicate the end of a transfer (that involves the Supernova) detection.
+  
+* Coming soon:
+  * For the I3C controller mode:
+    - Handling of Hot-Joins requests
+    - Target Reset Pattern
+  * For the I3C target mode:
+    - Normal IBIs request
+    - Hot-Join request
+
 ### Basic I3C Communication
 
-1. **Initializing the Supernova Device:**
+#### Operations valid for the Supernovas in I3C target mode and I3C controller mode
 
-   Import and initialize the `SupernovaDevice`. Optionally, specify the USB HID path if multiple devices are connected:
+1. ***Initializing the Supernova Device:***
+
+   Imports and initializes the `SupernovaDevice`. Optionally, specifies the USB HID path if multiple devices are connected:
 
    ```python
    from supernovacontroller.sequential import SupernovaDevice
@@ -65,50 +103,74 @@ Before proceeding, make sure you have installed the `SupernovaController` packag
 
    Call `open()` without parameters if you don't need to specify a particular device.
 
-2. **Creating an I3C Interface:**
+2. ***Creating an I3C Interface:***
 
-   Create an I3C controller interface:
+   Creates an I3C controller interface:
 
    ```python
-   i3c = device.create_interface("i3c.controller")
+   i3c_controller = device.create_interface("i3c.controller")
+   ```
+    Or an I3C target interface:
+
+   ```python
+   i3c_target = device.create_interface("i3c.target")
+   ```    
+
+3. ***Closing the Device:***
+
+   Closes the device when done:
+
+   ```python
+   device.close()
    ```
 
-3. **Setting Bus Voltage:**
+### Operations intended for the Supernova in I3C controller mode
 
-   Set the bus voltage (in mV) for the I3C bus. This step is required before initializing the bus if you don't specify the voltage parameter in `init_bus`:
+1. ***Initializing the Supernova as an I3C controller:***
+
+    Initializes the Supernova in controller mode:
+
+    ```python
+   success, status = i3c_controller.controller_init()
+   ```
+    By default, the Supernova is initialized by the open() method in controller mode, so it may not be needed to call it in most cases.
+
+2. ***Setting Bus Voltage:***
+
+   Sets the bus voltage (in mV) for the I3C bus. This step is required before initializing the bus if you don't specify the voltage parameter in `init_bus`:
 
    ```python
-   i3c.set_bus_voltage(3300)
+   success, data = i3c_controller.set_bus_voltage(3300)
    ```
 
-4. **Initializing the I3C Bus:**
+3. ***Initializing the I3C Bus:***
 
-   Initialize the I3C bus. The voltage parameter is optional here if already set via `set_bus_voltage`:
+   Initializes the I3C bus. The voltage parameter is optional here if already set via `set_bus_voltage`:
 
    ```python
-   i3c.init_bus()  # Voltage already set, so no need to specify it here
+   success, data = i3c_controller.init_bus()  # Voltage already set, so no need to specify it here
    ```
 
    If the bus voltage wasn't set earlier, you can initialize the bus with the voltage parameter:
 
    ```python
-   i3c.init_bus(3300)  # Setting the voltage directly in init_bus
+   success, data = i3c_controller.init_bus(3300)  # Setting the voltage directly in init_bus
    ```
 
-5. **Discovering Devices on the Bus:**
+4. ***Discovering Devices on the Bus:***
 
-   Retrieve a list of connected I3C devices:
+   Retrieves a list of connected I3C devices:
 
    ```python
-   success, targets = i3c.targets()
+   success, targets = i3c_controller.targets()
    if success:
        for target in targets:
            print(f"Found device: {target}")
    ```
 
-6. **Reading and Writing to a Device:**
-
-   Perform write and read operations on a target device. Replace `0x08` with the dynamic address of the device:
+5. ***Reading and Writing to a Device:***
+   
+   Performs I3C write and read operations on a target device: 
 
    ```python
    # Write data specifying address, mode, register and a list of bytes.
@@ -119,20 +181,103 @@ Before proceeding, make sure you have installed the `SupernovaController` packag
    if success:
        print(f"Read data: {data}")
    ```
+    Replace `0x08` with the dynamic address of the device.
 
-7. **Closing the Device:**
+6. ***Performing CCCs:***
 
-   Close the device when done:
+   Requests CCCs on the I3C bus, directed to an specific target or broadcast. They take different parameters depending on the command, examples of them can be:
 
    ```python
-   device.close()
+    # Send a GETPID CCC specifying the dynamic address.
+    success, result = i3c_controller.ccc_getpid(0x08)
+
+    # Send a SETMWL CCC specifying the dynamic address and maximum write length.
+    i3c_controller.ccc_unicast_setmwl(0x08, 1024)
+    # Send a GETMWL CCC specifying the dynamic address
+    success, result = i3c_controller.ccc_getmwl(0x08)
    ```
+    Replace `0x08` with the dynamic address of the device.
+
+### Operations intended for the Supernova in I3C target mode
+
+1. ***Initializing the Supernova as an I3C target:***
+
+    Initializes the Supernova in target mode and sets its initial configuration which includes the internal memory layout, its maximum write length, maximum read length, seconds waited to allow an In-Band Interrupt (IBI) to drive SDA low when the controller is not doing so and some flags regarding the target behaviour in the I3C bus:
+
+    ```python
+    TARGET_CONF                 = I3cOffline.OFFLINE_UNFIT.value |  \
+                                  PartNOrandom.PART_NUMB_DEFINED.value |  \
+                                  DdrOk.ALLOWED_DDR.value |  \
+                                  IgnoreTE0TE1Errors.IGNORE_ERRORS.value |  \
+                                  MatchStartStop.NOT_MATCH.value |  \
+                                  AlwaysNack.NOT_ALWAYS_NACK.value    
+    
+    # Init Supernova in target mode specifying:
+    # memory layout, uSeconds to wait for IBI, MRL, MWL and configuration.
+    success, status = i3c_target.target_init(I3cTargetMemoryLayout_t.MEM_1_BYTE, 0x69, 0x100, 0x100, TARGET_CONF)   
+   ```
+   The memory layout field can take `MEM_1_BYTE`, `MEM_2_BYTES` or `MEM_4_BYTES` value.
+        
+2. ***Set Supernova configuration:***
+
+    Sets the configuration of the Supernova such as its maximum write length, maximum read length, seconds waited to allow an In-Band Interrupt (IBI) to drive SDA low when the controller is not doing so and some flags regarding the target behaviour in the I3C bus:
+
+    ```python
+    TARGET_CONF                 = I3cOffline.OFFLINE_UNFIT.value |  \
+                                  PartNOrandom.PART_NUMB_DEFINED.value |  \
+                                  DdrOk.ALLOWED_DDR.value |  \
+                                  IgnoreTE0TE1Errors.IGNORE_ERRORS.value |  \
+                                  MatchStartStop.NOT_MATCH.value |  \
+                                  AlwaysNack.NOT_ALWAYS_NACK.value
+
+    # Configure the memory layout, uSeconds to wait for IBI, MRL, MWL and configuration of the target. 
+    success, status = i3c_target.set_configuration(0x69, 0x300, 0x250, TARGET_CONF)
+    ```
+
+3. ***Write memory:***
+
+    Writes the internal memory of the Supernova via USB:
+
+    ```python
+   success, error = device.write_memory(0x010A, [0xFF for i in range(0,10)])
+   ```
+    
+4. ***Read memory:***
+
+    Retrieves data from the Supernova internal memory via USB:
+
+    ```python
+   success, data = device.read_memory(0x0000, 255)
+   ```
+    
+***Target Notification:***
+
+When the Supernova acts in I3C target mode, it notifies everytime it detects the end of an I3C transfer it was involved in (not including CCCs).
+
+The notification reports info about the last I3C transaction addressed to the target Supernova.
+
+A typical target notification looks like:
+
+```python
+{'transfer_type': 'I3C_TARGET_READ', 'memory_address': 7, 'transfer_length': 5, 'usb_result': 'CMD_SUCCESSFUL', 'manager_result': 'I3C_TARGET_TRANSFER_SUCCESS', 'driver_result': ['NO_ERROR'], 'data': [238, 238, 238, 238, 238]}
+```
+
+  The `transfer_type` indicates if the transfer was a read or write operation from the target point of view, can take the values `I3C_TARGET_READ` or `I3C_TARGET_WRITE`.
+
+**Border Cases**
+
+The fact that the memory is not circular obligates to take into account border cases:
+
+* If the user tries to start the transfer in an address surpassing the target memory range, the target will ignore the address and will start the transfer from the end of the the previous one.
+
+* If the transfer starts in an allowed memory address but tries to surpass the range during the transaction, it will only modify the bytes in the allowed range and discard the rest. The end of the transfer is taken as the end of the memory.
 
 ### Next Steps
 
 After installing the `SupernovaController` package, you can further explore its capabilities by trying out the examples included in the installation. These examples demonstrate practical applications of UART, I2C and I3C protocols:
 
-- **Basic I3C Example (`basic_i3c_example.py`):** Learn the basics of I3C bus initialization and device communication.
+- **Basic I3C Example (`basic_i3c_example.py`):** Learn the basics of I3C bus initialization and device communication using the Supernova as an I3C controller.
+- **Basic I3C Target Mode Example (`basic_i3c_target_example.py`):** Learn the basics of I3C target mode implementation using two Supernovas, one as an I3C target and the other one as a controller.
 - **Basic I2C Example (`basic_i2c_example.py`):** Get started with fundamental I2C operations.
 - **Basic UART Example (`basic_uart_example.py`):** Try out the UART protocol Hands-On.
 - **IBI Example (`ibi_example.py`):** Understand handling In-Band Interrupts (IBI) in I3C.

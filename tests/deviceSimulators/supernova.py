@@ -1,6 +1,7 @@
 from .targetDevices.I3cTargetMemory import I3cTargetMemory
 from .targetDevices.I2cTargetMemory import I2cTargetMemory
 from .targetDevices.SimulatedP3T1085UK import SimulatedP3T1085UK
+from BinhoSupernova.utils.system_message import SystemOpcode
 
 
 class BinhoSupernovaSimulator:
@@ -29,20 +30,20 @@ class BinhoSupernovaSimulator:
     def onEvent(self, callback):
         self.callback = callback
 
-    def open(self, path=None, activateLogger=False):
+    def open(self, path=None):
         simulated_device_port = "SupernovaSimulatedPort"
         if path is None:
             path = simulated_device_port
 
         if path != simulated_device_port:
             return {
-                "code": "OPEN_CONNECTION_FAIL",
-                "message": "Connection with Supernova device opened successfully."
+                "opcode": SystemOpcode.OPEN_CONNECTION_FAIL.value,
+                "message": f"Simulator address should be {simulated_device_port}"
             }
 
         return {
-            "code": "OK",
-            "message": f"Simulator address should be {simulated_device_port}"
+            "opcode": SystemOpcode.OK.value,
+            "message": "Connection with Supernova device opened successfully."
         }
 
     def close(self):
@@ -153,6 +154,14 @@ class BinhoSupernovaSimulator:
             "name": "GET USB STRING",
             "length": messageLength,
             "message": message
+        }, None)
+
+    def i3cControllerInit(self, id):
+        self.callback({
+            "id": id,
+            "command": 1,
+            "name": "I3C CONTROLLER INIT",
+            "result": "I3C_CONTROLLER_INIT_SUCCESS",
         }, None)
 
     def i3cInitBus(self, id, targetDeviceTable):

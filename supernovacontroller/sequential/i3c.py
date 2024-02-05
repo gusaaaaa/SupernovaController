@@ -28,6 +28,8 @@ class SupernovaI3CBlockingInterface:
         self.open_drain_clock_freq_mhz = I3cOpenDrainTransferRate.OPEN_DRAIN_100_KHZ
         self.bus_voltage = None
 
+        self.controller_init()
+
     def set_parameters(self, push_pull_clock_freq_mhz: I3cPushPullTransferRate, open_drain_clock_freq_mhz: I3cOpenDrainTransferRate):
         """
         Sets the clock frequencies for push-pull and open-drain configurations using enumerated values.
@@ -99,6 +101,26 @@ class SupernovaI3CBlockingInterface:
             self.bus_voltage = None
 
         return result
+
+    def controller_init(self):
+        """
+        Initialize the Supernova in controller mode.
+        Returns:
+        tuple: A tuple containing two elements:
+            - The first element is a Boolean indicating the success (True) or failure (False) of the operation.
+            - The second element is the result coming from the SDK, or an error message
+                detailing the failure, obtained from the device's response.
+        """
+        try:
+            responses = self.controller.sync_submit([
+                lambda id: self.driver.i3cControllerInit(id)
+            ])
+        except Exception as e:
+            raise BackendError(original_exception=e) from e
+
+        status = responses[0]["result"]
+
+        return (status == "I3C_CONTROLLER_INIT_SUCCESS", status)
 
     def init_bus(self, voltage: int=None, targets=None):
         """
@@ -315,6 +337,8 @@ class SupernovaI3CBlockingInterface:
                 case "ccc_getdcr": return response["dcr"][2:].upper()
                 case "ccc_getmrl": return response["maxReadLength"]
                 case "ccc_getmwl": return response["maxWriteLength"]
+                case "ccc_get_status": return response["data"]
+                case "ccc_setnewda": return None
                 case "ccc_unicast_setmrl" | "ccc_unicast_setmwl" | "ccc_broadcast_setmwl" | "ccc_broadcast_setmrl" : return response["data"]
             return None
 
@@ -1331,3 +1355,28 @@ class SupernovaI3CBlockingInterface:
             raise BackendError(original_exception=e) from e
 
         return self._process_response("ccc_broadcast_entas3", responses)
+
+    def ccc_unicast_get_status(self, target_address):
+        """
+        Sends a unicast GET_STATUS command to the device with target_address dynamic address
+
+        Returns:
+        tuple: A tuple containing two elements:
+            - The first element is a Boolean indicating the success (True) or failure (False) of the operation.
+            - The second element is the two bytes that represent the status.
+
+        """
+        try:
+            responses = self.controller.sync_submit([
+                lambda id: self.driver.i3cGETSTATUS(
+                    id,
+                    target_address,
+                    self.push_pull_clock_freq_mhz,
+                    self.open_drain_clock_freq_mhz,
+                )
+            ])
+        except Exception as e:
+            raise BackendError(original_exception=e) from e
+
+        return self._process_response("ccc_get_status", responses)
+    
