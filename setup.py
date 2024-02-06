@@ -6,7 +6,7 @@ gh_token = os.environ.get('GH_TOKEN')
 
 setup(
     name='supernovacontroller',
-    version='1.0.0',
+    version='1.1.0',
     packages=find_packages(),
     data_files=[
         ('SupernovaExamples', ['examples/basic_i2c_example.py', 'examples/basic_i3c_example.py', 'examples/ibi_example.py', 'examples/ICM42605_i3c_example.py', 'examples/basic_i3c_target_example.py'])
@@ -20,7 +20,7 @@ setup(
     license='Private',
     install_requires=[
       'transfer_controller==0.3.1',
-      'BinhoSupernova==2.0.0'
+      'BinhoSupernova==2.0.1'
     ],
     classifiers=[
         'Development Status :: 3 - Alpha',
