@@ -118,7 +118,7 @@ class BinhoSupernovaSimulator:
         if(self.i3cBusStarted == False):
             raise BackendError(message="Bus was not initialized")
         
-        if(self.i3cTargetTable.get(str(targetAddress), None) == None):
+        if str(targetAddress) not in self.i3cTargetTable:
             raise BackendError(message="NACK_ERROR")
         
         return self.i3cTargetTable[str(targetAddress)]["staticAddress"]
