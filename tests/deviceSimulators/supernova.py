@@ -3,6 +3,20 @@ from .targetDevices.I3cTargetMemory import I3cTargetMemory
 from .targetDevices.I2cTargetMemory import I2cTargetMemory
 from .targetDevices.SimulatedP3T1085UK import SimulatedP3T1085UK
 
+def check_i3c_conditions(func):  
+    def wrapper(self, *args, **kwargs):  
+        response = self.getI3cTransferResponseTemplate(args[0], 0)
+        if not self.i3cBusStarted:  
+            response["command"] = 5 # this is for generalization of the error on init_bus
+            self.callback(self.build_error_response(response, "Bus was not Initialized"), None)
+            return
+        targetAddress = args[1]  # Assuming targetAddress is the second argument  
+        if str(targetAddress) not in self.i3cTargetTable:  
+            response["command"] = 6 # this is for generalization of the error on getTable
+            self.callback(self.build_error_response(response, "NACK_ERROR"), None)
+            return
+        return func(self, *args, **kwargs)  
+    return wrapper  
 
 class BinhoSupernovaSimulator:
     def __init__(self):
@@ -50,12 +64,21 @@ class BinhoSupernovaSimulator:
     def close(self):
         pass
 
-    def __build_error_response(self, response, exception):
-        response["header"]["result"] = "I3C_TRANSFER_FAIL"
-        response["header"]["hasData"] = False
-        response["descriptor"]["errors"] = [exception.message]
-        response["descriptor"]["dataLength"] = 0
-        return response
+    def build_error_response(self, response, error):
+        return {
+            "id": response["id"],
+            "command": response["command"],
+            "name": "I3C_TRANSFER",
+            "header": {
+                "tag": "RESPONSE_TO_REGULAR_REQUEST",
+                "result": "I3C_TRANSFER_FAIL",
+                "hasData": False,
+            },
+            "descriptor": {
+                "dataLength": 0,
+                "errors": [error]
+            },
+        }
 
     def setI2cSpiUartBusVoltage(self, id, i2cSpiUartBusVolt):
         self.callback({
@@ -122,29 +145,18 @@ class BinhoSupernovaSimulator:
     # I3C management --------------------------------------------------------------------
 
     def helperGetStaticFromDynamicAddress(self, targetAddress):
-        if self.i3cBusStarted == False:
-            raise BackendError(message="Bus was not initialized")
-        
-        if str(targetAddress) not in self.i3cTargetTable:
-            raise BackendError(message="NACK_ERROR")
-        
         return self.i3cTargetTable[str(targetAddress)]["staticAddress"]
 
     def helperGetDeviceInfoFromDynamicAddress(self, targetAddress):
         staticAddress = self.helperGetStaticFromDynamicAddress(targetAddress)
-        
-        try:
-            targets = self.__get_i3c_targets()
-        except BackendError as e:
-            raise e
-        
+        targets = self.__get_i3c_targets()
         return targets[str(staticAddress)].getDeviceInfo()
     
     def __get_i3c_targets(self):
         if(self.i3cBusStarted):
             return self.i3cTargets;
         else:
-            raise BackendError(message="Bus was not initialized")
+            return []
 
     def getI3cTransferResponseTemplate(self, id, dataLength):
         return {
@@ -221,6 +233,7 @@ class BinhoSupernovaSimulator:
             "table": table
         }, None)
 
+    @check_i3c_conditions
     def i3cWrite(self, id, targetAddress, mode, pushPullRate, openDrainRate, registerAddress, data):
         # Base response structure
         response = {
@@ -235,20 +248,17 @@ class BinhoSupernovaSimulator:
                 "errors": []
             },
         }            
-        try:
-            targets = self.__get_i3c_targets()
-            staticAddress = self.helperGetStaticFromDynamicAddress(targetAddress)
-            targets[str(staticAddress)].write(registerAddress + data)
-            response["header"]["result"] = "I3C_TRANSFER_SUCCESS"
-            response["header"]["hasData"] = False
-            response["descriptor"]["errors"].append("NO_TRANSFER_ERROR")
-            response["data"] = []
-            
-        except BackendError as e:
-            response = self.__build_error_response(response, e)
+        targets = self.__get_i3c_targets()
+        staticAddress = self.helperGetStaticFromDynamicAddress(targetAddress)
+        targets[str(staticAddress)].write(registerAddress + data)
+        response["header"]["result"] = "I3C_TRANSFER_SUCCESS"
+        response["header"]["hasData"] = False
+        response["descriptor"]["errors"].append("NO_TRANSFER_ERROR")
+        response["data"] = []
             
         self.callback(response, None)
 
+    @check_i3c_conditions
     def i3cRead(self, id, targetAddress, mode, pushPullRate, openDrainRate, registerAddress, length):
         # Base response structure
         response = {
@@ -262,142 +272,110 @@ class BinhoSupernovaSimulator:
                 "errors": []
             },
         }
-        try:
-            targets = self.__get_i3c_targets()
-            staticAddress = self.helperGetStaticFromDynamicAddress(targetAddress)
-            if (len(registerAddress) > 0):
-                targets[str(staticAddress)].write(registerAddress)
-            data = targets[str(staticAddress)].read(length)
-            response["header"]["result"] = "I3C_TRANSFER_SUCCESS"
-            response["header"]["hasData"] = True
-            response["descriptor"]["errors"].append("NO_TRANSFER_ERROR")
-            response["data"] = data
-            
-        except BackendError as e:
-            response["header"]["result"] = "I3C_TRANSFER_FAIL"
-            response["header"]["hasData"] = False
-            response["descriptor"]["errors"].append(e.message)
-            response["descriptor"]["dataLength"] = 0
+        targets = self.__get_i3c_targets()
+        staticAddress = self.helperGetStaticFromDynamicAddress(targetAddress)
+        if (len(registerAddress) > 0):
+            targets[str(staticAddress)].write(registerAddress)
+        data = targets[str(staticAddress)].read(length)
+        response["header"]["result"] = "I3C_TRANSFER_SUCCESS"
+        response["header"]["hasData"] = True
+        response["descriptor"]["errors"].append("NO_TRANSFER_ERROR")
+        response["data"] = data
 
         self.callback(response, None)
 
+    @check_i3c_conditions
     def i3cGETPID(self, id, targetAddress, pushPullRate, openDrainRate):
         response = self.getI3cTransferResponseTemplate(id, 0)
-        try:
-            deviceInfo = self.helperGetDeviceInfoFromDynamicAddress(targetAddress)
-            pid = list(map(lambda num: hex(num), deviceInfo["pid"]))
-            pidlen = len(pid)
-            response = self.getI3cTransferResponseTemplate(id, pidlen)
-            response["pid"] = pid
-            
-        except BackendError as e:
-            response = self.__build_error_response(response,e)
+        deviceInfo = self.helperGetDeviceInfoFromDynamicAddress(targetAddress)
+        pid = list(map(lambda num: hex(num), deviceInfo["pid"]))
+        pidlen = len(pid)
+        response = self.getI3cTransferResponseTemplate(id, pidlen)
+        response["pid"] = pid
         
         self.callback(response, None)
 
+    @check_i3c_conditions
     def i3cGETBCR(self, id, targetAddress, pushPullRate, openDrainRate):
         response = self.getI3cTransferResponseTemplate(id, 0)
-        try:
-            deviceInfo = self.helperGetDeviceInfoFromDynamicAddress(targetAddress)
-            bcr = deviceInfo["bcr"]
-            bcrlen = 1
-            response = self.getI3cTransferResponseTemplate(id, bcrlen)
-            response["bcr"] = bcr
-            
-        except BackendError as e:
-            response = self.__build_error_response(response,e)
+        deviceInfo = self.helperGetDeviceInfoFromDynamicAddress(targetAddress)
+        bcr = deviceInfo["bcr"]
+        bcrlen = 1
+        response = self.getI3cTransferResponseTemplate(id, bcrlen)
+        response["bcr"] = bcr
             
         self.callback(response, None)
 
+    @check_i3c_conditions
     def i3cGETDCR(self, id, targetAddress, pushPullRate, openDrainRate):
         response = self.getI3cTransferResponseTemplate(id, 0)
-        try:
-            deviceInfo = self.helperGetDeviceInfoFromDynamicAddress(targetAddress)
-            dcr = hex(deviceInfo["dcr"])
-            dcrlen = 1
-            response = self.getI3cTransferResponseTemplate(id, dcrlen)
-            response["dcr"] = dcr
+        deviceInfo = self.helperGetDeviceInfoFromDynamicAddress(targetAddress)
+        dcr = hex(deviceInfo["dcr"])
+        dcrlen = 1
+        response = self.getI3cTransferResponseTemplate(id, dcrlen)
+        response["dcr"] = dcr
 
-        except BackendError as e:
-            response = self.__build_error_response(response,e)
-            
         self.callback(response, None)
 
+    @check_i3c_conditions
     def i3cGETMRL(self, id, targetAddress, pushPullRate, openDrainRate):
         response = self.getI3cTransferResponseTemplate(id, 0)
-        try:
-            targets = self.__get_i3c_targets()
-            staticAddress = self.helperGetStaticFromDynamicAddress(targetAddress)       
-            mrl = targets[str(staticAddress)].getMRL()
-            response = self.getI3cTransferResponseTemplate(id, 2)
-            response["maxReadLength"] = mrl
-
-        except BackendError as e:
-            response = self.__build_error_response(response,e)
+        targets = self.__get_i3c_targets()
+        staticAddress = self.helperGetStaticFromDynamicAddress(targetAddress)       
+        mrl = targets[str(staticAddress)].getMRL()
+        response = self.getI3cTransferResponseTemplate(id, 2)
+        response["maxReadLength"] = mrl
 
         self.callback(response, None)
 
+    @check_i3c_conditions
     def i3cDirectSETMRL(self, id, targetAddress, pushPullRate, openDrainRate, mrl):
         response = self.getI3cTransferResponseTemplate(id, 0)
-        try:
-            targets = self.__get_i3c_targets()
-            staticAddress = self.helperGetStaticFromDynamicAddress(targetAddress)
-            targets[str(staticAddress)].setMRL(mrl)
-            response = self.getI3cTransferResponseTemplate(id, 2)
-            response["data"] = [0, 0]
-
-        except BackendError as e:
-            response = self.__build_error_response(response,e)
+        targets = self.__get_i3c_targets()
+        staticAddress = self.helperGetStaticFromDynamicAddress(targetAddress)
+        targets[str(staticAddress)].setMRL(mrl)
+        response = self.getI3cTransferResponseTemplate(id, 2)
+        response["data"] = [0, 0]
 
         self.callback(response, None)
 
+    @check_i3c_conditions
     def i3cBroadcastSETMRL(self, id, pushPullRate, openDrainRate, mrl):
         response = self.getI3cTransferResponseTemplate(id, 0)
-        try:
-            targets = self.__get_i3c_targets()
-            [target.setMRL(mrl) for target in targets.values()]
-            response = self.getI3cTransferResponseTemplate(id, 3)
-            response["data"] = [0, 0, 0]
-
-        except BackendError as e:
-            response = self.__build_error_response(response,e)
+        targets = self.__get_i3c_targets()
+        [target.setMRL(mrl) for target in targets.values()]
+        response = self.getI3cTransferResponseTemplate(id, 3)
+        response["data"] = [0, 0, 0]
 
         self.callback(response, None)
 
+    @check_i3c_conditions
     def i3cGETMWL(self, id, targetAddress, pushPullRate, openDrainRate):
         response = self.getI3cTransferResponseTemplate(id, 0)
-        try:
-            targets = self.__get_i3c_targets()
-            staticAddress = self.helperGetStaticFromDynamicAddress(targetAddress)
-            mwl = targets[str(staticAddress)].getMWL()
-            response = self.getI3cTransferResponseTemplate(id, 2)
-            response["maxWriteLength"] = mwl
-        except BackendError as e:
-            response = self.__build_error_response(response,e)
+        targets = self.__get_i3c_targets()
+        staticAddress = self.helperGetStaticFromDynamicAddress(targetAddress)
+        mwl = targets[str(staticAddress)].getMWL()
+        response = self.getI3cTransferResponseTemplate(id, 2)
+        response["maxWriteLength"] = mwl
         self.callback(response, None)
 
+    @check_i3c_conditions
     def i3cDirectSETMWL(self, id, targetAddress, pushPullRate, openDrainRate, mwl):
         response = self.getI3cTransferResponseTemplate(id, 0)
-        try:
-            targets = self.__get_i3c_targets()
-            staticAddress = self.helperGetStaticFromDynamicAddress(targetAddress)
-            targets[str(staticAddress)].setMWL(mwl)
-            response = self.getI3cTransferResponseTemplate(id, 2)
-            response["data"] = [0, 0]
-        except BackendError as e:
-            response = self.__build_error_response(response,e)
+        targets = self.__get_i3c_targets()
+        staticAddress = self.helperGetStaticFromDynamicAddress(targetAddress)
+        targets[str(staticAddress)].setMWL(mwl)
+        response = self.getI3cTransferResponseTemplate(id, 2)
+        response["data"] = [0, 0]
 
         self.callback(response, None)
 
+    @check_i3c_conditions
     def i3cBroadcastSETMWL(self, id, pushPullRate, openDrainRate, mwl):
         response = self.getI3cTransferResponseTemplate(id, 0)
-        try:
-            targets = self.__get_i3c_targets()
-            [target.setMWL(mwl) for target in targets.values()]
-            response = self.getI3cTransferResponseTemplate(id, 3)
-            response["data"] = [0, 0, 0]
-
-        except BackendError as e:
-            response = self.__build_error_response(response,e)
+        targets = self.__get_i3c_targets()
+        [target.setMWL(mwl) for target in targets.values()]
+        response = self.getI3cTransferResponseTemplate(id, 3)
+        response["data"] = [0, 0, 0]
 
         self.callback(response, None)
