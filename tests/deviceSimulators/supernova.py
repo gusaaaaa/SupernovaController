@@ -115,7 +115,7 @@ class BinhoSupernovaSimulator:
     # I3C management --------------------------------------------------------------------
 
     def helperGetStaticFromDynamicAddress(self, targetAddress):
-        if(self.i3cBusStarted == False):
+        if self.i3cBusStarted == False:
             raise BackendError(message="Bus was not initialized")
         
         if str(targetAddress) not in self.i3cTargetTable:
