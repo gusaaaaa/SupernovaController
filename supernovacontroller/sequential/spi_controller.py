@@ -35,8 +35,8 @@ class SupernovaSPIControllerBlockingInterface:
         self.frequency = 10000000                                        # 10 MHz
         self.bus_voltage = None
     
-    def __store_parameters(self, bitOrder: SpiControllerBitOrder=None, mode: SpiControllerMode=None, dataWidth: SpiControllerDataWidth=None,
-                           chipSelect: SpiControllerChipSelect=None, chipSelectPol: SpiControllerChipSelectPolarity=None, frequency: int=None):
+    def __store_parameters(self, bitOrder: SpiControllerBitOrder=None, mode: SpiControllerMode=None, chipSelect: SpiControllerChipSelect=None,
+                           chipSelectPol: SpiControllerChipSelectPolarity=None, frequency: int=None):
         """
         Stores the SPI controller communication parameters.
 
@@ -47,7 +47,6 @@ class SupernovaSPIControllerBlockingInterface:
         Args:
         bitOrder (SpiControllerBitOrder, optional): The bit order for SPI communication (default: None).
         mode (SpiControllerMode, optional): The mode for SPI communication (default: None).
-        dataWidth (SpiControllerDataWidth, optional): The data width in bits for SPI communication (default: None).
         chipSelect (SpiControllerChipSelect, optional): The selected Chip to communicate with (default: None).
         chipSelectPol (SpiControllerChipSelectPolarity, optional): The chip select polarity setting for SPI communication (default: None).
         frequency (int, optional): The clock frequency for the SPI communication (default: None).
@@ -56,7 +55,6 @@ class SupernovaSPIControllerBlockingInterface:
         # Update parameters if provided
         self.bitOrder = bitOrder or self.bitOrder
         self.mode = mode or self.mode
-        self.dataWidth = dataWidth or self.dataWidth    #TODO: ask if it's necessary since it can't be changed
         self.chipSelect = chipSelect or self.chipSelect
         self.chipSelectPol = chipSelectPol or self.chipSelectPol
         self.frequency = frequency or self.frequency
@@ -149,19 +147,18 @@ class SupernovaSPIControllerBlockingInterface:
 
         return result
     
-    def init_bus(self, bitOrder: SpiControllerBitOrder=None, mode: SpiControllerMode=None, dataWidth: SpiControllerDataWidth=None,
+    def init_bus(self, bitOrder: SpiControllerBitOrder=None, mode: SpiControllerMode=None,
                  chipSelect: SpiControllerChipSelect=None, chipSelectPol: SpiControllerChipSelectPolarity=None, frequency: int=None):
         """
         Initializes the SPI bus with specified parameters.
 
         This method initializes the SPI bus with the provided communication parameters such as bit order, spi mode,
-        data width, chip select, chip select polarity and frequency. If parameters are provided, it configures the bus
+        chip select, chip select polarity and frequency. If parameters are provided, it configures the bus
         accordingly; otherwise, it retains the current settings.
 
         Args:
         bitOrder (SpiControllerBitOrder, optional): The bit order for SPI communication (default: None).
         mode (SpiControllerMode, optional): The mode for SPI communication (default: None).
-        dataWidth (SpiControllerDataWidth, optional): The data width in bits for SPI communication (default: None).
         chipSelect (SpiControllerChipSelect, optional): The selected Chip to communicate with (default: None).
         chipSelectPol (SpiControllerChipSelectPolarity, optional): The chip select polarity setting for SPI communication (default: None).
         frequency (int, optional): The clock frequency for the SPI communication (default: None).
@@ -180,7 +177,7 @@ class SupernovaSPIControllerBlockingInterface:
         """
 
         # Update the SPI class attributes with the provided data
-        self.__store_parameters(bitOrder=bitOrder, mode=mode, dataWidth=dataWidth, chipSelect=chipSelect, chipSelectPol=chipSelectPol, frequency=frequency)
+        self.__store_parameters(bitOrder=bitOrder, mode=mode, chipSelect=chipSelect, chipSelectPol=chipSelectPol, frequency=frequency)
         # Check if all the needed configurations for SPI communication are correctly set
         is_data_complete = self.__check_data_complete()
         # Return failure if data is incomplete
@@ -201,19 +198,18 @@ class SupernovaSPIControllerBlockingInterface:
 
         return (response_success, "Success" if response_success else "Init failed, error from the Supernova")
      
-    def set_parameters(self, bitOrder: SpiControllerBitOrder=None, mode: SpiControllerMode=None, dataWidth: SpiControllerDataWidth=None,
+    def set_parameters(self, bitOrder: SpiControllerBitOrder=None, mode: SpiControllerMode=None,
                        chipSelect: SpiControllerChipSelect=None, chipSelectPol: SpiControllerChipSelectPolarity=None, frequency: int=None):
         """
         Sets SPI controller communication parameters.
 
-        This method sets the SPI controller communication parameters such as bit order, spi mode, data width, chip select,
+        This method sets the SPI controller communication parameters such as bit order, spi mode, chip select,
         chip select polarity and frequency. If parameters are provided, it configures the parameters;
         otherwise, it retains the current settings.
 
         Args:
         bitOrder (SpiControllerBitOrder, optional): The bit order for SPI communication (default: None).
         mode (SpiControllerMode, optional): The mode for SPI communication (default: None).
-        dataWidth (SpiControllerDataWidth, optional): The data width in bits for SPI communication (default: None).
         chipSelect (SpiControllerChipSelect, optional): The selected Chip to communicate with (default: None).
         chipSelectPol (SpiControllerChipSelectPolarity, optional): The chip select polarity setting for SPI communication (default: None).
         frequency (int, optional): The clock frequency for the SPI communication (default: None).
@@ -232,7 +228,7 @@ class SupernovaSPIControllerBlockingInterface:
         """
 
         # Update the SPI class attributes with the provided data
-        self.__store_parameters(bitOrder=bitOrder, mode=mode, dataWidth=dataWidth, chipSelect=chipSelect, chipSelectPol=chipSelectPol, frequency=frequency)
+        self.__store_parameters(bitOrder=bitOrder, mode=mode, chipSelect=chipSelect, chipSelectPol=chipSelectPol, frequency=frequency)
         # Check if all the needed configurations for SPI communication are correctly set
         is_data_complete = self.__check_data_complete()
         # Return failure if data is incomplete
