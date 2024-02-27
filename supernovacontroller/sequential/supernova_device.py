@@ -13,6 +13,7 @@ from .i2c import SupernovaI2CBlockingInterface
 from .i3c import SupernovaI3CBlockingInterface
 from .uart import SupernovaUARTBlockingInterface
 from .i3c_target import SupernovaI3CTargetBlockingInterface
+from .spi_controller import SupernovaSPIControllerBlockingInterface
 
 def id_gen(start=0):
     i = start
@@ -42,6 +43,7 @@ class SupernovaDevice:
           "i3c.controller": [None, SupernovaI3CBlockingInterface],
           "uart":[None, SupernovaUARTBlockingInterface],
           "i3c.target": [None, SupernovaI3CTargetBlockingInterface],
+          "spi.controller": [None, SupernovaSPIControllerBlockingInterface],
       }
 
       self.mounted = False
