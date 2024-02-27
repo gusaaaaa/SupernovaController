@@ -14,7 +14,7 @@ def main():
         Frequency: 10 MHz (default value)
 
     Then the bit order is changed to MSB first.
-    With this configuration a FRAM memory is used to test the SPI controller interface, transferring data to the memory and reading it, verifying it's correct operation.
+    With this configuration a FRAM memory (Adafruit MB85RS64V) is used to test the SPI controller interface, transferring data to the memory and reading it, verifying it's correct operation.
     """
     device = SupernovaDevice()
 
@@ -104,7 +104,7 @@ def main():
     else:
         print("Couldn't transfer data")
 
-    miso_idle = [0,0,0]                                     # The first 3 bytes in the miso line correspondent to the instruction transfer are in IDLE state
+    miso_idle = [0,0,0]                                     # The first 3 bytes in the miso line correspond to the instruction transfer so are in IDLE state
     expected_response = miso_idle + data_to_write           # The response consists of all the miso data since the start of the transfer
     if response == expected_response:
         print("Data written and read match correctly")
