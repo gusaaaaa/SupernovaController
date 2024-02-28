@@ -6,7 +6,7 @@ SupernovaController is a Python-based tool designed to interface with the Supern
 
 ## Features
 - **Blocking API:** A streamlined approach to interact with the Supernova device, minimizing the complexity of handling asynchronous callbacks.
-- **Multi-Interface:** Easily communicate with UART, I2C and I3C Devices in an All-In-One package.
+- **Multi-Interface:** Easily communicate with SPI, UART, I2C and I3C Devices in an All-In-One package.
 - **Communication:** Seamlessly manages command responses and notifications, facilitating easier and more intuitive command sequencing.
 - **Examples:** Comprehensive examples demonstrating the practical application of the blocking API.
 
@@ -272,14 +272,147 @@ The fact that the memory is not circular obligates to take into account border c
 
 * If the transfer starts in an allowed memory address but tries to surpass the range during the transaction, it will only modify the bytes in the allowed range and discard the rest. The end of the transfer is taken as the end of the memory.
 
-### Next Steps
+## SPI protocol
 
-After installing the `SupernovaController` package, you can further explore its capabilities by trying out the examples included in the installation. These examples demonstrate practical applications of UART, I2C and I3C protocols:
+### SPI features
+
+This section describes how to get you started with the `SupernovaController` focusing on the SPI protocol.
+In a SPI bus, the Supernova can act as a controller.
+
+* In controller mode the Supernova supports several features: 
+    * Supernova initialization in SPI controller mode.
+    * Bus initialization.
+    * Setting of bus parameters such as bit order, SPI mode, chip select, chip select polarity and frequency.
+    * SPI transfers of up to 1024 bytes.
+    * 8 bits data width frames.
+
+* Coming soon:
+  * For the SPI controller mode:
+    - Pre and post delays.
+    - Keep chip select active between transfers.
+    - Support for 16 bits data width.
+  * Support for SPI target mode.
+
+### Basic SPI Communication
+
+#### Generic operations
+
+1. ***Initializing the Supernova Device:***
+
+   Imports and initializes the `SupernovaDevice`. Optionally, specifies the USB HID path if multiple devices are connected:
+
+   ```python
+   from supernovacontroller.sequential import SupernovaDevice
+
+   device = SupernovaDevice()
+   # Optionally specify the USB HID path
+   device.open(usb_address='your_usb_hid_path')
+   ```
+
+   Call `open()` without parameters if you don't need to specify a particular device.
+
+2. ***Creating a SPI controller Interface:***
+
+   Creates a SPI controller interface:
+
+   ```python
+   spi_controller = device.create_interface("spi.controller")
+   ``` 
+
+3. ***Closing the Device:***
+
+   Closes the device when done:
+
+   ```python
+   device.close()
+   ```
+
+### Operations intended for the Supernova in SPI controller mode
+
+1. ***Setting Bus Voltage:***
+
+   Sets the bus voltage (in mV) for the SPI bus. This step is required before initializing the bus:
+
+   ```python
+   success, data = spi_controller.set_bus_voltage(3300)
+   ```
+
+2. ***Initializing the Supernova as a SPI controller:***
+
+    Initializes the Supernova in SPI controller mode:
+
+    ```python
+   success, status = spi_controller.init_bus()
+   ```
+    Without any parameters, the SPI controller initializes with the default values for bit order, mode, chip select, chip select polarity and frequency. Optionally, it is possible to set any of this parameters by specifying in the init_bus function:
+
+    ```python
+   success, status = spi_controller.init_bus(bitOrder=SpiControllerBitOrder.LSB, frequency=20000000)
+   ```
+
+3. ***Modifying the SPI controller parameters***
+
+    It is possible to set a new configuration for each parameter (bit order, mode, chip select, chip select polarity and frequency):
+
+    ```python
+   success, status = spi_controller.set_parameters(bitOrder = SpiControllerBitOrder.MSB, mode = SpiControllerMode.MODE_1)
+   ```
+
+   If parameters are provided, it configures the parameters; otherwise, it retains the current settings.
+
+4. ***Read the actual SPI controller configuration***
+
+    The following method retrieves the current SPI controller communication parameters, including bit order, spi mode, data width, chip select, chip select polarity and frequency.
+
+    ```python
+   success, response = spi_controller.get_parameters()
+   ```
+
+    The variable ```response``` is a tuple containing the current SPI controller communication parameters:
+    (bitOrder, mode, dataWidth, chipSelect, chipSelectPol, frequency)
+
+5. ***Transfer data over SPI bus***
+
+    Transfers the provided data over the SPI bus if the bus is initialized. It is necessary to indicate the length of the transfer to generate the SPI clock cycles. This length could be more than the length of the transferred data to a SPI target, in the cases where the response (data on the MISO line) consists of more bytes than the transferred.
+
+    ```python
+    data = [0x01, 0x02, 0x03, 0x04, 0x05, 0x06]
+    transferLength = 6
+    success, response = spi_controller.transfer(data, transferLength)
+    ```
+
+    For a particular case of a SPI target device that interprets instructions via opcodes, an example of use could be the following:
+    
+    ```python
+    # Read opcode: 0x03
+    # Address to read: 0x0002
+    # Transferred data: [opcode, address_H, address_L]
+    data = [0x03, 0x00, 0x02]
+    
+    # Transfer length includes the length of the transferred data to the target and the read length to generate SPI clock cycles for the read operation
+    # Read length: 6 bytes to read
+    # Data to target: 3 bytes
+    readLength = 6
+    dataToTarget = len(data)
+    transferLength = dataToTarget + readLength
+
+    success, response = spi_controller.transfer(data, transferLength)
+
+    # The response consists of the entire MISO line since the transfer started.
+    # If the SPI target device doesn't send information while the instruction is transferred, the first bytes of the response are in IDLE state with the value 0x00
+    # responde: [0x00, 0x00, 0x00, 0xFA, 0xFB, 0xFC, 0xFD, 0xFE, 0xFF]
+    dataFromTarget = response[3:]
+    ```
+
+## Next Steps
+
+After installing the `SupernovaController` package, you can further explore its capabilities by trying out the examples included in the installation. These examples demonstrate practical applications of SPI, UART, I2C and I3C protocols:
 
 - **Basic I3C Example (`basic_i3c_example.py`):** Learn the basics of I3C bus initialization and device communication using the Supernova as an I3C controller.
 - **Basic I3C Target Mode Example (`basic_i3c_target_example.py`):** Learn the basics of I3C target mode implementation using two Supernovas, one as an I3C target and the other one as a controller.
 - **Basic I2C Example (`basic_i2c_example.py`):** Get started with fundamental I2C operations.
 - **Basic UART Example (`basic_uart_example.py`):** Try out the UART protocol Hands-On.
+- **Basic SPI Controller Example (`basic_spi_controller_example.py`):** Explore the fundamental SPI controller operations communicating with a SPI Target device.
 - **IBI Example (`ibi_example.py`):** Understand handling In-Band Interrupts (IBI) in I3C.
 - **ICM42605 I3C Example (`ICM42605_i3c_example.py`):** Explore a real-world application of I3C with the ICM42605 sensor.
 
