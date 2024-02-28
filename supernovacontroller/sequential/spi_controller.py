@@ -279,7 +279,7 @@ class SupernovaSPIControllerBlockingInterface:
         Returns:
         tuple: A tuple containing two elements:
             - The first element is a Boolean indicating the success (True) or failure (False) of the send operation.
-            - The second element is a string describing the result of the SPI transfer.
+            - The second element is the response from the SPI target device. Corresponds to the SPI MISO line.
 
         Raises:
         BackendError: If an exception occurs during the transmission process.
