@@ -11,7 +11,9 @@ from supernovacontroller.errors import DeviceNotMountedError
 from supernovacontroller.errors import DeviceAlreadyMountedError
 from supernovacontroller.errors import UnknownInterfaceError
 from supernovacontroller.errors import BackendError
-from BinhoSupernova.commands.definitions import SpiControllerMode
+from BinhoSupernova.commands.definitions import (
+    SpiControllerBitOrder, SpiControllerMode, SpiControllerDataWidth,
+    SpiControllerChipSelect, SpiControllerChipSelectPolarity)
 
 sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
 from deviceSimulators.supernova import BinhoSupernovaSimulator
@@ -484,6 +486,29 @@ class TestSupernovaController(unittest.TestCase):
 
         self.device.close()
 
+    def test_spi_controller_get_parameters(self):
+        self.device.open()
+
+        spi_controller = self.device.create_interface("spi.controller")
+
+        spi_controller.init_bus()
+
+        (_, response) = spi_controller.get_parameters()
+        
+        self.assertTupleEqual(response,(SpiControllerBitOrder.MSB, SpiControllerMode.MODE_0, SpiControllerDataWidth._8_BITS_DATA,
+                                         SpiControllerChipSelect.CHIP_SELECT_0, SpiControllerChipSelectPolarity.ACTIVE_LOW, 10000000))
+
+        (success, _) = spi_controller.set_parameters(bit_order=SpiControllerBitOrder.LSB, chip_select=SpiControllerChipSelect.CHIP_SELECT_2, chip_select_pol=SpiControllerChipSelectPolarity.ACTIVE_HIGH)
+
+        self.assertEqual(success, True)
+
+        (_, response) = spi_controller.get_parameters()
+        
+        self.assertTupleEqual(response,(SpiControllerBitOrder.LSB, SpiControllerMode.MODE_0, SpiControllerDataWidth._8_BITS_DATA,
+                                         SpiControllerChipSelect.CHIP_SELECT_2, SpiControllerChipSelectPolarity.ACTIVE_HIGH, 10000000))
+
+        self.device.close()
+
     # To run this test, it's necessary to connect the SPI Target device of Adafruit: FRAM memory MB85RS64V
     # Use the Supernova's breakout board and connect the VCC, GND, SCK, MISO, MOSI and CS signals of the memory
     # to its correspondent signal in the breakout board
@@ -498,10 +523,10 @@ class TestSupernovaController(unittest.TestCase):
         spi_controller.set_parameters(mode=SpiControllerMode.MODE_0)
 
         data = [0x9F]
-        readLength = 4
-        transferLength = len(data) + readLength
+        read_length = 4
+        transfer_length = len(data) + read_length
 
-        (success, result) = spi_controller.transfer(data, transferLength)
+        (success, result) = spi_controller.transfer(data, transfer_length)
 
         self.assertTupleEqual((success, result), (True, [0x00, 0x04, 0x7F, 0x03, 0x02]))
 

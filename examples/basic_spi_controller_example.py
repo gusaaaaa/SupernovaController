@@ -28,7 +28,7 @@ def main():
         print("Couldn't set the SPI bus voltage.")
         exit(1)
 
-    (success, _) = spi_controller.init_bus(bitOrder=SpiControllerBitOrder.LSB)
+    (success, _) = spi_controller.init_bus(bit_order=SpiControllerBitOrder.LSB)
     if not success:
         print("Couldn't initialize SPI peripheral.")
         exit(1)
@@ -44,7 +44,7 @@ def main():
 
     # Change bit order to MSB first
     print("Changing the bit order to MSB first.")
-    (success, response) = spi_controller.set_parameters(bitOrder = SpiControllerBitOrder.MSB)
+    (success, response) = spi_controller.set_parameters(bit_order = SpiControllerBitOrder.MSB)
     if not success:
         print("Couldn't set the SPI parameters correctly.")
         exit(1)
@@ -62,8 +62,8 @@ def main():
     print("Reading manufacturer ID")
     data = [0x9F]                                           # Read Manufacturer ID opcode
     read_length = 4                                         # Manufacturer ID consists of 4 bytes of data
-    transferLength = len(data) + read_length                # Transfer length is the total of instruction length and read length
-    (success, response) = spi_controller.transfer(data, transferLength)
+    transfer_length = len(data) + read_length                # Transfer length is the total of instruction length and read length
+    (success, response) = spi_controller.transfer(data, transfer_length)
     if success:
         printable = [f'{value:#04x}' for value in response]
         print(f"Received data: {printable}")
@@ -73,8 +73,8 @@ def main():
     # Enable write operation
     print("Enabling write operation")
     data = [0x06]                                           # Write Enable (WREN) opcode
-    transferLength = len(data)                              # In this case the length is just the length of the instruction
-    (success, _) = spi_controller.transfer(data, transferLength)
+    transfer_length = len(data)                              # In this case the length is just the length of the instruction
+    (success, _) = spi_controller.transfer(data, transfer_length)
     if success:
         print(f"Write operation enable")
     else:
@@ -85,8 +85,8 @@ def main():
     instruction = [0x02, 0x00, 0x00]                        # Write operation opcode and memory address
     data_to_write = [0x2A, 0x3B]                            # Data to be written in the memory
     data = instruction + data_to_write
-    transferLength = len(data)                              # Transfer length is the total of the instruction length and data to write length
-    (success, _) = spi_controller.transfer(data, transferLength)
+    transfer_length = len(data)                              # Transfer length is the total of the instruction length and data to write length
+    (success, _) = spi_controller.transfer(data, transfer_length)
     if success:
         print(f"Write operation completed successfully")
     else:
@@ -96,8 +96,8 @@ def main():
     print("Reading 0x0000 memory address")
     data = [0x03, 0x00, 0x00]                               # Read operation opcode and memory address
     read_length = 2                                         # Length of byte to be read
-    transferLength = len(data) + read_length                # Transfer length is the total of the instruction length and read length
-    (success, response) = spi_controller.transfer(data, transferLength)
+    transfer_length = len(data) + read_length                # Transfer length is the total of the instruction length and read length
+    (success, response) = spi_controller.transfer(data, transfer_length)
     if success:
         printable = [f'{value:#04x}' for value in response]
         print(f"Received data: {printable}")

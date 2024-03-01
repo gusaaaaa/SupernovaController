@@ -334,7 +334,7 @@ In a SPI bus, the Supernova can act as a controller.
    Sets the bus voltage (in mV) for the SPI bus. This step is required before initializing the bus:
 
    ```python
-   success, data = spi_controller.set_bus_voltage(3300)
+   success, response = spi_controller.set_bus_voltage(3300)
    ```
 
 2. ***Initializing the Supernova as a SPI controller:***
@@ -342,12 +342,12 @@ In a SPI bus, the Supernova can act as a controller.
     Initializes the Supernova in SPI controller mode:
 
     ```python
-   success, status = spi_controller.init_bus()
+   success, response = spi_controller.init_bus()
    ```
-    Without any parameters, the SPI controller initializes with the default values for bit order, mode, chip select, chip select polarity and frequency. Optionally, it is possible to set any of this parameters by specifying in the init_bus function:
+    Without any parameters, the SPI controller initializes with the default values for bit order (MSB first), mode (Mode 0), chip select (CS0), chip select polarity (Active low) and frequency (10 MHz). Optionally, it is possible to set any of these parameters by specifying in the init_bus function:
 
     ```python
-   success, status = spi_controller.init_bus(bitOrder=SpiControllerBitOrder.LSB, frequency=20000000)
+   success, response = spi_controller.init_bus(bit_order=SpiControllerBitOrder.LSB, frequency=20000000)
    ```
 
 3. ***Modifying the SPI controller parameters***
@@ -355,12 +355,12 @@ In a SPI bus, the Supernova can act as a controller.
     It is possible to set a new configuration for each parameter (bit order, mode, chip select, chip select polarity and frequency):
 
     ```python
-   success, status = spi_controller.set_parameters(bitOrder = SpiControllerBitOrder.MSB, mode = SpiControllerMode.MODE_1)
+   success, response = spi_controller.set_parameters(bit_order = SpiControllerBitOrder.MSB, mode = SpiControllerMode.MODE_1)
    ```
 
    If parameters are provided, it configures the parameters; otherwise, it retains the current settings.
 
-4. ***Read the actual SPI controller configuration***
+4. ***Read the current SPI controller configuration***
 
     The following method retrieves the current SPI controller communication parameters, including bit order, spi mode, data width, chip select, chip select polarity and frequency.
 
@@ -369,7 +369,7 @@ In a SPI bus, the Supernova can act as a controller.
    ```
 
     The variable ```response``` is a tuple containing the current SPI controller communication parameters:
-    (bitOrder, mode, dataWidth, chipSelect, chipSelectPol, frequency)
+    (bit_order, mode, data_width, chip_select, chip_select_pol, frequency)
 
 5. ***Transfer data over SPI bus***
 
@@ -377,8 +377,8 @@ In a SPI bus, the Supernova can act as a controller.
 
     ```python
     data = [0x01, 0x02, 0x03, 0x04, 0x05, 0x06]
-    transferLength = 6
-    success, response = spi_controller.transfer(data, transferLength)
+    transfer_length = 6
+    success, response = spi_controller.transfer(data, transfer_length)
     ```
 
     For a particular case of a SPI target device that interprets instructions via opcodes, an example of use could be the following:
@@ -392,16 +392,16 @@ In a SPI bus, the Supernova can act as a controller.
     # Transfer length includes the length of the transferred data to the target and the read length to generate SPI clock cycles for the read operation
     # Read length: 6 bytes to read
     # Data to target: 3 bytes
-    readLength = 6
-    dataToTarget = len(data)
-    transferLength = dataToTarget + readLength
+    read_length = 6
+    data_to_target = len(data)
+    transfer_length = data_to_target + read_length
 
-    success, response = spi_controller.transfer(data, transferLength)
+    success, response = spi_controller.transfer(data, transfer_length)
 
     # The response consists of the entire MISO line since the transfer started.
     # If the SPI target device doesn't send information while the instruction is transferred, the first bytes of the response are in IDLE state with the value 0x00
-    # responde: [0x00, 0x00, 0x00, 0xFA, 0xFB, 0xFC, 0xFD, 0xFE, 0xFF]
-    dataFromTarget = response[3:]
+    # response: [0x00, 0x00, 0x00, 0xFA, 0xFB, 0xFC, 0xFD, 0xFE, 0xFF]
+    data_from_target = response[3:]
     ```
 
 ## Next Steps

@@ -27,16 +27,16 @@ class SupernovaSPIControllerBlockingInterface:
         # Transfer controller instance
         self.controller = controller
         # SPI controller communication parameters
-        self.bitOrder = SpiControllerBitOrder.MSB                        # MSB first
+        self.bit_order = SpiControllerBitOrder.MSB                        # MSB first
         self.mode = SpiControllerMode.MODE_0                             # Mode 0
-        self.dataWidth = SpiControllerDataWidth._8_BITS_DATA             # 8 bits data width
-        self.chipSelect = SpiControllerChipSelect.CHIP_SELECT_0          # Chip select 0
-        self.chipSelectPol = SpiControllerChipSelectPolarity.ACTIVE_LOW  # Active low
+        self.data_width = SpiControllerDataWidth._8_BITS_DATA             # 8 bits data width
+        self.chip_select = SpiControllerChipSelect.CHIP_SELECT_0          # Chip select 0
+        self.chip_select_pol = SpiControllerChipSelectPolarity.ACTIVE_LOW  # Active low
         self.frequency = 10000000                                        # 10 MHz
         self.bus_voltage = None
     
-    def __store_parameters(self, bitOrder: SpiControllerBitOrder=None, mode: SpiControllerMode=None, chipSelect: SpiControllerChipSelect=None,
-                           chipSelectPol: SpiControllerChipSelectPolarity=None, frequency: int=None):
+    def __store_parameters(self, bit_order: SpiControllerBitOrder=None, mode: SpiControllerMode=None, chip_select: SpiControllerChipSelect=None,
+                           chip_select_pol: SpiControllerChipSelectPolarity=None, frequency: int=None):
         """
         Stores the SPI controller communication parameters.
 
@@ -45,18 +45,18 @@ class SupernovaSPIControllerBlockingInterface:
         retaining existing values otherwise.
 
         Args:
-        bitOrder (SpiControllerBitOrder, optional): The bit order for SPI communication (default: None).
+        bit_order (SpiControllerBitOrder, optional): The bit order for SPI communication (default: None).
         mode (SpiControllerMode, optional): The mode for SPI communication (default: None).
-        chipSelect (SpiControllerChipSelect, optional): The selected Chip to communicate with (default: None).
-        chipSelectPol (SpiControllerChipSelectPolarity, optional): The chip select polarity setting for SPI communication (default: None).
+        chip_select (SpiControllerChipSelect, optional): The selected Chip to communicate with (default: None).
+        chip_select_pol (SpiControllerChipSelectPolarity, optional): The chip select polarity setting for SPI communication (default: None).
         frequency (int, optional): The clock frequency for the SPI communication (default: None).
         """
 
         # Update parameters if provided
-        self.bitOrder = bitOrder or self.bitOrder
+        self.bit_order = bit_order or self.bit_order
         self.mode = mode or self.mode
-        self.chipSelect = chipSelect or self.chipSelect
-        self.chipSelectPol = chipSelectPol or self.chipSelectPol
+        self.chip_select = chip_select or self.chip_select
+        self.chip_select_pol = chip_select_pol or self.chip_select_pol
         self.frequency = frequency or self.frequency
 
     def __check_data_complete(self):
@@ -72,11 +72,11 @@ class SupernovaSPIControllerBlockingInterface:
 
         # Check if all the configuration for SPI controller communication are set
         return all([
-            self.bitOrder is not None,
+            self.bit_order is not None,
             self.mode is not None,
-            self.dataWidth is not None,
-            self.chipSelect is not None,
-            self.chipSelectPol is not None,
+            self.data_width is not None,
+            self.chip_select is not None,
+            self.chip_select_pol is not None,
             self.frequency is not None
         ])
     
@@ -147,8 +147,8 @@ class SupernovaSPIControllerBlockingInterface:
 
         return result
     
-    def init_bus(self, bitOrder: SpiControllerBitOrder=None, mode: SpiControllerMode=None,
-                 chipSelect: SpiControllerChipSelect=None, chipSelectPol: SpiControllerChipSelectPolarity=None, frequency: int=None):
+    def init_bus(self, bit_order: SpiControllerBitOrder=None, mode: SpiControllerMode=None,
+                 chip_select: SpiControllerChipSelect=None, chip_select_pol: SpiControllerChipSelectPolarity=None, frequency: int=None):
         """
         Initializes the SPI bus with specified parameters.
 
@@ -157,10 +157,10 @@ class SupernovaSPIControllerBlockingInterface:
         accordingly; otherwise, it retains the current settings.
 
         Args:
-        bitOrder (SpiControllerBitOrder, optional): The bit order for SPI communication (default: None).
+        bit_order (SpiControllerBitOrder, optional): The bit order for SPI communication (default: None).
         mode (SpiControllerMode, optional): The mode for SPI communication (default: None).
-        chipSelect (SpiControllerChipSelect, optional): The selected Chip to communicate with (default: None).
-        chipSelectPol (SpiControllerChipSelectPolarity, optional): The chip select polarity setting for SPI communication (default: None).
+        chip_select (SpiControllerChipSelect, optional): The selected Chip to communicate with (default: None).
+        chip_select_pol (SpiControllerChipSelectPolarity, optional): The chip select polarity setting for SPI communication (default: None).
         frequency (int, optional): The clock frequency for the SPI communication (default: None).
 
         Returns:
@@ -177,7 +177,7 @@ class SupernovaSPIControllerBlockingInterface:
         """
 
         # Update the SPI class attributes with the provided data
-        self.__store_parameters(bitOrder=bitOrder, mode=mode, chipSelect=chipSelect, chipSelectPol=chipSelectPol, frequency=frequency)
+        self.__store_parameters(bit_order=bit_order, mode=mode, chip_select=chip_select, chip_select_pol=chip_select_pol, frequency=frequency)
         # Check if all the needed configurations for SPI communication are correctly set
         is_data_complete = self.__check_data_complete()
         # Return failure if data is incomplete
@@ -188,7 +188,7 @@ class SupernovaSPIControllerBlockingInterface:
         responses = None
         try:
             responses = self.controller.sync_submit([
-                lambda transfer_id: self.driver.spiControllerInit(id=transfer_id, bitOrder=self.bitOrder, mode=self.mode, dataWidth=self.dataWidth, chipSelect=self.chipSelect, chipSelectPol=self.chipSelectPol, frequency=self.frequency)
+                lambda transfer_id: self.driver.spiControllerInit(id=transfer_id, bitOrder=self.bit_order, mode=self.mode, dataWidth=self.data_width, chipSelect=self.chip_select, chipSelectPol=self.chip_select_pol, frequency=self.frequency)
             ])
         except Exception as e:
             raise BackendError(original_exception=e) from e
@@ -198,8 +198,8 @@ class SupernovaSPIControllerBlockingInterface:
 
         return (response_success, "Success" if response_success else "Init failed, error from the Supernova")
      
-    def set_parameters(self, bitOrder: SpiControllerBitOrder=None, mode: SpiControllerMode=None,
-                       chipSelect: SpiControllerChipSelect=None, chipSelectPol: SpiControllerChipSelectPolarity=None, frequency: int=None):
+    def set_parameters(self, bit_order: SpiControllerBitOrder=None, mode: SpiControllerMode=None,
+                       chip_select: SpiControllerChipSelect=None, chip_select_pol: SpiControllerChipSelectPolarity=None, frequency: int=None):
         """
         Sets SPI controller communication parameters.
 
@@ -208,10 +208,10 @@ class SupernovaSPIControllerBlockingInterface:
         otherwise, it retains the current settings.
 
         Args:
-        bitOrder (SpiControllerBitOrder, optional): The bit order for SPI communication (default: None).
+        bit_order (SpiControllerBitOrder, optional): The bit order for SPI communication (default: None).
         mode (SpiControllerMode, optional): The mode for SPI communication (default: None).
-        chipSelect (SpiControllerChipSelect, optional): The selected Chip to communicate with (default: None).
-        chipSelectPol (SpiControllerChipSelectPolarity, optional): The chip select polarity setting for SPI communication (default: None).
+        chip_select (SpiControllerChipSelect, optional): The selected Chip to communicate with (default: None).
+        chip_select_pol (SpiControllerChipSelectPolarity, optional): The chip select polarity setting for SPI communication (default: None).
         frequency (int, optional): The clock frequency for the SPI communication (default: None).
 
         Returns:
@@ -228,7 +228,7 @@ class SupernovaSPIControllerBlockingInterface:
         """
 
         # Update the SPI class attributes with the provided data
-        self.__store_parameters(bitOrder=bitOrder, mode=mode, chipSelect=chipSelect, chipSelectPol=chipSelectPol, frequency=frequency)
+        self.__store_parameters(bit_order=bit_order, mode=mode, chip_select=chip_select, chip_select_pol=chip_select_pol, frequency=frequency)
         # Check if all the needed configurations for SPI communication are correctly set
         is_data_complete = self.__check_data_complete()
         # Return failure if data is incomplete
@@ -239,7 +239,7 @@ class SupernovaSPIControllerBlockingInterface:
         # Request SPI controller set parameters 
         try:
             responses = self.controller.sync_submit([
-                lambda transfer_id: self.driver.spiControllerSetParameters(id=transfer_id, bitOrder=self.bitOrder, mode=self.mode, dataWidth=self.dataWidth, chipSelect=self.chipSelect, chipSelectPol=self.chipSelectPol, frequency=self.frequency)
+                lambda transfer_id: self.driver.spiControllerSetParameters(id=transfer_id, bitOrder=self.bit_order, mode=self.mode, dataWidth=self.data_width, chipSelect=self.chip_select, chipSelectPol=self.chip_select_pol, frequency=self.frequency)
             ])
         except Exception as e:
             raise BackendError(original_exception=e) from e
@@ -260,13 +260,13 @@ class SupernovaSPIControllerBlockingInterface:
         tuple: A tuple containing two elements:
             - The first element is a Boolean indicating the success (True) of retrieving parameters.
             - The second element is a tuple containing the current SPI controller communication parameters:
-                (bitOrder, mode, dataWidth, chipSelect, chipSelectPol, frequency).
+                (bit_order, mode, data_width, chip_select, chip_select_pol, frequency).
         """
 
         # return configured SPI controller parameters
-        return (True, (self.bitOrder, self.mode, self.dataWidth, self.chipSelect, self.chipSelectPol, self.frequency))
+        return (True, (self.bit_order, self.mode, self.data_width, self.chip_select, self.chip_select_pol, self.frequency))
     
-    def transfer(self, data, transferLength):
+    def transfer(self, data, transfer_length):
         """
         Transfers data over the SPI bus.
 
@@ -274,7 +274,7 @@ class SupernovaSPIControllerBlockingInterface:
 
         Args:
         data: The data to be transmitted over the SPI bus.
-        transferLength: 2-bytes integer that represents the transfer length. The range allowed is [1, 1024].
+        transfer_length: 2-bytes integer that represents the transfer length. The range allowed is [1, 1024].
 
         Returns:
         tuple: A tuple containing two elements:
@@ -289,7 +289,7 @@ class SupernovaSPIControllerBlockingInterface:
         # Request SPI transfer
         try:
             responses = self.controller.sync_submit([
-                lambda transfer_id: self.driver.spiControllerTransfer(id=transfer_id, payload=data, transferLength=transferLength),
+                lambda transfer_id: self.driver.spiControllerTransfer(id=transfer_id, payload=data, transferLength=transfer_length),
             ])
         except Exception as e:
             raise BackendError(original_exception=e) from e
