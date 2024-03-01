@@ -334,14 +334,14 @@ This section describes how to get you started with the `SupernovaController` foc
     ```python
    success, response = uart.init_bus()
    ```
-    Without any parameters, the UART peripheral initializes with the default values for baudrate (9600bps), parity (no parity), data size (8 bit), stop bit (one stop bit) and hardware handshake (no hardware handshake). Optionally, it is possible to set any of this parameters by specifying in the init_bus function:
+    Without any parameters, the UART peripheral initializes with the default values for baudrate (9600bps), parity (no parity), data size (8 bit), stop bit (one stop bit) and hardware handshake (no hardware handshake). Optionally, it is possible to set any of these parameters by specifying in the init_bus function:
 
     ```python
    success, response = uart.init_bus(baudrate=UartControllerBaudRate.UART_BAUD_115200, parity=UartControllerParity.UART_EVEN_PARITY)
    ```
 3. ***Modifying the UART peripheral parameters***
 
-    It is possible to set a new configuration for each parameter (baudrate, parity, data size, stop bit and hardware handshake):
+    It is also possible to configure/set any parameter after initialization (baudrate, parity, data size, stop bit and hardware handshake):
 
     ```python
    success, response = uart.set_parameters(stop_bit = UartControllerStopBit.UART_TWO_STOP_BIT, baudrate = UartControllerBaudRate.UART_BAUD_56000)
@@ -349,7 +349,7 @@ This section describes how to get you started with the `SupernovaController` foc
 
    If parameters are provided, it configures the parameters; otherwise, it retains the current settings.
 
-4. ***Read the actual UART peripheral configuration***
+4. ***Read the current UART peripheral configuration***
 
     The following method retrieves the current UART peripheral communication parameters, including baudrate, parity, data size, stop bit and hardware handshake.
 
@@ -373,7 +373,7 @@ This section describes how to get you started with the `SupernovaController` foc
 
 6. ***Receive data over UART bus***
 
-    If the bus is initialized, awaits reception of data over the UART RX channel. A timeout can be added to the waiting process to exit if no data is received and a timeout occurred (use None to ignore the timeout feature). 
+    If the bus is initialized, awaits reception of data over the UART RX channel. A timeout can be set to the waiting process to exit if no data is received in the timeout's time specified time (use None to ignore the timeout feature). 
 
     ```python
     success, response = uart.wait_for_notification(timeout = None)
