@@ -1,8 +1,23 @@
+from supernovacontroller.errors.exceptions import BackendError
 from .targetDevices.I3cTargetMemory import I3cTargetMemory
 from .targetDevices.I2cTargetMemory import I2cTargetMemory
 from .targetDevices.SimulatedP3T1085UK import SimulatedP3T1085UK
 from BinhoSupernova.utils.system_message import SystemOpcode
 
+def check_i3c_conditions(func):  
+    def wrapper(self, *args, **kwargs):  
+        response = self.getI3cTransferResponseTemplate(args[0], 0)
+        if not self.i3cBusStarted:  
+            response["command"] = 5 # this is for generalization of the error on init_bus
+            self.callback(self.build_error_response(response, "Bus was not Initialized"), None)
+            return
+        targetAddress = args[1]  # Assuming targetAddress is the second argument  
+        if str(targetAddress) not in self.i3cTargetTable:  
+            response["command"] = 6 # this is for generalization of the error on getTable
+            self.callback(self.build_error_response(response, "NACK_ERROR"), None)
+            return
+        return func(self, *args, **kwargs)  
+    return wrapper  
 
 class BinhoSupernovaSimulator:
     def __init__(self):
@@ -14,6 +29,7 @@ class BinhoSupernovaSimulator:
             "FW_VERSION": "FW-1.1.0",
             "BL_VERSION": "BL-1.0.1"
         }
+        self.i3cBusStarted = False
         self.i2cTargets = {
             "80": I2cTargetMemory(address=80),
             "81": I2cTargetMemory(address=81),
@@ -48,6 +64,22 @@ class BinhoSupernovaSimulator:
 
     def close(self):
         pass
+
+    def build_error_response(self, response, error):
+        return {
+            "id": response["id"],
+            "command": response["command"],
+            "name": "I3C_TRANSFER",
+            "header": {
+                "tag": "RESPONSE_TO_REGULAR_REQUEST",
+                "result": "I3C_TRANSFER_FAIL",
+                "hasData": False,
+            },
+            "descriptor": {
+                "dataLength": 0,
+                "errors": [error]
+            },
+        }
 
     def setI2cSpiUartBusVoltage(self, id, i2cSpiUartBusVolt):
         self.callback({
@@ -118,7 +150,14 @@ class BinhoSupernovaSimulator:
 
     def helperGetDeviceInfoFromDynamicAddress(self, targetAddress):
         staticAddress = self.helperGetStaticFromDynamicAddress(targetAddress)
-        return self.i3cTargets[str(staticAddress)].getDeviceInfo()
+        targets = self.__get_i3c_targets()
+        return targets[str(staticAddress)].getDeviceInfo()
+    
+    def __get_i3c_targets(self):
+        if(self.i3cBusStarted):
+            return self.i3cTargets;
+        else:
+            return []
 
     def getI3cTransferResponseTemplate(self, id, dataLength):
         return {
@@ -171,6 +210,7 @@ class BinhoSupernovaSimulator:
             self.i3cTargetTable[str(dynamicAddress)] = memory.getDeviceInfo()
             dynamicAddress += 1
 
+        self.i3cBusStarted = True
         self.callback({
             "id": id,
             "command": 5,
@@ -202,6 +242,7 @@ class BinhoSupernovaSimulator:
             "table": table
         }, None)
 
+    @check_i3c_conditions
     def i3cWrite(self, id, targetAddress, mode, pushPullRate, openDrainRate, registerAddress, data):
         # Base response structure
         response = {
@@ -215,24 +256,18 @@ class BinhoSupernovaSimulator:
                 "dataLength": 0,
                 "errors": []
             },
-        }
-
-        # Check if i3cTargetTable is None or the specific targetAddress entry is None
-        if self.i3cTargetTable is None or self.i3cTargetTable.get(str(targetAddress)) is None:
-            response["header"]["result"] = "I3C_TRANSFER_FAIL"
-            response["header"]["hasData"] = False
-            response["descriptor"]["errors"].append("NACK_ERROR")
-            response["descriptor"]["dataLength"] = 0
-        else:
-            staticAddress = self.i3cTargetTable[str(targetAddress)]["staticAddress"]
-            self.i3cTargets[str(staticAddress)].write(registerAddress + data)
-            response["header"]["result"] = "I3C_TRANSFER_SUCCESS"
-            response["header"]["hasData"] = False
-            response["descriptor"]["errors"].append("NO_TRANSFER_ERROR")
-            response["data"] = []
-
+        }            
+        targets = self.__get_i3c_targets()
+        staticAddress = self.helperGetStaticFromDynamicAddress(targetAddress)
+        targets[str(staticAddress)].write(registerAddress + data)
+        response["header"]["result"] = "I3C_TRANSFER_SUCCESS"
+        response["header"]["hasData"] = False
+        response["descriptor"]["errors"].append("NO_TRANSFER_ERROR")
+        response["data"] = []
+            
         self.callback(response, None)
 
+    @check_i3c_conditions
     def i3cRead(self, id, targetAddress, mode, pushPullRate, openDrainRate, registerAddress, length):
         # Base response structure
         response = {
@@ -246,88 +281,110 @@ class BinhoSupernovaSimulator:
                 "errors": []
             },
         }
-
-        # Check if i3cTargetTable is None or the specific targetAddress entry is None
-        if self.i3cTargetTable is None or self.i3cTargetTable.get(str(targetAddress)) is None:
-            response["header"]["result"] = "I3C_TRANSFER_FAIL"
-            response["header"]["hasData"] = False
-            response["descriptor"]["errors"].append("NACK_ERROR")
-            response["descriptor"]["dataLength"] = 0
-        else:
-            staticAddress = self.i3cTargetTable[str(targetAddress)]["staticAddress"]
-            if (len(registerAddress) > 0):
-                self.i3cTargets[str(staticAddress)].write(registerAddress)
-            data = self.i3cTargets[str(staticAddress)].read(length)
-            response["header"]["result"] = "I3C_TRANSFER_SUCCESS"
-            response["header"]["hasData"] = True
-            response["descriptor"]["errors"].append("NO_TRANSFER_ERROR")
-            response["data"] = data
+        targets = self.__get_i3c_targets()
+        staticAddress = self.helperGetStaticFromDynamicAddress(targetAddress)
+        if (len(registerAddress) > 0):
+            targets[str(staticAddress)].write(registerAddress)
+        data = targets[str(staticAddress)].read(length)
+        response["header"]["result"] = "I3C_TRANSFER_SUCCESS"
+        response["header"]["hasData"] = True
+        response["descriptor"]["errors"].append("NO_TRANSFER_ERROR")
+        response["data"] = data
 
         self.callback(response, None)
 
+    @check_i3c_conditions
     def i3cGETPID(self, id, targetAddress, pushPullRate, openDrainRate):
-        staticAddress = self.helperGetStaticFromDynamicAddress(targetAddress)
-        deviceInfo = self.i3cTargets[str(staticAddress)].getDeviceInfo()
+        response = self.getI3cTransferResponseTemplate(id, 0)
+        deviceInfo = self.helperGetDeviceInfoFromDynamicAddress(targetAddress)
         pid = list(map(lambda num: hex(num), deviceInfo["pid"]))
         pidlen = len(pid)
         response = self.getI3cTransferResponseTemplate(id, pidlen)
         response["pid"] = pid
+        
         self.callback(response, None)
 
+    @check_i3c_conditions
     def i3cGETBCR(self, id, targetAddress, pushPullRate, openDrainRate):
-        staticAddress = self.helperGetStaticFromDynamicAddress(targetAddress)
-        deviceInfo = self.i3cTargets[str(staticAddress)].getDeviceInfo()
+        response = self.getI3cTransferResponseTemplate(id, 0)
+        deviceInfo = self.helperGetDeviceInfoFromDynamicAddress(targetAddress)
         bcr = deviceInfo["bcr"]
         bcrlen = 1
         response = self.getI3cTransferResponseTemplate(id, bcrlen)
         response["bcr"] = bcr
+            
         self.callback(response, None)
 
+    @check_i3c_conditions
     def i3cGETDCR(self, id, targetAddress, pushPullRate, openDrainRate):
-        staticAddress = self.helperGetStaticFromDynamicAddress(targetAddress)
-        deviceInfo = self.i3cTargets[str(staticAddress)].getDeviceInfo()
+        response = self.getI3cTransferResponseTemplate(id, 0)
+        deviceInfo = self.helperGetDeviceInfoFromDynamicAddress(targetAddress)
         dcr = hex(deviceInfo["dcr"])
         dcrlen = 1
         response = self.getI3cTransferResponseTemplate(id, dcrlen)
         response["dcr"] = dcr
+
         self.callback(response, None)
 
+    @check_i3c_conditions
     def i3cGETMRL(self, id, targetAddress, pushPullRate, openDrainRate):
-        staticAddress = self.helperGetStaticFromDynamicAddress(targetAddress)
-        mrl = self.i3cTargets[str(staticAddress)].getMRL()
+        response = self.getI3cTransferResponseTemplate(id, 0)
+        targets = self.__get_i3c_targets()
+        staticAddress = self.helperGetStaticFromDynamicAddress(targetAddress)       
+        mrl = targets[str(staticAddress)].getMRL()
         response = self.getI3cTransferResponseTemplate(id, 2)
         response["maxReadLength"] = mrl
+
         self.callback(response, None)
 
+    @check_i3c_conditions
     def i3cDirectSETMRL(self, id, targetAddress, pushPullRate, openDrainRate, mrl):
+        response = self.getI3cTransferResponseTemplate(id, 0)
+        targets = self.__get_i3c_targets()
         staticAddress = self.helperGetStaticFromDynamicAddress(targetAddress)
-        self.i3cTargets[str(staticAddress)].setMRL(mrl)
+        targets[str(staticAddress)].setMRL(mrl)
         response = self.getI3cTransferResponseTemplate(id, 2)
         response["data"] = [0, 0]
+
         self.callback(response, None)
 
+    @check_i3c_conditions
     def i3cBroadcastSETMRL(self, id, pushPullRate, openDrainRate, mrl):
-        [target.setMRL(mrl) for target in self.i3cTargets.values()]
+        response = self.getI3cTransferResponseTemplate(id, 0)
+        targets = self.__get_i3c_targets()
+        [target.setMRL(mrl) for target in targets.values()]
         response = self.getI3cTransferResponseTemplate(id, 3)
         response["data"] = [0, 0, 0]
+
         self.callback(response, None)
 
+    @check_i3c_conditions
     def i3cGETMWL(self, id, targetAddress, pushPullRate, openDrainRate):
+        response = self.getI3cTransferResponseTemplate(id, 0)
+        targets = self.__get_i3c_targets()
         staticAddress = self.helperGetStaticFromDynamicAddress(targetAddress)
-        mwl = self.i3cTargets[str(staticAddress)].getMWL()
+        mwl = targets[str(staticAddress)].getMWL()
         response = self.getI3cTransferResponseTemplate(id, 2)
         response["maxWriteLength"] = mwl
         self.callback(response, None)
 
+    @check_i3c_conditions
     def i3cDirectSETMWL(self, id, targetAddress, pushPullRate, openDrainRate, mwl):
+        response = self.getI3cTransferResponseTemplate(id, 0)
+        targets = self.__get_i3c_targets()
         staticAddress = self.helperGetStaticFromDynamicAddress(targetAddress)
-        self.i3cTargets[str(staticAddress)].setMWL(mwl)
+        targets[str(staticAddress)].setMWL(mwl)
         response = self.getI3cTransferResponseTemplate(id, 2)
         response["data"] = [0, 0]
+
         self.callback(response, None)
 
+    @check_i3c_conditions
     def i3cBroadcastSETMWL(self, id, pushPullRate, openDrainRate, mwl):
-        [target.setMWL(mwl) for target in self.i3cTargets.values()]
+        response = self.getI3cTransferResponseTemplate(id, 0)
+        targets = self.__get_i3c_targets()
+        [target.setMWL(mwl) for target in targets.values()]
         response = self.getI3cTransferResponseTemplate(id, 3)
         response["data"] = [0, 0, 0]
+
         self.callback(response, None)
