@@ -305,6 +305,7 @@ In a SPI bus, the Supernova can act as a controller.
    from supernovacontroller.sequential import SupernovaDevice
 
    device = SupernovaDevice()
+   
    # Optionally specify the USB HID path
    device.open(usb_address='your_usb_hid_path')
    ```

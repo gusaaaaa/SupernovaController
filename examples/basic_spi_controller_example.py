@@ -60,9 +60,10 @@ def main():
     
     # Read Manufacturer ID
     print("Reading manufacturer ID")
-    data = [0x9F]                                           # Read Manufacturer ID opcode
+    READ_MANUFACTURER_ID_OPCODE = 0x9F
+    data = [READ_MANUFACTURER_ID_OPCODE]                    # Read Manufacturer ID opcode
     read_length = 4                                         # Manufacturer ID consists of 4 bytes of data
-    transfer_length = len(data) + read_length                # Transfer length is the total of instruction length and read length
+    transfer_length = len(data) + read_length               # Transfer length is the total of instruction length and read length
     (success, response) = spi_controller.transfer(data, transfer_length)
     if success:
         printable = [f'{value:#04x}' for value in response]
@@ -72,8 +73,9 @@ def main():
     
     # Enable write operation
     print("Enabling write operation")
-    data = [0x06]                                           # Write Enable (WREN) opcode
-    transfer_length = len(data)                              # In this case the length is just the length of the instruction
+    WREN_OPCODE = 0x06
+    data = [WREN_OPCODE]                                    # Write Enable (WREN) opcode
+    transfer_length = len(data)                             # In this case the length is just the length of the instruction
     (success, _) = spi_controller.transfer(data, transfer_length)
     if success:
         print(f"Write operation enable")
@@ -82,7 +84,8 @@ def main():
 
     # Write operation
     print("Writing [0x2A 0x2B] to 0x0000 memory address")
-    instruction = [0x02, 0x00, 0x00]                        # Write operation opcode and memory address
+    WRITE_OPCODE = 0x02
+    instruction = [WRITE_OPCODE, 0x00, 0x00]                # Write operation opcode and memory address
     data_to_write = [0x2A, 0x3B]                            # Data to be written in the memory
     data = instruction + data_to_write
     transfer_length = len(data)                              # Transfer length is the total of the instruction length and data to write length
@@ -94,9 +97,10 @@ def main():
 
     # Read operation
     print("Reading 0x0000 memory address")
-    data = [0x03, 0x00, 0x00]                               # Read operation opcode and memory address
+    READ_OPCODE = 0x03
+    data = [READ_OPCODE, 0x00, 0x00]                        # Read operation opcode and memory address
     read_length = 2                                         # Length of byte to be read
-    transfer_length = len(data) + read_length                # Transfer length is the total of the instruction length and read length
+    transfer_length = len(data) + read_length               # Transfer length is the total of the instruction length and read length
     (success, response) = spi_controller.transfer(data, transfer_length)
     if success:
         printable = [f'{value:#04x}' for value in response]
