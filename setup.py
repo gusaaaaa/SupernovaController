@@ -10,7 +10,7 @@ setup(
     packages=find_packages(),
     data_files=[
         ('SupernovaExamples', ['examples/basic_i2c_example.py', 'examples/basic_i3c_example.py', 'examples/ibi_example.py', 'examples/ICM42605_i3c_example.py', 'examples/basic_i3c_target_example.py',
-                               'examples/basic_spi_controller_example.py'])
+                               'examples/basic_uart_example', 'examples/basic_spi_controller_example.py'])
     ],
     description='A blocking API for interacting with the Supernova host-adapter device',
     long_description=open('README.md').read(),
