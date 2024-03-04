@@ -329,12 +329,12 @@ This section describes how to get you started with the `SupernovaController` foc
 
 2. ***Initializing the Supernova UART peripheral:***
 
-    Initializes the Supernova in UART peripheral:
+    Initializes the Supernova UART peripheral:
 
     ```python
    success, response = uart.init_bus()
    ```
-    Without any parameters, the UART peripheral initializes with the default values for baudrate (9600bps), parity (no parity), data size (8 bit), stop bit (one stop bit) and hardware handshake (no hardware handshake). Optionally, it is possible to set any of these parameters by specifying in the init_bus function:
+    Without any parameters, the UART peripheral initializes with the default values for baudrate (9600bps), parity (no parity), data size (8 bit), stop bit (one stop bit) and hardware handshake (no hardware handshake). Optionally, it is possible to set any of these parameters by specifying them in the init_bus function:
 
     ```python
    success, response = uart.init_bus(baudrate=UartControllerBaudRate.UART_BAUD_115200, parity=UartControllerParity.UART_EVEN_PARITY)
@@ -368,8 +368,8 @@ This section describes how to get you started with the `SupernovaController` foc
     data = [0x00, 0x01, 0x02, 0x3, 0x04, 0x05, 0x06]
     success, response = uart.send(data, transferLength)
     ```
-    - If no errors happen while sending the data, ```success``` will be _true_ and the ```response``` will be a success message.
-    - If an error happens while sending the data, ```success``` will be _false_ and the ```response``` will be an error message.
+    - If no errors arises while sending the data, ```success``` will be _true_ and the ```response``` will be a success message.
+    - If an error arises while sending the data, ```success``` will be _false_ and the ```response``` will be an error message.
 
 6. ***Receive data over UART bus***
 
@@ -380,8 +380,7 @@ This section describes how to get you started with the `SupernovaController` foc
     ```
     - If data is received before the configured timeout, ```success``` will be _true_ and the ```response``` will be the array of received data.
     - If data is not received before the configured timeout,  ```success``` will be _false_ and the ```response``` will be a timeout error message.
-    - If an error happens while receiving the data, ```success``` will be _false_ and the ```response``` will be an error message.
-
+    - If an error arises while receiving the data, ```success``` will be _false_ and the ```response``` will be an error message.
 
 ### Next Steps
 
