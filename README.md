@@ -272,6 +272,116 @@ The fact that the memory is not circular obligates to take into account border c
 
 * If the transfer starts in an allowed memory address but tries to surpass the range during the transaction, it will only modify the bytes in the allowed range and discard the rest. The end of the transfer is taken as the end of the memory.
 
+## UART protocol
+
+### UART features
+
+This section describes how to get you started with the `SupernovaController` focusing on the UART protocol.
+
+* The supported features are: 
+    * Bus initialization.
+    * Setting of bus parameters such as baudrate, hardware handshake, parity, data size and stop bit.
+    * UART TX/RX transactions of up to 1024 bytes.
+
+### Basic UART Communication
+
+#### Generic operations
+
+1. ***Initializing the Supernova Device:***
+
+   Imports and initializes the `SupernovaDevice`. Optionally, specifies the USB HID path if multiple devices are connected:
+
+   ```python
+   from supernovacontroller.sequential import SupernovaDevice
+
+   device = SupernovaDevice()
+   # Optionally specify the USB HID path
+   device.open(usb_address='your_usb_hid_path')
+   ```
+
+   Call `open()` without parameters if you don't need to specify a particular device.
+
+2. ***Creating a UART controller Interface:***
+
+   Creates a UART controller interface:
+
+   ```python
+   uart = device.create_interface("uart")
+   ``` 
+
+3. ***Closing the Device:***
+
+   Closes the device when done:
+
+   ```python
+   device.close()
+   ```
+
+### Operations intended for the Supernova UART peripheral
+
+1. ***Setting Bus Voltage:***
+
+   Sets the bus voltage (in mV) for the UART bus. This step is required before initializing the bus:
+
+   ```python
+   success, response = uart.set_bus_voltage(3300)
+   ```
+
+2. ***Initializing the Supernova UART peripheral:***
+
+    Initializes the Supernova UART peripheral:
+
+    ```python
+   success, response = uart.init_bus()
+   ```
+    Without any parameters, the UART peripheral initializes with the default values for baudrate (9600bps), parity (no parity), data size (8 bit), stop bit (one stop bit) and hardware handshake (no hardware handshake). Optionally, it is possible to set any of these parameters by specifying them in the init_bus function:
+
+    ```python
+   success, response = uart.init_bus(baudrate=UartControllerBaudRate.UART_BAUD_115200, parity=UartControllerParity.UART_EVEN_PARITY)
+   ```
+3. ***Modifying the UART peripheral parameters***
+
+    It is also possible to configure/set any parameter after initialization (baudrate, parity, data size, stop bit and hardware handshake):
+
+    ```python
+   success, response = uart.set_parameters(stop_bit = UartControllerStopBit.UART_TWO_STOP_BIT, baudrate = UartControllerBaudRate.UART_BAUD_56000)
+   ```
+
+   If parameters are provided, it configures the parameters; otherwise, it retains the current settings.
+
+4. ***Read the current UART peripheral configuration***
+
+    The following method retrieves the current UART peripheral communication parameters, including baudrate, parity, data size, stop bit and hardware handshake.
+
+    ```python
+   success, response = uart.get_parameters()
+   ```
+
+    The variable ```response``` is a tuple containing the current UART controller communication parameters:
+    *(baudrate, parity, data_size, stop_bit, hardware_handshake)*
+
+5. ***Send data over UART bus***
+
+    If the bus is initialized, sends the provided data over the UART TX channel. 
+
+    ```python
+    data = [0x00, 0x01, 0x02, 0x3, 0x04, 0x05, 0x06]
+    success, response = uart.send(data, transferLength)
+    ```
+    - If no errors arises while sending the data, ```success``` will be _true_ and the ```response``` will be a success message.
+    - If an error arises while sending the data, ```success``` will be _false_ and the ```response``` will be an error message.
+
+6. ***Receive data over UART bus***
+
+    If the bus is initialized, awaits reception of data over the UART RX channel. A timeout can be set to the waiting process to exit if no data is received in the timeout's time specified time (use None to ignore the timeout feature). 
+
+    ```python
+    success, response = uart.wait_for_notification(timeout = None)
+    ```
+    - If data is received before the configured timeout, ```success``` will be _true_ and the ```response``` will be the array of received data.
+    - If data is not received before the configured timeout,  ```success``` will be _false_ and the ```response``` will be a timeout error message.
+    - If an error arises while receiving the data, ```success``` will be _false_ and the ```response``` will be an error message.
+
 ### Next Steps
 
 After installing the `SupernovaController` package, you can further explore its capabilities by trying out the examples included in the installation. These examples demonstrate practical applications of UART, I2C and I3C protocols:
