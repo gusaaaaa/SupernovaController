@@ -6,7 +6,7 @@ gh_token = os.environ.get('GH_TOKEN')
 
 setup(
     name='supernovacontroller',
-    version='1.1.0',
+    version='1.3.0',
     packages=find_packages(),
     data_files=[
         ('SupernovaExamples', ['examples/basic_i2c_example.py', 'examples/basic_i3c_example.py', 'examples/ibi_example.py', 'examples/ICM42605_i3c_example.py', 'examples/basic_i3c_target_example.py'])
