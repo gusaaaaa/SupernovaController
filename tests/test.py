@@ -525,7 +525,7 @@ class TestSupernovaController(unittest.TestCase):
 
         i3c.init_bus(3300)
 
-        (success, result) = i3c.target_reset(0x08,0x00, TransferDirection.READ)
+        (success, result) = i3c.target_reset(0x08,I3cTargetResetDefByte.RESET_I3C_PERIPHERAL, TransferDirection.READ)
 
         self.assertTupleEqual((success, result), (True, [0x00]))
 
