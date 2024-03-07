@@ -327,6 +327,47 @@ class SupernovaI3CBlockingInterface:
 
         return result
 
+    def target_reset(self, current_address, defining_byte, read_or_write_reset_action):
+        """
+        Writes or reads the reset action using the RSTACT CCC and performs a reset pattern on the I3C bus.
+        
+        This method performs a RSTACT CCC to either set or get the reset action of a specified target.
+        It also triggers a reset pattern, forcing each target to perform its configured reset action.
+
+        Args:
+        current_address (c_uint8): The current dynamic address of the target device. 
+            This should be the address that the device is currently using on the I3C bus.
+        defining_byte (I3cTargetResetDefByte): The defining byte used for the RSTACT CCC.
+        read_or_write_reset_action (TransferDirection): Determines whether to read or write the reset action.
+            It should be either TransferDirection.WRITE or TransferDirection.READ.
+
+        Returns:
+        tuple: A tuple containing two elements:
+            - The first element is a Boolean indicating the success (True) or failure (False) of the operation.
+            - The second element depends on the read_or_write_reset_action value:
+                - If it is a write, then the returned value can be either None indicating success, 
+                    or an error message detailing the failure obtained from the controller's response.
+                - If it is a read, the returned value is the reset action in case of success,
+                    or an error message detailing the failure obtained from the controller's response. 
+        """
+        try:
+            responses = self.controller.sync_submit([
+                lambda id: self.driver.i3cTargetReset(id, current_address, defining_byte, read_or_write_reset_action, self.push_pull_clock_freq_mhz, self.open_drain_clock_freq_mhz )
+            ])
+        except Exception as e:
+            raise BackendError(original_exception=e) from e
+
+        status = responses[0]["descriptor"]["errors"][0]
+
+        if status == "NO_TRANSFER_ERROR":
+            if (read_or_write_reset_action == TransferDirection.WRITE):
+                result = (True, None)
+            else:
+                result = (True, responses[0]["data"])
+        else:
+            result = (False, responses[0]["descriptor"]["errors"])
+        return result
+        
     def _process_response(self, command_name, responses, extra_data=None):
         def format_response_payload(command_name, response):
             if command_name == "write":
