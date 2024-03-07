@@ -14,6 +14,8 @@ from supernovacontroller.errors import BackendError
 from BinhoSupernova.commands.definitions import (
     SpiControllerBitOrder, SpiControllerMode, SpiControllerDataWidth,
     SpiControllerChipSelect, SpiControllerChipSelectPolarity)
+from BinhoSupernova.Supernova import I3cTargetResetDefByte
+from BinhoSupernova.Supernova import TransferDirection
 
 sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), "..")))
 from binhosimulators import BinhoSupernovaSimulator
@@ -515,6 +517,32 @@ class TestSupernovaController(unittest.TestCase):
         (success, result) = spi_controller.transfer(data, transfer_length)
 
         self.assertTupleEqual((success, result), (True, [0x00, 0x04, 0x7F, 0x03, 0x02]))
+    def test_target_reset_read_reset_action(self):
+
+        self.device.open()
+
+        i3c = self.device.create_interface("i3c.controller")
+
+        i3c.init_bus(3300)
+
+        (success, result) = i3c.target_reset(0x08,0x00, TransferDirection.READ)
+
+        self.assertTupleEqual((success, result), (True, [0x00]))
+
+        self.device.close()
+
+    def test_target_reset_write_reset_action(self):
+
+        self.device.open()
+
+        i3c = self.device.create_interface("i3c.controller")
+
+        i3c.init_bus(3300)
+
+        (success, result) = i3c.target_reset(0x08,I3cTargetResetDefByte.RESET_I3C_PERIPHERAL, TransferDirection.WRITE)
+        print(success, result)
+
+        self.assertTupleEqual((success, result), (True, None))
 
         self.device.close()
 
