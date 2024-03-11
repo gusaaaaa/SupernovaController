@@ -280,6 +280,7 @@ After installing the `SupernovaController` package, you can further explore its 
 - **Basic I3C Target Mode Example (`basic_i3c_target_example.py`):** Learn the basics of I3C target mode implementation using two Supernovas, one as an I3C target and the other one as a controller.
 - **Basic I2C Example (`basic_i2c_example.py`):** Get started with fundamental I2C operations.
 - **Basic UART Example (`basic_uart_example.py`):** Try out the UART protocol Hands-On.
+- **Hot-join example(`hot_join_example.py`):** Understand how to handle the hot-join procedure in I3C.
 - **IBI Example (`ibi_example.py`):** Understand handling In-Band Interrupts (IBI) in I3C.
 - **ICM42605 I3C Example (`ICM42605_i3c_example.py`):** Explore a real-world application of I3C with the ICM42605 sensor.
 
