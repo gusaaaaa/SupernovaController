@@ -11,6 +11,8 @@ from supernovacontroller.errors import DeviceNotMountedError
 from supernovacontroller.errors import DeviceAlreadyMountedError
 from supernovacontroller.errors import UnknownInterfaceError
 from supernovacontroller.errors import BackendError
+from BinhoSupernova.Supernova import I3cTargetResetDefByte
+from BinhoSupernova.Supernova import TransferDirection
 
 sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
 from deviceSimulators.supernova import BinhoSupernovaSimulator
@@ -443,6 +445,35 @@ class TestSupernovaController(unittest.TestCase):
         (success, result) = i3c.ccc_getpid(0x08)
 
         self.assertTupleEqual((success, result), (True, [0x00, 0x00, 0x00, 0x00, 0x64, 0x65]))
+
+        self.device.close()
+
+    def test_target_reset_read_reset_action(self):
+
+        self.device.open()
+
+        i3c = self.device.create_interface("i3c.controller")
+
+        i3c.init_bus(3300)
+
+        (success, result) = i3c.target_reset(0x08,I3cTargetResetDefByte.RESET_I3C_PERIPHERAL, TransferDirection.READ)
+
+        self.assertTupleEqual((success, result), (True, [0x00]))
+
+        self.device.close()
+
+    def test_target_reset_write_reset_action(self):
+
+        self.device.open()
+
+        i3c = self.device.create_interface("i3c.controller")
+
+        i3c.init_bus(3300)
+
+        (success, result) = i3c.target_reset(0x08,I3cTargetResetDefByte.RESET_I3C_PERIPHERAL, TransferDirection.WRITE)
+        print(success, result)
+
+        self.assertTupleEqual((success, result), (True, None))
 
         self.device.close()
 
