@@ -15,7 +15,7 @@ from BinhoSupernova.Supernova import I3cTargetResetDefByte
 from BinhoSupernova.Supernova import TransferDirection
 
 sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
-from deviceSimulators.supernova import BinhoSupernovaSimulator
+from binhosimulators import BinhoSupernovaSimulator
 
 class TestSupernovaController(unittest.TestCase):
     @classmethod

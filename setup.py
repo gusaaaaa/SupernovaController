@@ -20,7 +20,8 @@ setup(
     license='Private',
     install_requires=[
       'transfer_controller==0.3.1',
-      'BinhoSupernova==2.0.1'
+      'BinhoSupernova==2.0.1',
+      'BinhoSimulators @ git+https://${GH_TOKEN}@github.com/binhollc/BinhoSimulators.git@develop-0.1.0'
     ],
     classifiers=[
         'Development Status :: 3 - Alpha',
