@@ -91,7 +91,7 @@ class SupernovaDevice:
             self.notification_handlers[name] = (filter_func, handler_func)
 
     def _push_sdk_response(self, supernova_response, system_message):
-        if supernova_response:
+        if supernova_response and "id" in supernova_response:
             # Check if the id is non-zero (zero is reserved for notifications)
             if supernova_response["id"] != 0:
                 # Add the response to the response queue
