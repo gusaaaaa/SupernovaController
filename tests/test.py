@@ -211,8 +211,8 @@ class TestSupernovaController(unittest.TestCase):
 
         i3c = self.device.create_interface("i3c.controller")
 
-        # Mock the controller"s sync_submit method to simulate a failure response.
-        # It"s important to note that this approach makes the test somewhat dependent
+        # Mock the controller's sync_submit method to simulate a failure response.
+        # It's important to note that this approach makes the test somewhat dependent
         # on the internal implementation of the device class.
         with mock.patch.object(self.device.controller, "sync_submit") as mock_sync_submit:
             mock_sync_submit.return_value = [{"name": "SET I3C BUS VOLTAGE", "result": 1}]  # Simulate an error response
@@ -290,7 +290,7 @@ class TestSupernovaController(unittest.TestCase):
             "dynamic_address": 0x08,
             "bcr": 0x10,
             "dcr": 0xC3,
-            "pid": [0x65, 0x64, 0x00, 0x00, 0x00, 0x00],
+            "pid": ["0x65", "0x64", "0x00", "0x00", "0x00", "0x00"],
             
         })
         self.assertDictEqual(targets[1], {
@@ -298,7 +298,7 @@ class TestSupernovaController(unittest.TestCase):
             "dynamic_address": 0x09,
             "bcr": 0x03,
             "dcr": 0x63,
-            "pid": [0x02, 0x17, 0x0F, 0x1D, 0x00, 0x5A],
+            "pid": ["0x5A", "0x00", "0x1D", "0x0F", "0x17", "0x02"],
         })
 
         self.device.close()
@@ -378,8 +378,8 @@ class TestSupernovaController(unittest.TestCase):
 
         self.device.close()
 
-    # Mock the controller"s sync_submit method to simulate an exception.
-    # It"s important to note that this approach makes the test somewhat dependent
+    # Mock the controller's sync_submit method to simulate an exception.
+    # It's important to note that this approach makes the test somewhat dependent
     # on the internal implementation of the device class.
     @patch.object(TransferController, "sync_submit", MagicMock(side_effect=Exception("This is a mock exception from the backend")))
     def test_backend_exception_is_wrapped(self):
