@@ -14,17 +14,17 @@ from supernovacontroller.errors import BackendError
 from BinhoSupernova.Supernova import I3cTargetResetDefByte
 from BinhoSupernova.Supernova import TransferDirection
 
-sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
-from deviceSimulators.supernova import BinhoSupernovaSimulator
+sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), "..")))
+from binhosimulators import BinhoSupernovaSimulator
 
 class TestSupernovaController(unittest.TestCase):
     @classmethod
     def setUpClass(cls):
         """
         Initializes the testing class. Determines whether to use the simulator or real device
-        based on the 'USE_REAL_DEVICE' environment variable. Default is to use the simulator.
+        based on the "USE_REAL_DEVICE" environment variable. Default is to use the simulator.
         """
-        cls.use_simulator = not os.getenv('USE_REAL_DEVICE', 'False') == 'True'
+        cls.use_simulator = not os.getenv("USE_REAL_DEVICE", "False") == "True"
 
     def setUp(self):
         self.device = SupernovaDevice()
@@ -38,11 +38,11 @@ class TestSupernovaController(unittest.TestCase):
     def test_open_device_and_close(self):
         info = self.device.open()
 
-        self.assertRegex(info['hw_version'], r'^[A-Za-z0-9]$', "Invalid hw_version format")
-        self.assertRegex(info['fw_version'], r'^\d+\.\d+\.\d+$', "Invalid fw_version format")
-        self.assertRegex(info['serial_number'], r'^[A-Fa-f0-9]+$', "Invalid serial_number format")
-        self.assertEqual(info['manufacturer'], "Binho LLC", "Invalid manufacturer string")
-        self.assertEqual(info['product_name'], "Binho Supernova", "Invalid product name")
+        self.assertRegex(info["hw_version"], r"^[A-Za-z0-9]$", "Invalid hw_version format")
+        self.assertRegex(info["fw_version"], r"^\d+\.\d+\.\d+$", "Invalid fw_version format")
+        self.assertRegex(info["serial_number"], r"^[A-Fa-f0-9]+$", "Invalid serial_number format")
+        self.assertEqual(info["manufacturer"], "Binho LLC", "Invalid manufacturer string")
+        self.assertEqual(info["product_name"], "Binho Supernova", "Invalid product name")
 
         self.device.close()
 
@@ -214,7 +214,7 @@ class TestSupernovaController(unittest.TestCase):
         # Mock the controller's sync_submit method to simulate a failure response.
         # It's important to note that this approach makes the test somewhat dependent
         # on the internal implementation of the device class.
-        with mock.patch.object(self.device.controller, 'sync_submit') as mock_sync_submit:
+        with mock.patch.object(self.device.controller, "sync_submit") as mock_sync_submit:
             mock_sync_submit.return_value = [{"name": "SET I3C BUS VOLTAGE", "result": 1}]  # Simulate an error response
 
             # Call the method under test
@@ -284,34 +284,21 @@ class TestSupernovaController(unittest.TestCase):
         (success, targets) = i3c.targets()
 
         self.assertEqual(success, True)
-        self.assertEqual(len(targets), 4)
+        self.assertEqual(len(targets), 2)
         self.assertDictEqual(targets[0], {
-            'bcr': 0x10,
-            'dcr': 0xC3,
-            'dynamic_address': 0x08,
-            'pid': [0x65, 0x64, 0x00, 0x00, 0x00, 0x00],
-            'static_address': 0x50
+            "static_address": 0x50,
+            "dynamic_address": 0x08,
+            "bcr": 0x10,
+            "dcr": 0xC3,
+            "pid": ["0x65", "0x64", "0x00", "0x00", "0x00", "0x00"],
+            
         })
         self.assertDictEqual(targets[1], {
-            'bcr': 0x10,
-            'dcr': 0xC3,
-            'dynamic_address': 0x09,
-            'pid': [0x65, 0x64, 0x00, 0x00, 0x00, 0x00],
-            'static_address': 0x51
-        })
-        self.assertDictEqual(targets[2], {
-            'bcr': 0x10,
-            'dcr': 0xC3,
-            'dynamic_address': 0x0A,
-            'pid': [0x65, 0x64, 0x00, 0x00, 0x00, 0x00],
-            'static_address': 0x52
-        })
-        self.assertDictEqual(targets[3], {
-            'bcr': 0x03,
-            'dcr': 0x63,
-            'dynamic_address': 0x0B,
-            'pid': [0x5A, 0x00, 0x1D, 0x0F, 0x17, 0x02],
-            'static_address': 0x53
+            "static_address": 0x51,
+            "dynamic_address": 0x09,
+            "bcr": 0x03,
+            "dcr": 0x63,
+            "pid": ["0x5A", "0x00", "0x1D", "0x0F", "0x17", "0x02"],
         })
 
         self.device.close()
@@ -449,6 +436,8 @@ class TestSupernovaController(unittest.TestCase):
         self.device.close()
 
     def test_target_reset_read_reset_action(self):
+        if self.use_simulator:
+            self.skipTest("For real device only")
 
         self.device.open()
 
@@ -463,6 +452,8 @@ class TestSupernovaController(unittest.TestCase):
         self.device.close()
 
     def test_target_reset_write_reset_action(self):
+        if self.use_simulator:
+            self.skipTest("For real device only")
 
         self.device.open()
 
