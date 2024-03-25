@@ -518,6 +518,8 @@ class TestSupernovaController(unittest.TestCase):
 
         self.assertTupleEqual((success, result), (True, [0x00, 0x04, 0x7F, 0x03, 0x02]))
     def test_target_reset_read_reset_action(self):
+        if self.use_simulator:
+            self.skipTest("For real device only")
 
         self.device.open()
 
@@ -532,6 +534,8 @@ class TestSupernovaController(unittest.TestCase):
         self.device.close()
 
     def test_target_reset_write_reset_action(self):
+        if self.use_simulator:
+            self.skipTest("For real device only")
 
         self.device.open()
 
