@@ -380,6 +380,7 @@ class SupernovaI3CBlockingInterface:
                 case "ccc_getmwl": return response["maxWriteLength"]
                 case "ccc_get_status": return response["data"]
                 case "ccc_setnewda": return None
+                case "ccc_setdasa": return None
                 case "ccc_unicast_setmrl" | "ccc_unicast_setmwl" | "ccc_broadcast_setmwl" | "ccc_broadcast_setmrl" : return response["data"]
             return None
 

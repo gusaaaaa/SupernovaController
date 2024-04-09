@@ -217,7 +217,46 @@ In an I3C bus, the Supernova can act either as a controller or as a target.
     success, status = i3c_target.target_init(I3cTargetMemoryLayout_t.MEM_1_BYTE, 0x69, 0x100, 0x100, TARGET_CONF)   
    ```
    The memory layout field can take `MEM_1_BYTE`, `MEM_2_BYTES` or `MEM_4_BYTES` value.
-        
+
+2. ***Set PID:***
+
+    Sets the PID of the Supernova acting as an I3C target via USB:
+
+    ```python
+   success, error = device.set_pid([0x02, 0x03, 0x04, 0x05, 0x06, 0x07])
+   ```
+
+3. ***Set BCR:***
+
+    Sets the BCR of the Supernova acting as an I3C target via USB:
+
+    ```python
+   success, error = device.set_bcr(I3cTargetMaxDataSpeedLimit_t.MAX_DATA_SPEED_LIMIT, I3cTargetIbiCapable_t.NOT_IBI_CAPABLE, 
+                                I3cTargetIbiPayload_t.IBI_WITH_PAYLOAD, I3cTargetOfflineCap_t.OFFLINE_CAPABLE, 
+                                I3cTargetVirtSupport_t.VIRTUAL_TARGET_SUPPORT, I3cTargetDeviceRole_t.I3C_TARGET)
+   ```
+
+    Note: The input parameters set the bits of the BCR one by one, taking into account their meaning as stated in section 5.1.1.2.1
+    of the MIPI I3C Basic Specification v.1.1.1
+
+4. ***Set DCR:***
+
+    Sets the DCR of the Supernova acting as an I3C target via USB:
+
+    ```python
+   success, error = device.set_dcr(I3cTargetDcr_t.I3C_TARGET_MEMORY)
+   ```
+
+    The input parameter (of I3cTargetDcr_t) indicates the type of device the Supernova represents, which determines the DCR value as defined by the MIPI alliance in https://www.mipi.org/hubfs/I3C-Public-Tables/MIPI-I3C-v1-1-Current-DCR-Table.pdf. For this case `I3cTargetDcr_t` can take the values `I3C_SECONDARY_CONTROLLER`, `I3C_TARGET_MEMORY` and `I3C_TARGET_MICROCONTROLLER`. 
+
+1. ***Set Static Address:***
+
+    Sets the static address of the Supernova acting as an I3C target via USB:
+
+    ```python
+   success, error = device.set_static_address(0x73)
+   ```
+
 2. ***Set Supernova configuration:***
 
     Sets the configuration of the Supernova such as its maximum write length, maximum read length, seconds waited to allow an In-Band Interrupt (IBI) to drive SDA low when the controller is not doing so and some flags regarding the target behaviour in the I3C bus:
