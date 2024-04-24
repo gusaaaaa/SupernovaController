@@ -545,10 +545,10 @@ This will print the path to the `SupernovaExamples` directory. Navigate to this 
 You can run an example directly from this directory using Python. For instance:
 
 ```sh
-python /path/to/SupernovaExamples/basic_i2c_example.py
+python /path/to/supernovacontrollerexamples/basic_i2c_example.py
 ```
 
-Replace `/path/to/SupernovaExamples/` with the actual path printed in the previous step and `basic_i2c_example.py` with the name of the example you wish to run.
+Replace `/path/to/supernovacontrollerexamples/` with the actual path printed in the previous step and `basic_i2c_example.py` with the name of the example you wish to run.
 
 Or by calling the main method from the example directly from your Python script, as so:
 
