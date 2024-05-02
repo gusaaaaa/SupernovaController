@@ -1,10 +1,8 @@
 from supernovacontroller.sequential import SupernovaDevice
 from BinhoSupernova.commands.definitions import DdrOk
 from BinhoSupernova.commands.definitions import (I3cTargetMemoryLayout_t, I3cTargetMaxDataSpeedLimit_t, I3cTargetIbiCapable_t, I3cTargetIbiPayload_t, 
-                                                 I3cTargetOfflineCap_t, I3cTargetVirtSupport_t, I3cTargetDeviceRole_t, I3cTargetDcr_t)
-from BinhoSupernova.commands.definitions import IgnoreTE0TE1Errors
-from BinhoSupernova.commands.definitions import MatchStartStop
-from BinhoSupernova.commands.definitions import AlwaysNack
+                                                 I3cTargetOfflineCap_t, I3cTargetVirtSupport_t, I3cTargetDeviceRole_t, I3cTargetDcr_t, I3cBcrRegister_t,
+                                                 IgnoreTE0TE1Errors, MatchStartStop, AlwaysNack)
 
 def main():
     """
@@ -32,7 +30,7 @@ def main():
     print("-----------------------")
 
     target_device = SupernovaDevice()
-    info = target_device.open(usb_address ="\\\\?\\HID#VID_1FC9&PID_82FC#6&2fcfc8d8&0&0000#{4d1e55b2-f16f-11cf-88cb-001111000030}")
+    info = target_device.open(usb_address ="\\\\?\\HID#VID_1FC9&PID_82FC#6&bb45e52&1&0000#{4d1e55b2-f16f-11cf-88cb-001111000030}")
     i3c_target = target_device.create_interface("i3c.target")
 
     controller_device = SupernovaDevice()
@@ -61,20 +59,32 @@ def main():
 
     PID_TO_SET = [0x02, 0x03, 0x04, 0x05, 0x06, 0x07]
     success, status = i3c_target.set_pid(PID_TO_SET)
-    print("PID assigned successfully" if success else "Could not assign the PID")
+    print(f"PID {PID_TO_SET} assigned successfully." if success else "Could not assign the PID")
 
     success, status = i3c_target.set_bcr(I3cTargetMaxDataSpeedLimit_t.MAX_DATA_SPEED_LIMIT, I3cTargetIbiCapable_t.NOT_IBI_CAPABLE, 
                                          I3cTargetIbiPayload_t.IBI_WITH_PAYLOAD, I3cTargetOfflineCap_t.OFFLINE_CAPABLE, 
                                          I3cTargetVirtSupport_t.VIRTUAL_TARGET_SUPPORT, I3cTargetDeviceRole_t.I3C_TARGET)
-    print("BCR assigned successfully" if success else "Could not assign the BCR")
+    
+    BCR_TO_SET = I3cBcrRegister_t() 
+    BCR_TO_SET.bits.maxDataSpeedLimitation = I3cTargetMaxDataSpeedLimit_t.MAX_DATA_SPEED_LIMIT.value
+    BCR_TO_SET.bits.ibiRequestCapable = I3cTargetIbiCapable_t.NOT_IBI_CAPABLE.value
+    BCR_TO_SET.bits.ibiPayload = I3cTargetIbiPayload_t.IBI_WITH_PAYLOAD.value
+    BCR_TO_SET.bits.offlineCapable = I3cTargetOfflineCap_t.OFFLINE_CAPABLE.value
+    BCR_TO_SET.bits.virtualTargetSupport = I3cTargetVirtSupport_t.VIRTUAL_TARGET_SUPPORT.value
+    BCR_TO_SET.bits.deviceRole = I3cTargetDeviceRole_t.I3C_TARGET.value
+    # Shift value to set BCR[5] based on ddrOk field from I3cTargetFeatures_t 
+    # (BCR[5] indicates if HDR is activated, this flag is set during initialization when the target configuration is modified)
+    SHIFT_CONVERSION = 3
+    BCR_TO_SET = BCR_TO_SET.byte | ((TARGET_CONF & DdrOk.ALLOWED_DDR.value) << SHIFT_CONVERSION)
+    print(f"BCR {BCR_TO_SET} assigned successfully" if success else "Could not assign the BCR")
 
     DCR_TO_SET = I3cTargetDcr_t.I3C_TARGET_MEMORY
     success, status = i3c_target.set_dcr(DCR_TO_SET)
-    print("DCR assigned successfully" if success else "Could not assign the DCR")
+    print(f"DCR {DCR_TO_SET.value} assigned successfully" if success else "Could not assign the DCR")
 
     STATIC_ADDR_TO_SET = 0x73
     success, status = i3c_target.set_static_address(STATIC_ADDR_TO_SET)
-    print("Static address assigned successfully" if success else "Could not assign the Static address")
+    print(f"Static address {STATIC_ADDR_TO_SET} assigned successfully" if success else "Could not assign the Static address")
 
     print("--------------------------------------------------------------------------------------------------------")
     print("Initialize controller peripheral")

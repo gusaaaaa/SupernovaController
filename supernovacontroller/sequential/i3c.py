@@ -382,7 +382,7 @@ class SupernovaI3CBlockingInterface:
                 case "ccc_setnewda": return None
                 case "ccc_setdasa": return None
                 case "ccc_unicast_setmrl" | "ccc_unicast_setmwl" | "ccc_broadcast_setmwl" | "ccc_broadcast_setmrl" : return response["data"]
-            return None
+                case _: return "Transfer type not supported" 
 
         response = responses[0]
         if response["header"]["result"] == "I3C_TRANSFER_SUCCESS":
