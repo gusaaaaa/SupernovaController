@@ -329,17 +329,26 @@ class SupernovaI3CBlockingInterface:
 
     def _process_response(self, command_name, responses, extra_data=None):
         def format_response_payload(command_name, response):
-            match command_name:
-                case "write": return None
-                case "read": return response["data"]
-                case "ccc_getpid": return [int(item[2:], 16) for item in response["pid"]]
-                case "ccc_getbcr": return response["bcr"]["value"][2][2:].upper()
-                case "ccc_getdcr": return response["dcr"][2:].upper()
-                case "ccc_getmrl": return response["maxReadLength"]
-                case "ccc_getmwl": return response["maxWriteLength"]
-                case "ccc_get_status": return response["data"]
-                case "ccc_setnewda": return None
-                case "ccc_unicast_setmrl" | "ccc_unicast_setmwl" | "ccc_broadcast_setmwl" | "ccc_broadcast_setmrl" : return response["data"]
+            if command_name == "write":
+                return None
+            elif command_name == "read":
+                return response["data"]
+            elif command_name == "ccc_getpid":
+                return [int(item[2:], 16) for item in response["pid"]]
+            elif command_name == "ccc_getbcr":
+                return response["bcr"]["value"][2][2:].upper()
+            elif command_name == "ccc_getdcr":
+                return response["dcr"][2:].upper()
+            elif command_name == "ccc_getmrl":
+                return response["maxReadLength"]
+            elif command_name == "ccc_getmwl":
+                return response["maxWriteLength"]
+            elif command_name == "ccc_get_status":
+                return response["data"]
+            elif command_name == "ccc_setnewda":
+                return None
+            elif command_name in ["ccc_unicast_setmrl", "ccc_unicast_setmwl", "ccc_broadcast_setmwl", "ccc_broadcast_setmrl"]:
+                return response["data"]
             return None
 
         response = responses[0]
