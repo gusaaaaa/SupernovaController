@@ -1,8 +1,7 @@
 from supernovacontroller.sequential import SupernovaDevice
-from BinhoSupernova.commands.definitions import I3cTargetMemoryLayout_t
-from BinhoSupernova.commands.definitions import I3cOffline
-from BinhoSupernova.commands.definitions import PartNOrandom
 from BinhoSupernova.commands.definitions import DdrOk
+from BinhoSupernova.commands.definitions import (I3cTargetMemoryLayout_t, I3cTargetMaxDataSpeedLimit_t, I3cTargetIbiCapable_t, I3cTargetIbiPayload_t, 
+                                                 I3cTargetOfflineCap_t, I3cTargetVirtSupport_t, I3cTargetDeviceRole_t, I3cTargetDcr_t)
 from BinhoSupernova.commands.definitions import IgnoreTE0TE1Errors
 from BinhoSupernova.commands.definitions import MatchStartStop
 from BinhoSupernova.commands.definitions import AlwaysNack
@@ -58,15 +57,30 @@ def main():
     USECONDS_TO_WAIT_FOR_IBI    = 0x69
     MRL                         = 0x100
     MWL                         = 0x100
-    TARGET_CONF                 = I3cOffline.OFFLINE_UNFIT.value |  \
-                                  PartNOrandom.PART_NUMB_DEFINED.value |  \
-                                  DdrOk.ALLOWED_DDR.value |  \
+    TARGET_CONF                 = DdrOk.ALLOWED_DDR.value |  \
                                   IgnoreTE0TE1Errors.IGNORE_ERRORS.value |  \
                                   MatchStartStop.NOT_MATCH.value |  \
                                   AlwaysNack.NOT_ALWAYS_NACK.value    
     
     success, status = i3c_target.target_init(MEMORY_LAYOUT, USECONDS_TO_WAIT_FOR_IBI, MRL, MWL, TARGET_CONF)
     print("Target initialized correctly" if success else "Could not initialize the target")
+
+    PID_TO_SET = [0x02, 0x03, 0x04, 0x05, 0x06, 0x07]
+    success, status = i3c_target.set_pid(PID_TO_SET)
+    print("PID assigned successfully" if success else "Could not assign the PID")
+
+    success, status = i3c_target.set_bcr(I3cTargetMaxDataSpeedLimit_t.MAX_DATA_SPEED_LIMIT, I3cTargetIbiCapable_t.NOT_IBI_CAPABLE, 
+                                         I3cTargetIbiPayload_t.IBI_WITH_PAYLOAD, I3cTargetOfflineCap_t.OFFLINE_CAPABLE, 
+                                         I3cTargetVirtSupport_t.VIRTUAL_TARGET_SUPPORT, I3cTargetDeviceRole_t.I3C_TARGET)
+    print("BCR assigned successfully" if success else "Could not assign the BCR")
+
+    DCR_TO_SET = I3cTargetDcr_t.I3C_TARGET_MEMORY
+    success, status = i3c_target.set_dcr(DCR_TO_SET)
+    print("DCR assigned successfully" if success else "Could not assign the DCR")
+
+    STATIC_ADDR_TO_SET = 0x73
+    success, status = i3c_target.set_static_address(STATIC_ADDR_TO_SET)
+    print("Static address assigned successfully" if success else "Could not assign the Static address")
 
     success, status = i3c_controller.controller_init()
     print("Controller initialized correctly" if success else "Could not initialize the controller")
@@ -130,9 +144,7 @@ def main():
     USECONDS_TO_WAIT_FOR_IBI    = 0x69
     MRL                         = 0x300
     MWL                         = 0x250
-    TARGET_CONF                 = I3cOffline.OFFLINE_UNFIT.value |  \
-                                  PartNOrandom.PART_NUMB_DEFINED.value |  \
-                                  DdrOk.ALLOWED_DDR.value |  \
+    TARGET_CONF                 = DdrOk.ALLOWED_DDR.value |  \
                                   IgnoreTE0TE1Errors.IGNORE_ERRORS.value |  \
                                   MatchStartStop.NOT_MATCH.value |  \
                                   AlwaysNack.NOT_ALWAYS_NACK.value   
@@ -223,9 +235,7 @@ def main():
     USECONDS_TO_WAIT_FOR_IBI    = 0x69
     MRL                         = 0x300
     MWL                         = 0x250
-    TARGET_CONF                 = I3cOffline.OFFLINE_UNFIT.value |  \
-                                  PartNOrandom.PART_NUMB_DEFINED.value |  \
-                                  DdrOk.ALLOWED_DDR.value |  \
+    TARGET_CONF                 = DdrOk.ALLOWED_DDR.value |  \
                                   IgnoreTE0TE1Errors.IGNORE_ERRORS.value |  \
                                   MatchStartStop.NOT_MATCH.value |  \
                                   AlwaysNack.NOT_ALWAYS_NACK.value    
@@ -274,6 +284,7 @@ def main():
     DATA        = [0xEE for i in range(8)]
     result = i3c_controller.write(target_address, i3c_controller.TransferMode.I3C_SDR, SUBADDR, DATA)
     notification_flag, notification_message = i3c_target.wait_for_notification(1)
+    print(notification_message)
 
     # I3C READ WITHOUT INDICATING START REGISTER ADDRESS
     SUBADDR     = []
@@ -310,8 +321,6 @@ def main():
     notification_flag, notification_message = i3c_target.wait_for_notification(1)
     print(notification_message)
     result = i3c_controller.read(target_address, i3c_controller.TransferMode.I3C_SDR, [], LENGTH)
-    notification_flag, notification_message = i3c_target.wait_for_notification(1)
-    print(notification_message)
     notification_flag, notification_message = i3c_target.wait_for_notification(1)
     print(notification_message)
 
