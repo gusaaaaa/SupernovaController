@@ -247,9 +247,9 @@ In an I3C bus, the Supernova can act either as a controller or as a target.
    success, error = device.set_dcr(I3cTargetDcr_t.I3C_TARGET_MEMORY)
    ```
 
-    The input parameter (of I3cTargetDcr_t) indicates the type of device the Supernova represents, which determines the DCR value as defined by the MIPI alliance in https://www.mipi.org/hubfs/I3C-Public-Tables/MIPI-I3C-v1-1-Current-DCR-Table.pdf. For this case `I3cTargetDcr_t` can take the values `I3C_SECONDARY_CONTROLLER`, `I3C_TARGET_MEMORY` and `I3C_TARGET_MICROCONTROLLER`. 
+    The input parameter (of I3cTargetDcr_t) indicates the type of device the Supernova represents, which determines the [DCR value as defined by the MIPI alliance](https://www.mipi.org/hubfs/I3C-Public-Tables/MIPI-I3C-v1-1-Current-DCR-Table.pdf). For this case `I3cTargetDcr_t` can take the values `I3C_SECONDARY_CONTROLLER`, `I3C_TARGET_MEMORY` and `I3C_TARGET_MICROCONTROLLER`. 
 
-1. ***Set Static Address:***
+5. ***Set Static Address:***
 
     Sets the static address of the Supernova acting as an I3C target via USB:
 
@@ -257,7 +257,7 @@ In an I3C bus, the Supernova can act either as a controller or as a target.
    success, error = device.set_static_address(0x73)
    ```
 
-2. ***Set Supernova configuration:***
+6. ***Set Supernova configuration:***
 
     Sets the configuration of the Supernova such as its maximum write length, maximum read length, seconds waited to allow an In-Band Interrupt (IBI) to drive SDA low when the controller is not doing so and some flags regarding the target behaviour in the I3C bus:
 
@@ -273,7 +273,7 @@ In an I3C bus, the Supernova can act either as a controller or as a target.
     success, status = i3c_target.set_configuration(0x69, 0x300, 0x250, TARGET_CONF)
     ```
 
-3. ***Write memory:***
+7. ***Write memory:***
 
     Writes the internal memory of the Supernova via USB:
 
@@ -281,7 +281,7 @@ In an I3C bus, the Supernova can act either as a controller or as a target.
    success, error = device.write_memory(0x010A, [0xFF for i in range(0,10)])
    ```
     
-4. ***Read memory:***
+8. ***Read memory:***
 
     Retrieves data from the Supernova internal memory via USB:
 
