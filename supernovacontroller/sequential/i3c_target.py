@@ -1,6 +1,7 @@
 from transfer_controller import TransferController
 from BinhoSupernova.Supernova import Supernova
-from BinhoSupernova.commands.definitions import I3cTargetMemoryLayout_t
+from BinhoSupernova.commands.definitions import (I3cTargetMemoryLayout_t, I3cTargetMaxDataSpeedLimit_t, I3cTargetIbiCapable_t, I3cTargetIbiPayload_t, 
+                                                 I3cTargetOfflineCap_t, I3cTargetVirtSupport_t, I3cTargetDeviceRole_t, I3cTargetDcr_t)
 from supernovacontroller.errors import BusVoltageError
 from supernovacontroller.errors import BusNotInitializedError
 from supernovacontroller.errors import BackendError
@@ -139,8 +140,125 @@ class SupernovaI3CTargetBlockingInterface:
 
         status = responses[0]["result"]
         return (status == "I3C_TARGET_INIT_SUCCESS", status)
-    
-    
+
+    def set_pid(self, pid: list):
+        """
+        Modifies the PID of the I3C target via USB.
+
+        Args:
+        pid (list): PID to set by the user, PID[0] is the LSB.
+
+        Returns:
+        tuple: A tuple containing two elements:
+            - The first element is a Boolean indicating the success (True) or failure (False) of the operation.
+            - The second element is a message indicating the success or failure of the operation
+        """
+
+        try:
+            responses = self.controller.sync_submit([
+                lambda id: self.driver.i3cTargetSetPid(
+                    id,
+                    pid,
+                )
+            ])
+        except Exception as e:
+            raise BackendError(original_exception=e) from e
+
+        status = responses[0]["result"]
+        return (status == "I3C_TARGET_SET_PID_SUCCESS", status)    
+
+    def set_bcr(self, max_data_speed_limit: I3cTargetMaxDataSpeedLimit_t, ibi_req_capable: I3cTargetIbiCapable_t, ibi_payload: I3cTargetIbiPayload_t, offline_capable: I3cTargetOfflineCap_t, virt_targ_support: I3cTargetVirtSupport_t, device_role: I3cTargetDeviceRole_t):
+        """
+        Modifies the BCR of the I3C target via USB. 
+        Note: BCR[5] which indicates advanced capabilities (in this case HDR DDR mode) is a a read-only bit, always set by the peripheral.
+        
+        Args:
+        max_data_speed_limit (I3cTargetMaxDataSpeedLimit_t): Indicates if there is a data speed limit.
+        ibi_req_capable (I3cTargetIbiCapable_t): Shows if the target is capable of requesting IBIs.
+        ibi_payload (I3cTargetIbiPayload_t): Shows if the target is capable of sending data during IBIs.
+        offline_capable (I3cTargetOfflineCap_t) : Specifies wether the target has offline capabilities or not.
+        virt_targ_support (I3cTargetVirtSupport_t): Indicates if the target supports virtual target mode.
+        device_role (I3cTargetDeviceRole_t): Specifies the role.
+
+        Returns:
+        tuple: A tuple containing two elements:
+            - The first element is a Boolean indicating the success (True) or failure (False) of the operation.
+            - The second element is a message indicating the success or failure of the operation
+        """
+
+        try:
+            responses = self.controller.sync_submit([
+                lambda id: self.driver.i3cTargetSetBcr(
+                    id,
+                    max_data_speed_limit,
+                    ibi_req_capable,
+                    ibi_payload,
+                    offline_capable,
+                    virt_targ_support,
+                    device_role,
+                )
+            ])
+        except Exception as e:
+            raise BackendError(original_exception=e) from e
+
+        result = (responses[0]["usb_result"]) and (responses[0]["manager_result"]) and (responses[0]["driver_result"])
+        status = "I3C_TARGET_SET_BCR_SUCCESS" if result else "I3C_TARGET_SET_BCR_FAILED"
+        return (result, status)    
+
+    def set_dcr(self, dcr_value: I3cTargetDcr_t):
+        """
+        Modifies the DCR of the I3C target via USB
+
+        Args:
+        dcr_value (I3cTargetType_t): Determines the type of device the target represents which defines the DCR.
+
+        Returns:
+        tuple: A tuple containing two elements:
+            - The first element is a Boolean indicating the success (True) or failure (False) of the operation.
+            - The second element is a message indicating the success or failure of the operation
+        """
+
+        try:
+            responses = self.controller.sync_submit([
+                lambda id: self.driver.i3cTargetSetDcr(
+                    id,
+                    dcr_value,
+                )
+            ])
+        except Exception as e:
+            raise BackendError(original_exception=e) from e
+
+        result = (responses[0]["usb_result"]) and (responses[0]["manager_result"]) and (responses[0]["driver_result"])
+        status = "I3C_TARGET_SET_DCR_SUCCESS" if result else "I3C_TARGET_SET_DCR_FAILED"
+        return (result, status)    
+
+    def set_static_address(self, staticAddr):
+        """
+        Modifies the static address of the I3C target via USB
+
+        Args:
+        staticAddr (int): Static address to assign.
+
+        Returns:
+        tuple: A tuple containing two elements:
+            - The first element is a Boolean indicating the success (True) or failure (False) of the operation.
+            - The second element is a message indicating the success or failure of the operation
+        """
+
+        try:
+            responses = self.controller.sync_submit([
+                lambda id: self.driver.i3cTargetSetStaticAddr(
+                    id,
+                    staticAddr,
+                )
+            ])
+        except Exception as e:
+            raise BackendError(original_exception=e) from e
+
+        result = (responses[0]["usb_result"]) and (responses[0]["manager_result"]) and (responses[0]["driver_result"])
+        status = "I3C_TARGET_SET_STATIC_ADDRESS_SUCCESS" if result else "I3C_TARGET_SET_STATIC_ADDRESS_FAILED"
+        return (result, status)    
+
     def set_configuration(self, useconds_to_wait_for_ibi, max_read_length, max_write_length, features):
         """
         Configures the I3C peripheral in target mode.
