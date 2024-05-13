@@ -1,15 +1,21 @@
 import os
 from setuptools import setup, find_packages
 
-# Read GH_TOKEN from environment variables // Remove when transfer_controller v0.3.0 is approved
+# Read GH_TOKEN from environment variables
 gh_token = os.environ.get('GH_TOKEN')
+
+dev_dependencies = []
+
+if gh_token:
+    dev_dependencies.append(f'binhosimulators @ git+https://{gh_token}@github.com/binhollc/BinhoSimulators.git@v0.1.1')
 
 setup(
     name='supernovacontroller',
     version='1.3.0',
     packages=find_packages(),
     data_files=[
-        ('SupernovaExamples', ['examples/basic_i2c_example.py', 'examples/basic_i3c_example.py', 'examples/ibi_example.py', 'examples/ICM42605_i3c_example.py', 'examples/basic_i3c_target_example.py'])
+        ('lib/site-packages/supernovacontrollerexamples', ['examples/basic_i2c_example.py', 'examples/basic_i3c_example.py', 'examples/ibi_example.py', 'examples/ICM42605_i3c_example.py', 'examples/basic_i3c_target_example.py',
+                               'examples/basic_uart_example.py', 'examples/basic_spi_controller_example.py', 'examples/hot_join_example.py'])
     ],
     description='A blocking API for interacting with the Supernova host-adapter device',
     long_description=open('README.md').read(),
@@ -19,14 +25,14 @@ setup(
     url='https://github.com/binhollc/SupernovaController',
     license='Private',
     install_requires=[
-      'transfer_controller==0.3.1',
-      'BinhoSupernova==2.0.1'
-    ],
+      'transfer_controller==0.4.0',
+      'BinhoSupernova==2.0.1',
+    ] + dev_dependencies,
     classifiers=[
         'Development Status :: 3 - Alpha',
         'Intended Audience :: Developers',
         'Programming Language :: Python :: 3',
         'Operating System :: OS Independent',
     ],
-    python_requires='>=3.5',
+    python_requires='>=3.9',
 )

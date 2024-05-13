@@ -11,18 +11,23 @@ from supernovacontroller.errors import DeviceNotMountedError
 from supernovacontroller.errors import DeviceAlreadyMountedError
 from supernovacontroller.errors import UnknownInterfaceError
 from supernovacontroller.errors import BackendError
+from BinhoSupernova.commands.definitions import (
+    SpiControllerBitOrder, SpiControllerMode, SpiControllerDataWidth,
+    SpiControllerChipSelect, SpiControllerChipSelectPolarity)
+from BinhoSupernova.Supernova import I3cTargetResetDefByte
+from BinhoSupernova.Supernova import TransferDirection
 
-sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
-from deviceSimulators.supernova import BinhoSupernovaSimulator
+sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), "..")))
+from binhosimulators import BinhoSupernovaSimulator
 
 class TestSupernovaController(unittest.TestCase):
     @classmethod
     def setUpClass(cls):
         """
         Initializes the testing class. Determines whether to use the simulator or real device
-        based on the 'USE_REAL_DEVICE' environment variable. Default is to use the simulator.
+        based on the "USE_REAL_DEVICE" environment variable. Default is to use the simulator.
         """
-        cls.use_simulator = not os.getenv('USE_REAL_DEVICE', 'False') == 'True'
+        cls.use_simulator = not os.getenv("USE_REAL_DEVICE", "False") == "True"
 
     def setUp(self):
         self.device = SupernovaDevice()
@@ -36,11 +41,11 @@ class TestSupernovaController(unittest.TestCase):
     def test_open_device_and_close(self):
         info = self.device.open()
 
-        self.assertRegex(info['hw_version'], r'^[A-Za-z0-9]$', "Invalid hw_version format")
-        self.assertRegex(info['fw_version'], r'^\d+\.\d+\.\d+$', "Invalid fw_version format")
-        self.assertRegex(info['serial_number'], r'^[A-Fa-f0-9]+$', "Invalid serial_number format")
-        self.assertEqual(info['manufacturer'], "Binho LLC", "Invalid manufacturer string")
-        self.assertEqual(info['product_name'], "Binho Supernova", "Invalid product name")
+        self.assertRegex(info["hw_version"], r"^[A-Za-z0-9]$", "Invalid hw_version format")
+        self.assertRegex(info["fw_version"], r"^\d+\.\d+\.\d+$", "Invalid fw_version format")
+        self.assertRegex(info["serial_number"], r"^[A-Fa-f0-9]+$", "Invalid serial_number format")
+        self.assertEqual(info["manufacturer"], "Binho LLC", "Invalid manufacturer string")
+        self.assertEqual(info["product_name"], "Binho Supernova", "Invalid product name")
 
         self.device.close()
 
@@ -212,7 +217,7 @@ class TestSupernovaController(unittest.TestCase):
         # Mock the controller's sync_submit method to simulate a failure response.
         # It's important to note that this approach makes the test somewhat dependent
         # on the internal implementation of the device class.
-        with mock.patch.object(self.device.controller, 'sync_submit') as mock_sync_submit:
+        with mock.patch.object(self.device.controller, "sync_submit") as mock_sync_submit:
             mock_sync_submit.return_value = [{"name": "SET I3C BUS VOLTAGE", "result": 1}]  # Simulate an error response
 
             # Call the method under test
@@ -282,34 +287,21 @@ class TestSupernovaController(unittest.TestCase):
         (success, targets) = i3c.targets()
 
         self.assertEqual(success, True)
-        self.assertEqual(len(targets), 4)
+        self.assertEqual(len(targets), 2)
         self.assertDictEqual(targets[0], {
-            'bcr': 0x10,
-            'dcr': 0xC3,
-            'dynamic_address': 0x08,
-            'pid': [0x65, 0x64, 0x00, 0x00, 0x00, 0x00],
-            'static_address': 0x50
+            "static_address": 0x50,
+            "dynamic_address": 0x08,
+            "bcr": 0x10,
+            "dcr": 0xC3,
+            "pid": ["0x65", "0x64", "0x00", "0x00", "0x00", "0x00"],
+            
         })
         self.assertDictEqual(targets[1], {
-            'bcr': 0x10,
-            'dcr': 0xC3,
-            'dynamic_address': 0x09,
-            'pid': [0x65, 0x64, 0x00, 0x00, 0x00, 0x00],
-            'static_address': 0x51
-        })
-        self.assertDictEqual(targets[2], {
-            'bcr': 0x10,
-            'dcr': 0xC3,
-            'dynamic_address': 0x0A,
-            'pid': [0x65, 0x64, 0x00, 0x00, 0x00, 0x00],
-            'static_address': 0x52
-        })
-        self.assertDictEqual(targets[3], {
-            'bcr': 0x03,
-            'dcr': 0x63,
-            'dynamic_address': 0x0B,
-            'pid': [0x5A, 0x00, 0x1D, 0x0F, 0x17, 0x02],
-            'static_address': 0x53
+            "static_address": 0x51,
+            "dynamic_address": 0x09,
+            "bcr": 0x03,
+            "dcr": 0x63,
+            "pid": ["0x5A", "0x00", "0x1D", "0x0F", "0x17", "0x02"],
         })
 
         self.device.close()
@@ -443,6 +435,118 @@ class TestSupernovaController(unittest.TestCase):
         (success, result) = i3c.ccc_getpid(0x08)
 
         self.assertTupleEqual((success, result), (True, [0x00, 0x00, 0x00, 0x00, 0x64, 0x65]))
+
+        self.device.close()
+
+    def test_spi_controller_set_bus_voltage(self):
+        self.device.open()
+
+        spi_controller = self.device.create_interface("spi.controller")
+
+        (success, result) = spi_controller.set_bus_voltage(3300)
+
+        self.assertTupleEqual((success, result), (True, 3300))
+        self.assertEqual(spi_controller.bus_voltage, 3300)
+
+        self.device.close()
+
+    def test_spi_controller_init_bus(self):
+        self.device.open()
+
+        spi_controller = self.device.create_interface("spi.controller")
+
+        (success, _) = spi_controller.init_bus()
+
+        self.assertEqual(success, True)
+
+        self.device.close()
+
+    def test_spi_controller_set_parameters(self):
+        self.device.open()
+
+        spi_controller = self.device.create_interface("spi.controller")
+
+        spi_controller.init_bus()
+
+        (success, _) = spi_controller.set_parameters(mode=SpiControllerMode.MODE_2)
+
+        self.assertEqual(success, True)
+        self.assertEqual(spi_controller.mode, SpiControllerMode.MODE_2)
+
+        self.device.close()
+
+    def test_spi_controller_get_parameters(self):
+        self.device.open()
+
+        spi_controller = self.device.create_interface("spi.controller")
+
+        spi_controller.init_bus()
+
+        (_, response) = spi_controller.get_parameters()
+        
+        self.assertTupleEqual(response,(SpiControllerBitOrder.MSB, SpiControllerMode.MODE_0, SpiControllerDataWidth._8_BITS_DATA,
+                                         SpiControllerChipSelect.CHIP_SELECT_0, SpiControllerChipSelectPolarity.ACTIVE_LOW, 10000000))
+
+        (success, _) = spi_controller.set_parameters(bit_order=SpiControllerBitOrder.LSB, chip_select=SpiControllerChipSelect.CHIP_SELECT_2, chip_select_pol=SpiControllerChipSelectPolarity.ACTIVE_HIGH)
+
+        self.assertEqual(success, True)
+
+        (_, response) = spi_controller.get_parameters()
+        
+        self.assertTupleEqual(response,(SpiControllerBitOrder.LSB, SpiControllerMode.MODE_0, SpiControllerDataWidth._8_BITS_DATA,
+                                         SpiControllerChipSelect.CHIP_SELECT_2, SpiControllerChipSelectPolarity.ACTIVE_HIGH, 10000000))
+
+        self.device.close()
+
+    # To run this test, it's necessary to connect the SPI Target device of Adafruit: FRAM memory MB85RS64V
+    # Use the Supernova's breakout board and connect the VCC, GND, SCK, MISO, MOSI and CS signals of the memory
+    # to its correspondent signal in the breakout board
+    def test_spi_controller_transfer(self):
+        self.device.open()
+
+        spi_controller = self.device.create_interface("spi.controller")
+
+        spi_controller.set_bus_voltage(3300)
+        spi_controller.init_bus()
+        spi_controller.set_parameters(mode=SpiControllerMode.MODE_0)
+
+        data = [0x9F]
+        read_length = 4
+        transfer_length = len(data) + read_length
+
+        (success, result) = spi_controller.transfer(data, transfer_length)
+
+        self.assertTupleEqual((success, result), (True, [0x00, 0x04, 0x7F, 0x03, 0x02]))
+    def test_target_reset_read_reset_action(self):
+        if self.use_simulator:
+            self.skipTest("For real device only")
+
+        self.device.open()
+
+        i3c = self.device.create_interface("i3c.controller")
+
+        i3c.init_bus(3300)
+
+        (success, result) = i3c.target_reset(0x08,I3cTargetResetDefByte.RESET_I3C_PERIPHERAL, TransferDirection.READ)
+
+        self.assertTupleEqual((success, result), (True, [0x00]))
+
+        self.device.close()
+
+    def test_target_reset_write_reset_action(self):
+        if self.use_simulator:
+            self.skipTest("For real device only")
+
+        self.device.open()
+
+        i3c = self.device.create_interface("i3c.controller")
+
+        i3c.init_bus(3300)
+
+        (success, result) = i3c.target_reset(0x08,I3cTargetResetDefByte.RESET_I3C_PERIPHERAL, TransferDirection.WRITE)
+        print(success, result)
+
+        self.assertTupleEqual((success, result), (True, None))
 
         self.device.close()
 

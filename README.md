@@ -6,7 +6,7 @@ SupernovaController is a Python-based tool designed to interface with the Supern
 
 ## Features
 - **Blocking API:** A streamlined approach to interact with the Supernova device, minimizing the complexity of handling asynchronous callbacks.
-- **Multi-Interface:** Easily communicate with UART, I2C and I3C Devices in an All-In-One package.
+- **Multi-Interface:** Easily communicate with SPI, UART, I2C and I3C Devices in an All-In-One package.
 - **Communication:** Seamlessly manages command responses and notifications, facilitating easier and more intuitive command sequencing.
 - **Examples:** Comprehensive examples demonstrating the practical application of the blocking API.
 
@@ -217,8 +217,47 @@ In an I3C bus, the Supernova can act either as a controller or as a target.
     success, status = i3c_target.target_init(I3cTargetMemoryLayout_t.MEM_1_BYTE, 0x69, 0x100, 0x100, TARGET_CONF)   
    ```
    The memory layout field can take `MEM_1_BYTE`, `MEM_2_BYTES` or `MEM_4_BYTES` value.
-        
-2. ***Set Supernova configuration:***
+
+2. ***Set PID:***
+
+    Sets the PID of the Supernova acting as an I3C target via USB:
+
+    ```python
+   success, error = device.set_pid([0x02, 0x03, 0x04, 0x05, 0x06, 0x07])
+   ```
+
+3. ***Set BCR:***
+
+    Sets the BCR of the Supernova acting as an I3C target via USB:
+
+    ```python
+   success, error = device.set_bcr(I3cTargetMaxDataSpeedLimit_t.MAX_DATA_SPEED_LIMIT, I3cTargetIbiCapable_t.NOT_IBI_CAPABLE, 
+                                I3cTargetIbiPayload_t.IBI_WITH_PAYLOAD, I3cTargetOfflineCap_t.OFFLINE_CAPABLE, 
+                                I3cTargetVirtSupport_t.VIRTUAL_TARGET_SUPPORT, I3cTargetDeviceRole_t.I3C_TARGET)
+   ```
+
+    Note: The input parameters set the bits of the BCR one by one, taking into account their meaning as stated in section 5.1.1.2.1
+    of the MIPI I3C Basic Specification v.1.1.1
+
+4. ***Set DCR:***
+
+    Sets the DCR of the Supernova acting as an I3C target via USB:
+
+    ```python
+   success, error = device.set_dcr(I3cTargetDcr_t.I3C_TARGET_MEMORY)
+   ```
+
+    The input parameter (of I3cTargetDcr_t) indicates the type of device the Supernova represents, which determines the [DCR value as defined by the MIPI alliance](https://www.mipi.org/hubfs/I3C-Public-Tables/MIPI-I3C-v1-1-Current-DCR-Table.pdf). For this case `I3cTargetDcr_t` can take the values `I3C_SECONDARY_CONTROLLER`, `I3C_TARGET_MEMORY` and `I3C_TARGET_MICROCONTROLLER`. 
+
+5. ***Set Static Address:***
+
+    Sets the static address of the Supernova acting as an I3C target via USB:
+
+    ```python
+   success, error = device.set_static_address(0x73)
+   ```
+
+6. ***Set Supernova configuration:***
 
     Sets the configuration of the Supernova such as its maximum write length, maximum read length, seconds waited to allow an In-Band Interrupt (IBI) to drive SDA low when the controller is not doing so and some flags regarding the target behaviour in the I3C bus:
 
@@ -234,7 +273,7 @@ In an I3C bus, the Supernova can act either as a controller or as a target.
     success, status = i3c_target.set_configuration(0x69, 0x300, 0x250, TARGET_CONF)
     ```
 
-3. ***Write memory:***
+7. ***Write memory:***
 
     Writes the internal memory of the Supernova via USB:
 
@@ -242,7 +281,7 @@ In an I3C bus, the Supernova can act either as a controller or as a target.
    success, error = device.write_memory(0x010A, [0xFF for i in range(0,10)])
    ```
     
-4. ***Read memory:***
+8. ***Read memory:***
 
     Retrieves data from the Supernova internal memory via USB:
 
@@ -272,27 +311,272 @@ The fact that the memory is not circular obligates to take into account border c
 
 * If the transfer starts in an allowed memory address but tries to surpass the range during the transaction, it will only modify the bytes in the allowed range and discard the rest. The end of the transfer is taken as the end of the memory.
 
-### Next Steps
+## UART protocol
 
-After installing the `SupernovaController` package, you can further explore its capabilities by trying out the examples included in the installation. These examples demonstrate practical applications of UART, I2C and I3C protocols:
+### UART features
+
+This section describes how to get you started with the `SupernovaController` focusing on the UART protocol.
+
+* The supported features are: 
+    * Bus initialization.
+    * Setting of bus parameters such as baudrate, hardware handshake, parity, data size and stop bit.
+    * UART TX/RX transactions of up to 1024 bytes.
+
+### Basic UART Communication
+
+#### Generic operations
+
+1. ***Initializing the Supernova Device:***
+
+   Imports and initializes the `SupernovaDevice`. Optionally, specifies the USB HID path if multiple devices are connected:
+
+   ```python
+   from supernovacontroller.sequential import SupernovaDevice
+
+   device = SupernovaDevice()
+   # Optionally specify the USB HID path
+   device.open(usb_address='your_usb_hid_path')
+   ```
+
+   Call `open()` without parameters if you don't need to specify a particular device.
+
+2. ***Creating a UART controller Interface:***
+
+   Creates a UART controller interface:
+
+   ```python
+   uart = device.create_interface("uart")
+   ``` 
+
+3. ***Closing the Device:***
+
+   Closes the device when done:
+
+   ```python
+   device.close()
+   ```
+
+### Operations intended for the Supernova UART peripheral
+
+1. ***Setting Bus Voltage:***
+
+   Sets the bus voltage (in mV) for the UART bus. This step is required before initializing the bus:
+
+   ```python
+   success, response = uart.set_bus_voltage(3300)
+   ```
+
+2. ***Initializing the Supernova UART peripheral:***
+
+    Initializes the Supernova UART peripheral:
+
+    ```python
+   success, response = uart.init_bus()
+   ```
+    Without any parameters, the UART peripheral initializes with the default values for baudrate (9600bps), parity (no parity), data size (8 bit), stop bit (one stop bit) and hardware handshake (no hardware handshake). Optionally, it is possible to set any of these parameters by specifying them in the init_bus function:
+
+    ```python
+   success, response = uart.init_bus(baudrate=UartControllerBaudRate.UART_BAUD_115200, parity=UartControllerParity.UART_EVEN_PARITY)
+   ```
+3. ***Modifying the UART peripheral parameters***
+
+    It is also possible to configure/set any parameter after initialization (baudrate, parity, data size, stop bit and hardware handshake):
+
+    ```python
+   success, response = uart.set_parameters(stop_bit = UartControllerStopBit.UART_TWO_STOP_BIT, baudrate = UartControllerBaudRate.UART_BAUD_56000)
+   ```
+
+   If parameters are provided, it configures the parameters; otherwise, it retains the current settings.
+
+4. ***Read the current UART peripheral configuration***
+
+    The following method retrieves the current UART peripheral communication parameters, including baudrate, parity, data size, stop bit and hardware handshake.
+
+    ```python
+   success, response = uart.get_parameters()
+   ```
+
+    The variable ```response``` is a tuple containing the current UART controller communication parameters:
+    *(baudrate, parity, data_size, stop_bit, hardware_handshake)*
+
+5. ***Send data over UART bus***
+
+    If the bus is initialized, sends the provided data over the UART TX channel. 
+
+    ```python
+    data = [0x00, 0x01, 0x02, 0x3, 0x04, 0x05, 0x06]
+    success, response = uart.send(data, transferLength)
+    ```
+    - If no errors arises while sending the data, ```success``` will be _true_ and the ```response``` will be a success message.
+    - If an error arises while sending the data, ```success``` will be _false_ and the ```response``` will be an error message.
+
+6. ***Receive data over UART bus***
+
+    If the bus is initialized, awaits reception of data over the UART RX channel. A timeout can be set to the waiting process to exit if no data is received in the timeout's time specified time (use None to ignore the timeout feature). 
+
+    ```python
+    success, response = uart.wait_for_notification(timeout = None)
+    ```
+    - If data is received before the configured timeout, ```success``` will be _true_ and the ```response``` will be the array of received data.
+    - If data is not received before the configured timeout,  ```success``` will be _false_ and the ```response``` will be a timeout error message.
+    - If an error arises while receiving the data, ```success``` will be _false_ and the ```response``` will be an error message.
+
+## SPI protocol
+
+### SPI features
+
+This section describes how to get you started with the `SupernovaController` focusing on the SPI protocol.
+In a SPI bus, the Supernova can act as a controller.
+
+* In controller mode the Supernova supports several features: 
+    * Supernova initialization in SPI controller mode.
+    * Bus initialization.
+    * Setting of bus parameters such as bit order, SPI mode, chip select, chip select polarity and frequency.
+    * SPI transfers of up to 1024 bytes.
+    * 8 bits data width frames.
+
+* Coming soon:
+  * For the SPI controller mode:
+    - Pre and post delays.
+    - Keep chip select active between transfers.
+    - Support for 16 bits data width.
+  * Support for SPI target mode.
+
+### Basic SPI Communication
+
+#### Generic operations
+
+1. ***Initializing the Supernova Device:***
+
+   Imports and initializes the `SupernovaDevice`. Optionally, specifies the USB HID path if multiple devices are connected:
+
+   ```python
+   from supernovacontroller.sequential import SupernovaDevice
+
+   device = SupernovaDevice()
+   
+   # Optionally specify the USB HID path
+   device.open(usb_address='your_usb_hid_path')
+   ```
+
+   Call `open()` without parameters if you don't need to specify a particular device.
+
+2. ***Creating a SPI controller Interface:***
+
+   Creates a SPI controller interface:
+
+   ```python
+   spi_controller = device.create_interface("spi.controller")
+   ``` 
+
+3. ***Closing the Device:***
+
+   Closes the device when done:
+
+   ```python
+   device.close()
+   ```
+
+### Operations intended for the Supernova in SPI controller mode
+
+1. ***Setting Bus Voltage:***
+
+   Sets the bus voltage (in mV) for the SPI bus. This step is required before initializing the bus:
+
+   ```python
+   success, response = spi_controller.set_bus_voltage(3300)
+   ```
+
+2. ***Initializing the Supernova as a SPI controller:***
+
+    Initializes the Supernova in SPI controller mode:
+
+    ```python
+   success, response = spi_controller.init_bus()
+   ```
+    Without any parameters, the SPI controller initializes with the default values for bit order (MSB first), mode (Mode 0), chip select (CS0), chip select polarity (Active low) and frequency (10 MHz). Optionally, it is possible to set any of these parameters by specifying in the init_bus function:
+
+    ```python
+   success, response = spi_controller.init_bus(bit_order=SpiControllerBitOrder.LSB, frequency=20000000)
+   ```
+
+3. ***Modifying the SPI controller parameters***
+
+    It is possible to set a new configuration for each parameter (bit order, mode, chip select, chip select polarity and frequency):
+
+    ```python
+   success, response = spi_controller.set_parameters(bit_order = SpiControllerBitOrder.MSB, mode = SpiControllerMode.MODE_1)
+   ```
+
+   If parameters are provided, it configures the parameters; otherwise, it retains the current settings.
+
+4. ***Read the current SPI controller configuration***
+
+    The following method retrieves the current SPI controller communication parameters, including bit order, spi mode, data width, chip select, chip select polarity and frequency.
+
+    ```python
+   success, response = spi_controller.get_parameters()
+   ```
+
+    The variable ```response``` is a tuple containing the current SPI controller communication parameters:
+    (bit_order, mode, data_width, chip_select, chip_select_pol, frequency)
+
+5. ***Transfer data over SPI bus***
+
+    Transfers the provided data over the SPI bus if the bus is initialized. It is necessary to indicate the length of the transfer to generate the SPI clock cycles. This length could be more than the length of the transferred data to a SPI target, in the cases where the response (data on the MISO line) consists of more bytes than the transferred.
+
+    ```python
+    data = [0x01, 0x02, 0x03, 0x04, 0x05, 0x06]
+    transfer_length = 6
+    success, response = spi_controller.transfer(data, transfer_length)
+    ```
+
+    For a particular case of a SPI target device that interprets instructions via opcodes, an example of use could be the following:
+    
+    ```python
+    # Read opcode: 0x03
+    # Address to read: 0x0002
+    # Transferred data: [opcode, address_H, address_L]
+    data = [0x03, 0x00, 0x02]
+    
+    # Transfer length includes the length of the transferred data to the target and the read length to generate SPI clock cycles for the read operation
+    # Read length: 6 bytes to read
+    # Data to target: 3 bytes
+    read_length = 6
+    data_to_target = len(data)
+    transfer_length = data_to_target + read_length
+
+    success, response = spi_controller.transfer(data, transfer_length)
+
+    # The response consists of the entire MISO line since the transfer started.
+    # If the SPI target device doesn't send information while the instruction is transferred, the first bytes of the response are in IDLE state with the value 0x00
+    # response: [0x00, 0x00, 0x00, 0xFA, 0xFB, 0xFC, 0xFD, 0xFE, 0xFF]
+    data_from_target = response[3:]
+    ```
+
+## Next Steps
+
+After installing the `SupernovaController` package, you can further explore its capabilities by trying out the examples included in the installation. These examples demonstrate practical applications of SPI, UART, I2C and I3C protocols:
 
 - **Basic I3C Example (`basic_i3c_example.py`):** Learn the basics of I3C bus initialization and device communication using the Supernova as an I3C controller.
 - **Basic I3C Target Mode Example (`basic_i3c_target_example.py`):** Learn the basics of I3C target mode implementation using two Supernovas, one as an I3C target and the other one as a controller.
 - **Basic I2C Example (`basic_i2c_example.py`):** Get started with fundamental I2C operations.
 - **Basic UART Example (`basic_uart_example.py`):** Try out the UART protocol Hands-On.
+- **Basic SPI Controller Example (`basic_spi_controller_example.py`):** Explore the fundamental SPI controller operations communicating with a SPI Target device.
+- **Hot-join example(`hot_join_example.py`):** Understand how to handle the hot-join procedure in I3C.
 - **IBI Example (`ibi_example.py`):** Understand handling In-Band Interrupts (IBI) in I3C.
 - **ICM42605 I3C Example (`ICM42605_i3c_example.py`):** Explore a real-world application of I3C with the ICM42605 sensor.
 
 #### Accessing the Examples
 
-The example scripts are installed in a directory named `SupernovaExamples`, which is located in your Python environment's directory. To find this directory, you can use the following Python commands:
+The example scripts are installed in your site-packages folder as `supernovacontrollerexamples`, and you can access them just like you would any other package in Python. To find this directory, you can use the following Python commands:
 
 ```python
 import sys
 import os
 
-examples_dir_name = "SupernovaExamples"
-examples_path = os.path.join(sys.prefix, examples_dir_name)
+examples_dir_name = "supernovacontrollerexamples"
+examples_path = os.path.join(sys.prefix, "lib", "site-packages", examples_dir_name)
 print(f"Examples are located in: {examples_path}")
 ```
 
@@ -301,10 +585,18 @@ This will print the path to the `SupernovaExamples` directory. Navigate to this 
 You can run an example directly from this directory using Python. For instance:
 
 ```sh
-python /path/to/SupernovaExamples/basic_i2c_example.py
+python /path/to/supernovacontrollerexamples/basic_i2c_example.py
 ```
 
-Replace `/path/to/SupernovaExamples/` with the actual path printed in the previous step and `basic_i2c_example.py` with the name of the example you wish to run.
+Replace `/path/to/supernovacontrollerexamples/` with the actual path printed in the previous step and `basic_i2c_example.py` with the name of the example you wish to run.
+
+Or by calling the main method from the example directly from your Python script, as so:
+
+```python
+from supernovacontrollerexamples import basic_i2c_example
+
+basic_i2c_example.main()
+```
 
 #### Exploring Further
 
