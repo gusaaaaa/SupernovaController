@@ -5,6 +5,61 @@ from supernovacontroller.errors import BusVoltageError
 
 
 class SupernovaI2CBlockingInterface:
+    """
+    The SupernovaI2CBlockingInterface class provides methods to interact with I2C devices.
+
+    This class includes three primary methods:
+
+    - write(target_static_address, register_address, data):
+        Writes data to the specified I2C target device.
+
+    - read(target_static_address, length):
+        Reads data from the specified I2C target device.
+
+    - read_from(target_static_address, register_address, length):
+        Reads data from the specified I2C target device, indicating the address of the internal register from which the data is read.
+
+    Clarification on I2C Interface:
+
+    The signature of the I2C interface methods (i.e., write, read, and read_from) is as follows:
+
+    i2c.write(target_static_address, register_address, data):
+        - target_static_address: This is the static address of the I2C target.
+        - register_address: A Python list representing the register address of the I2C target.
+          This value is optional because it depends on the target. Most I2C targets provide a memory register map so the
+          I2C controller can access and write to or read from the memory by indexing it with a register address. However,
+          some I2C targets receive bytes that are interpreted as commands. If the internal register is not used, the
+          register address list can be left empty. For example: i2c.write(0x18, [], [0xF1, 0xF2, 0xF3, 0xF4, 0xF5]).
+          The maximum length of the register address list is 4. For example: i2c.write(0x18, [0x01, 0x02, 0x03, 0x04],
+          [0xF1, 0xF2, 0xF3, 0xF4, 0xF5]).
+        - data: A Python list of bytes holding the data to be sent over I2C. The maximum length is 1024 bytes.
+
+        When passing both lists (register_address and data) populated with data, the stream of bytes transferred over
+        I2C is the addition of both lists. For instance, when sending the command i2c.write(0x18, [0x01, 0x02, 0x03, 0x04],
+        [0xF1, 0xF2, 0xF3, 0xF4, 0xF5]), the expected result on the bus is: START + TARGET_ADDRESS/W + 0x01 + 0x02 + 0x03
+        + 0x04 + 0xF1 + 0xF2 + 0xF3 + 0xF4 + 0xF5 + STOP.
+
+    i2c.read(target_static_address, length):
+        - target_static_address: This is the static address of the I2C target.
+        - length: The number of bytes to be read from the target.
+
+        Reads data from the I2C target device without specifying a register address.
+
+    i2c.read_from(target_static_address, register_address, length):
+        - target_static_address: This is the static address of the I2C target.
+        - register_address: A Python list representing the register address of the internal memory of the I2C target.
+          This value is optional and depends on the target. The maximum length of the register address list is 4.
+        - length: The number of bytes to be read from the target.
+
+        The length parameter specifies the number of bytes to be read from the target.
+
+    Important Note:
+    ---------------
+    - When writing to an I2C target that uses an internal memory register map, ensure that the register address length
+      is consistent with the target's requirements. For example, some targets may use 1 byte for the register address,
+      while others may use 2 or more bytes.
+    """
+
     def __init__(self, driver: Supernova, controller: TransferController, notification_subscription):
         self.driver = driver
         self.controller = controller
