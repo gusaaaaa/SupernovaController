@@ -501,7 +501,10 @@ class TestSupernovaController(unittest.TestCase):
     # To run this test, it's necessary to connect the SPI Target device of Adafruit: FRAM memory MB85RS64V
     # Use the Supernova's breakout board and connect the VCC, GND, SCK, MISO, MOSI and CS signals of the memory
     # to its correspondent signal in the breakout board
-    def test_spi_controller_transfer(self):
+    def test_spi_who_am_i_fram_MB85RS64V(self):
+        if self.use_simulator:
+            self.skipTest("For real device only")
+
         self.device.open()
 
         spi_controller = self.device.create_interface("spi.controller")
