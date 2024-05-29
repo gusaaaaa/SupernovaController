@@ -520,6 +520,27 @@ class TestSupernovaController(unittest.TestCase):
         (success, result) = spi_controller.transfer(data, transfer_length)
 
         self.assertTupleEqual((success, result), (True, [0x00, 0x04, 0x7F, 0x03, 0x02]))
+
+    def test_spi_sim_transfer(self):
+        if not self.use_simulator:
+            self.skipTest("For simulated device only")
+
+        self.device.open()
+
+        spi_controller = self.device.create_interface("spi.controller")
+
+        spi_controller.set_bus_voltage(3300)
+        spi_controller.init_bus()
+        spi_controller.set_parameters(mode=SpiControllerMode.MODE_0)
+
+        data = [0xAA, 0xBB, 0xCC]
+        read_length = 2
+        transfer_length = len(data) + read_length
+
+        (success, result) = spi_controller.transfer(data, transfer_length)
+
+        self.assertTupleEqual((success, result), (True, [0xAA, 0xBB, 0xCC, 0x00, 0x00]))
+
     def test_target_reset_read_reset_action(self):
         if self.use_simulator:
             self.skipTest("For real device only")
