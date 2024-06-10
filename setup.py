@@ -7,7 +7,7 @@ gh_token = os.environ.get('GH_TOKEN')
 dev_dependencies = []
 
 if gh_token:
-    dev_dependencies.append(f'binhosimulators @ git+https://{gh_token}@github.com/binhollc/BinhoSimulators.git@v0.1.1')
+    dev_dependencies.append(f'binhosimulators @ git+https://{gh_token}@github.com/binhollc/BinhoSimulators.git@v0.2.1')
 
 setup(
     name='supernovacontroller',
