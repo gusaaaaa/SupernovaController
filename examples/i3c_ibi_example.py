@@ -5,6 +5,21 @@ counter = 0
 last_ibi = Event()
 
 def main():
+    """
+    Example to illustrate i3c protocol IBI usage with SupernovaController.
+    
+    Sequence of commands:
+    - Initialize the Device: Creates and opens a connection to Supernova host adapter.
+    - Create I3C Interface: Creates an I3C interface for communication.
+    - Set I3C Parameters and Initialize Bus: Sets transfer rates and initializes the I3C bus with a specific voltage level.
+    - Find Specific ICM Device: Uses find_target_device_by_pid to find a specific device based on its PID.
+    - Perform Write Transfers for IBI Configuration: Writes configuration values to the ICM device to enable IBI.
+    - Add In-Band Interrupt Procedure Filter and Handler: Configures a handler to process IBI notifications.
+    - Enable IBIs on ICM Device: Enables IBIs on the ICM device.
+    - Wait for IBIs: Waits for a specific number of IBI notifications.
+    - Close Device Connection: Closes the connection to the Supernova device.
+    """
+
     device = SupernovaDevice()
 
     info = device.open()
@@ -37,22 +52,22 @@ def main():
     # IBI configuration
     # ---
 
-    def is_icm_ibi(name, message):
-        source_address = message["header"]["address"]
-        return name == "icm_ibi" and source_address == target_address
+    # Add In-Band Interrupt procedure filter and handler
+    def is_ibi(name, message):
+        return message['name'].strip() == "I3C IBI NOTIFICATION" and message['header']['type'] == "IBI_NORMAL"
 
-    def handle_icm_ibi(name, message):
+    def handle_ibi(name, message):
         global counter
         global last_ibi
-
-        payload = message["payload"]
-        print(payload)
-
+        
+        ibi_info = {'dynamic_address': message['header']['address'],  'controller_response': message['header']['response'], 'mdb':message['payload'][0], 'payload':message['payload'][1:]}
+        print(f"NOTIFICATION: New IBI request -> {ibi_info}")
+        
         counter += 1
         if counter == 10:
             last_ibi.set()
-
-    device.on_notification(name="icm_ibi", filter_func=is_icm_ibi, handler_func=handle_icm_ibi)
+            
+    device.on_notification(name="ibi", filter_func=is_ibi, handler_func=handle_ibi)
 
     i3c.toggle_ibi(target_address, False)
 
