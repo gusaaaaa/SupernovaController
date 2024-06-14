@@ -7,6 +7,7 @@ class CodeTranslator:
         "i2c" : i2c_codes
     }
     
+    @staticmethod
     def get_message(protocol, code):
         protocol_dict = CodeTranslator.library.get(protocol)
         if protocol is None: return "Invalid Protocol"
