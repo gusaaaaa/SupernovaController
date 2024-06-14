@@ -18,6 +18,10 @@ def main():
     - Enable IBIs on ICM Device: Enables IBIs on the ICM device.
     - Wait for IBIs: Waits for a specific number of IBI notifications.
     - Close Device Connection: Closes the connection to the Supernova device.
+
+    Important Note: 
+    This example is for triggering IBIs specifically on a ICM42605 accelerometer. If testing with some other IBI capable target
+    remember to rewrite the setup for IBIs with the corresponding procedure for your device.
     """
 
     device = SupernovaDevice()
@@ -44,7 +48,7 @@ def main():
     if deviceFound is False:
         print("ICM device not found in the I3C bus")
 
-    print(icm_device)
+    print(f"Connected device info: {icm_device}")
 
     target_address = icm_device["dynamic_address"]
 
@@ -71,7 +75,8 @@ def main():
 
     i3c.toggle_ibi(target_address, False)
 
-    # Setup IBIs on IMC device
+    # Setup IBIs on ICM device
+    # Change this part if you are using another target with its procedure to start IBIs
     i3c.write(target_address, i3c.TransferMode.I3C_SDR, [0x76], [0x00])
     i3c.write(target_address, i3c.TransferMode.I3C_SDR, [0x4E], [0x20])
     i3c.write(target_address, i3c.TransferMode.I3C_SDR, [0x13], [0x05])
