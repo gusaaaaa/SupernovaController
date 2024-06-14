@@ -1,5 +1,6 @@
 from transfer_controller import TransferController
 from BinhoSupernova.Supernova import Supernova
+from supernovacontroller.utils.status_codes import CodeTranslator
 from supernovacontroller.errors import BackendError
 from supernovacontroller.errors import BusVoltageError
 
@@ -247,7 +248,7 @@ class SupernovaI2CBlockingInterface:
         if response_ok:
             result = (True, None)
         else:
-            result = (False, None)
+            result = (False, CodeTranslator.get_message("i2c", responses[0]["status"]))
 
         return result
 
@@ -289,7 +290,7 @@ class SupernovaI2CBlockingInterface:
         if response_ok:
             result = (True, responses[0]["data"])
         else:
-            result = (False, None)
+            result = (False, CodeTranslator.get_message("i2c", responses[0]["status"]))
 
         return result
 
@@ -332,6 +333,6 @@ class SupernovaI2CBlockingInterface:
         if response_ok:
             result = (True, responses[0]["data"])
         else:
-            result = (False, None)
+            result = (False, CodeTranslator.get_message("i2c", responses[0]["status"]))
 
         return result

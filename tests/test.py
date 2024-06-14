@@ -287,22 +287,29 @@ class TestSupernovaController(unittest.TestCase):
         (success, targets) = i3c.targets()
 
         self.assertEqual(success, True)
-        self.assertEqual(len(targets), 2)
+        self.assertEqual(len(targets), 3)
         self.assertDictEqual(targets[0], {
             "static_address": 0x50,
             "dynamic_address": 0x08,
             "bcr": 0x10,
             "dcr": 0xC3,
-            "pid": ["0x65", "0x64", "0x00", "0x00", "0x00", "0x00"],
-            
+            "pid": ["0x00", "0x00", "0x00", "0x00", "0x64", "0x65"],
         })
         self.assertDictEqual(targets[1], {
             "static_address": 0x51,
             "dynamic_address": 0x09,
             "bcr": 0x03,
             "dcr": 0x63,
-            "pid": ["0x5A", "0x00", "0x1D", "0x0F", "0x17", "0x02"],
+            "pid": ["0x02", "0x17", "0x0F", "0x1D", "0x00", "0x5A"],
         })
+        self.assertDictEqual(targets[2], {
+            "static_address": 0x52,
+            "dynamic_address": 0x0A,
+            "bcr": 0x10,
+            "dcr": 0xC3,
+            "pid": ["0x06", "0x06", "0x06", "0x06", "0x66", "0x66"],
+        })
+
 
         self.device.close()
 
