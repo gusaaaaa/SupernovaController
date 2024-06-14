@@ -508,7 +508,10 @@ class TestSupernovaController(unittest.TestCase):
     # To run this test, it's necessary to connect the SPI Target device of Adafruit: FRAM memory MB85RS64V
     # Use the Supernova's breakout board and connect the VCC, GND, SCK, MISO, MOSI and CS signals of the memory
     # to its correspondent signal in the breakout board
-    def test_spi_controller_transfer(self):
+    def test_spi_who_am_i_fram_MB85RS64V(self):
+        if self.use_simulator:
+            self.skipTest("For real device only")
+
         self.device.open()
 
         spi_controller = self.device.create_interface("spi.controller")
@@ -524,6 +527,59 @@ class TestSupernovaController(unittest.TestCase):
         (success, result) = spi_controller.transfer(data, transfer_length)
 
         self.assertTupleEqual((success, result), (True, [0x00, 0x04, 0x7F, 0x03, 0x02]))
+
+    def test_spi_sim_transfer(self):
+        if not self.use_simulator:
+            self.skipTest("For simulated device only")
+
+        self.device.open()
+
+        spi_controller = self.device.create_interface("spi.controller")
+
+        spi_controller.set_bus_voltage(3300)
+        spi_controller.init_bus()
+        spi_controller.set_parameters(mode=SpiControllerMode.MODE_0)
+
+        data = [0xAA, 0xBB, 0xCC]
+        read_length = 2
+        transfer_length = len(data) + read_length
+
+        (success, result) = spi_controller.transfer(data, transfer_length)
+
+        self.assertTupleEqual((success, result), (True, [0xAA, 0xBB, 0xCC, 0x00, 0x00]))
+
+    def test_target_reset_read_reset_action(self):
+        if self.use_simulator:
+            self.skipTest("For real device only")
+
+        self.device.open()
+
+        i3c = self.device.create_interface("i3c.controller")
+
+        i3c.init_bus(3300)
+
+        (success, result) = i3c.target_reset(0x08,I3cTargetResetDefByte.RESET_I3C_PERIPHERAL, TransferDirection.READ)
+
+        self.assertTupleEqual((success, result), (True, [0x00]))
+
+        self.device.close()
+
+    def test_target_reset_write_reset_action(self):
+        if self.use_simulator:
+            self.skipTest("For real device only")
+
+        self.device.open()
+
+        i3c = self.device.create_interface("i3c.controller")
+
+        i3c.init_bus(3300)
+
+        (success, result) = i3c.target_reset(0x08,I3cTargetResetDefByte.RESET_I3C_PERIPHERAL, TransferDirection.WRITE)
+        print(success, result)
+
+        self.assertTupleEqual((success, result), (True, None))
+
+        self.device.close()
 
 if __name__ == "__main__":
     unittest.main()
