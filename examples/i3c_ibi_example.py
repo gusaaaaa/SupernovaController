@@ -7,7 +7,7 @@ last_ibi = Event()
 def main():
     """
     Example to illustrate i3c protocol IBI usage with SupernovaController.
-    
+
     Sequence of commands:
     - Initialize the Device: Creates and opens a connection to Supernova host adapter.
     - Create I3C Interface: Creates an I3C interface for communication.
@@ -19,7 +19,7 @@ def main():
     - Wait for IBIs: Waits for a specific number of IBI notifications.
     - Close Device Connection: Closes the connection to the Supernova device.
 
-    Important Note: 
+    Important Note:
     This example is for triggering IBIs specifically on a ICM42605 accelerometer. If testing with some other IBI capable target
     remember to rewrite the setup for IBIs with the corresponding procedure for your device.
     """
@@ -63,14 +63,14 @@ def main():
     def handle_ibi(name, message):
         global counter
         global last_ibi
-        
+
         ibi_info = {'dynamic_address': message['header']['address'],  'controller_response': message['header']['response'], 'mdb':message['payload'][0], 'payload':message['payload'][1:]}
         print(f"NOTIFICATION: New IBI request -> {ibi_info}")
-        
+
         counter += 1
         if counter == 10:
             last_ibi.set()
-            
+
     device.on_notification(name="ibi", filter_func=is_ibi, handler_func=handle_ibi)
 
     i3c.toggle_ibi(target_address, False)
