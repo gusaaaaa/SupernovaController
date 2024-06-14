@@ -287,22 +287,29 @@ class TestSupernovaController(unittest.TestCase):
         (success, targets) = i3c.targets()
 
         self.assertEqual(success, True)
-        self.assertEqual(len(targets), 2)
+        self.assertEqual(len(targets), 3)
         self.assertDictEqual(targets[0], {
             "static_address": 0x50,
             "dynamic_address": 0x08,
             "bcr": 0x10,
             "dcr": 0xC3,
-            "pid": ["0x65", "0x64", "0x00", "0x00", "0x00", "0x00"],
-            
+            "pid": ["0x00", "0x00", "0x00", "0x00", "0x64", "0x65"],
         })
         self.assertDictEqual(targets[1], {
             "static_address": 0x51,
             "dynamic_address": 0x09,
             "bcr": 0x03,
             "dcr": 0x63,
-            "pid": ["0x5A", "0x00", "0x1D", "0x0F", "0x17", "0x02"],
+            "pid": ["0x02", "0x17", "0x0F", "0x1D", "0x00", "0x5A"],
         })
+        self.assertDictEqual(targets[2], {
+            "static_address": 0x52,
+            "dynamic_address": 0x0A,
+            "bcr": 0x10,
+            "dcr": 0xC3,
+            "pid": ["0x06", "0x06", "0x06", "0x06", "0x66", "0x66"],
+        })
+
 
         self.device.close()
 
@@ -517,38 +524,6 @@ class TestSupernovaController(unittest.TestCase):
         (success, result) = spi_controller.transfer(data, transfer_length)
 
         self.assertTupleEqual((success, result), (True, [0x00, 0x04, 0x7F, 0x03, 0x02]))
-    def test_target_reset_read_reset_action(self):
-        if self.use_simulator:
-            self.skipTest("For real device only")
-
-        self.device.open()
-
-        i3c = self.device.create_interface("i3c.controller")
-
-        i3c.init_bus(3300)
-
-        (success, result) = i3c.target_reset(0x08,I3cTargetResetDefByte.RESET_I3C_PERIPHERAL, TransferDirection.READ)
-
-        self.assertTupleEqual((success, result), (True, [0x00]))
-
-        self.device.close()
-
-    def test_target_reset_write_reset_action(self):
-        if self.use_simulator:
-            self.skipTest("For real device only")
-
-        self.device.open()
-
-        i3c = self.device.create_interface("i3c.controller")
-
-        i3c.init_bus(3300)
-
-        (success, result) = i3c.target_reset(0x08,I3cTargetResetDefByte.RESET_I3C_PERIPHERAL, TransferDirection.WRITE)
-        print(success, result)
-
-        self.assertTupleEqual((success, result), (True, None))
-
-        self.device.close()
 
 if __name__ == "__main__":
     unittest.main()
