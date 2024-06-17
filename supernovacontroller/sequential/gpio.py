@@ -39,8 +39,6 @@ class SupernovaGPIOInterface:
     def set_bus_voltage(self, voltage_mv: int):
         """
         Sets the bus voltage for the GPIO interface to a specified value.
-        The method updates the bus voltage of the instance only if the operation is successful. The success
-        or failure of the operation is determined based on the response from the hardware.
 
         Args:
         voltage_mv (int): The voltage value to be set for the GPIO bus in millivolts (mV).
@@ -53,22 +51,18 @@ class SupernovaGPIOInterface:
               error message detailing the failure, obtained from the device's response.
 
         Note:
-        - The method does not perform validation on the input voltage value. Users of this
-          method should ensure that the provided voltage value is within acceptable limits
-          for their specific hardware configuration.
-        - The bus voltage is updated in the interface instance only if the operation is successful.
-
-        Raises:
-        BackendError: If an exception occurs setting the bus voltage process.
+        - The SDK method called depends upon which hardware revision is connected.
+          - If Rev. B is used, voltage can be set in pins 1 and 2 with setI3cBusVoltage(). Pins 3 to 6 are fixed at 3.3 V.
+          - If Rev. C is used, voltage is set with setI2cSpiUartBusVoltage() for all pins.
         """
         set_voltage_method = None
 
         if self.hardware_version.startswith("HW-B"):
-            set_voltage_method = self.driver.setI2cSpiUartBusVoltage
-            expected_name = "SET I2C-SPI-UART BUS VOLTAGE"
-        elif self.hardware_version.startswith("HW-C"):
             set_voltage_method = self.driver.setI3cBusVoltage
             expected_name = "SET I3C BUS VOLTAGE"
+        elif self.hardware_version.startswith("HW-C"):
+            set_voltage_method = self.driver.setI2cSpiUartBusVoltage
+            expected_name = "SET I2C-SPI-UART BUS VOLTAGE"
         else:
             raise BackendError(f"Unsupported hardware version: {self.hardware_version}")
 
@@ -110,7 +104,13 @@ class SupernovaGPIOInterface:
 
         Args:
         pin_number (GpioPinNumber): The GPIO pin number to configure.
+        Possible values:
+        - GPIO_1 to GPIO_6: Represents GPIO pins 1 to 6.
+
         functionality (GpioFunctionality): The desired functionality for the GPIO pin.
+        Possible values:
+        - DIGITAL_INPUT: Configures the pin as a digital input.
+        - DIGITAL_OUTPUT: Configures the pin as a digital output.
 
         Returns:
         tuple: A tuple containing two elements:
@@ -192,6 +192,9 @@ class SupernovaGPIOInterface:
         tuple: A tuple containing two elements:
             - The first element is a Boolean indicating the success (True) or failure (False) of setting the interrupt.
             - The second element is a string describing the result of setting the interrupt.
+
+        Note: 
+        -  In hardware revision B, all pins support GPIO interruption except for pin 3.
         """
         responses = None
         try:
@@ -226,29 +229,3 @@ class SupernovaGPIOInterface:
 
         response_success = responses[0]["name"] == "GPIO DISABLE INTERRUPT" and self.__check_if_response_is_correct(responses[0])
         return (response_success, "Success" if response_success else "Disable interrupt failed, error from the Supernova")
-
-    def wait_for_notification(self, timeout):
-        """
-        Waits for GPIO interrupt notification.
-
-        This method waits for a notification related to GPIO interrupt for the specified timeout duration.
-        It uses the GPIO notification subscription to wait for incoming interrupt notifications.
-
-        Args:
-        timeout: The duration in seconds to wait for the notification.
-
-        Returns:
-        tuple: A tuple containing two elements:
-            - The first element is a Boolean indicating the success (True) or failure (False) of receiving the notification.
-            - The second element is either the received payload if successful or an error message.
-        """
-        received_data_flag, notification = self.gpio_notification.wait_for_notification(timeout)
-
-        if not received_data_flag:
-            return (False, "Timeout occurred while waiting for the GPIO interrupt notification")
-        
-        response_ok = self.__check_if_response_is_correct(notification)
-        if not response_ok:
-            return (False, "Error from Supernova while receiving GPIO interrupt data")
-
-        return (True, notification["pin_number"])

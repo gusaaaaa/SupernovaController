@@ -20,7 +20,7 @@ def main():
         3. Sets GPIO_6 to HIGH and reads the value from GPIO_5.
         4. Sets GPIO_6 to LOW and reads the value from GPIO_5.
         5. Configures an interrupt on GPIO_5 for both rising and falling edges.
-        6. Toggles GPIO_6 to generate interrupts on GPIO_5.
+        6. Toggles GPIO_6 to generate 4 interrupts on GPIO_5.
         7. Disables the interrupt on GPIO_5.
     """
     device = SupernovaDevice()
@@ -29,6 +29,9 @@ def main():
     info = device.open()
     gpio = device.create_interface("gpio")
 
+    # Important note about GPIO voltage set depending on hardware revision:
+    # - If Rev. B is used, voltage can be set in pins 1 and 2 with setI3cBusVoltage(). Pins 3 to 6 are fixed at 3.3 V.
+    # - If Rev. C is used, voltage is set with setI2cSpiUartBusVoltage() for all pins.
     print("Initializing GPIO peripheral.")
     (success, _) = gpio.set_bus_voltage(3300)
     if not success:
@@ -70,9 +73,11 @@ def main():
     else:
         print("Failed to read GPIO_5 value.")
 
-    # -- Interruptuions
+    # -- Interruptions
+    # To manage GPIO notifications, we have to pass to the on_notification() method the following functions:
+    # - Filter function: it checks if the notification is a GPIO interrupt.
+    # - Handler function: it processes the interruption. In our case prints relevant data and sets the event.
     def is_gpio_interrupt(name, message):
-        is_gpio_interruption = message['name'].strip() == "GPIO INTERRUPTION"
         return message['name'].strip() == "GPIO INTERRUPTION"
     
     def handle_gpio_interrupt(name, message):
@@ -88,6 +93,8 @@ def main():
         print("Couldn't set interrupt on GPIO_5.")
         exit(1)
 
+    # Since pin 6 was in LOW, the following loop will generate 4 interruptions because
+    # we have set the interruption trigger type to check both edges (rising and falling)
     print("Toggling GPIO_6 to generate interrupts on GPIO_5...")
     for level in [GpioLogicLevel.HIGH, GpioLogicLevel.LOW, GpioLogicLevel.HIGH, GpioLogicLevel.LOW]:
         (success, _) = gpio.digital_write(GpioPinNumber.GPIO_6, level)

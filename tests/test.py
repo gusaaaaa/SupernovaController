@@ -609,5 +609,24 @@ class TestSupernovaController(unittest.TestCase):
         
         self.device.close()
 
+    def test_gpio_set_disable_interrupt(self):
+        if self.use_simulator:
+            self.skipTest("For real device only")
+        self.device.open()
+        
+        gpio = self.device.create_interface("gpio")
+        
+        gpio.configure_pin(GpioPinNumber.GPIO_5, GpioFunctionality.DIGITAL_INPUT)
+        
+        (success, result) = gpio.set_interrupt(GpioPinNumber.GPIO_5, GpioTriggerType.TRIGGER_BOTH_EDGES)
+        self.assertEqual(success, True)
+        self.assertEqual(result, "Success")
+        
+        (success, result) = gpio.disable_interrupt(GpioPinNumber.GPIO_5)
+        self.assertEqual(success, True)
+        self.assertEqual(result, "Success")
+        
+        self.device.close()
+
 if __name__ == "__main__":
     unittest.main()
