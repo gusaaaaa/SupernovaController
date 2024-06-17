@@ -27,7 +27,7 @@ class TestSupernovaController(unittest.TestCase):
         Initializes the testing class. Determines whether to use the simulator or real device
         based on the "USE_REAL_DEVICE" environment variable. Default is to use the simulator.
         """
-        cls.use_simulator = True# not os.getenv("USE_REAL_DEVICE", "False") == "True"
+        cls.use_simulator = not os.getenv("USE_REAL_DEVICE", "False") == "True"
 
     def setUp(self):
         self.device = SupernovaDevice()
