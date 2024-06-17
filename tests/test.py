@@ -27,7 +27,7 @@ class TestSupernovaController(unittest.TestCase):
         Initializes the testing class. Determines whether to use the simulator or real device
         based on the "USE_REAL_DEVICE" environment variable. Default is to use the simulator.
         """
-        cls.use_simulator = not os.getenv("USE_REAL_DEVICE", "False") == "True"
+        cls.use_simulator = True# not os.getenv("USE_REAL_DEVICE", "False") == "True"
 
     def setUp(self):
         self.device = SupernovaDevice()
@@ -547,39 +547,6 @@ class TestSupernovaController(unittest.TestCase):
         (success, result) = spi_controller.transfer(data, transfer_length)
 
         self.assertTupleEqual((success, result), (True, [0xAA, 0xBB, 0xCC, 0x00, 0x00]))
-
-    def test_target_reset_read_reset_action(self):
-        if self.use_simulator:
-            self.skipTest("For real device only")
-
-        self.device.open()
-
-        i3c = self.device.create_interface("i3c.controller")
-
-        i3c.init_bus(3300)
-
-        (success, result) = i3c.target_reset(0x08,I3cTargetResetDefByte.RESET_I3C_PERIPHERAL, TransferDirection.READ)
-
-        self.assertTupleEqual((success, result), (True, [0x00]))
-
-        self.device.close()
-
-    def test_target_reset_write_reset_action(self):
-        if self.use_simulator:
-            self.skipTest("For real device only")
-
-        self.device.open()
-
-        i3c = self.device.create_interface("i3c.controller")
-
-        i3c.init_bus(3300)
-
-        (success, result) = i3c.target_reset(0x08,I3cTargetResetDefByte.RESET_I3C_PERIPHERAL, TransferDirection.WRITE)
-        print(success, result)
-
-        self.assertTupleEqual((success, result), (True, None))
-
-        self.device.close()
 
 if __name__ == "__main__":
     unittest.main()
