@@ -73,7 +73,6 @@ def main():
     # -- Interruptuions
     def is_gpio_interrupt(name, message):
         is_gpio_interruption = message['name'].strip() == "GPIO INTERRUPTION"
-        print("is_gpio_interruption: ", is_gpio_interruption)
         return message['name'].strip() == "GPIO INTERRUPTION"
     
     def handle_gpio_interrupt(name, message):
