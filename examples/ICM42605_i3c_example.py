@@ -119,13 +119,17 @@ def main():
     def readIMUData():
         (_, raw_data) = i3c.read(target_address, i3c.TransferMode.I3C_SDR, [ICM42605_TEMP_DATA1], 14)
         imuData = [0,0,0,0,0,0,0]
-        imuData[0] = ctypes.c_int16((raw_data[0] << 8) | raw_data[1]).value
-        imuData[1] = ctypes.c_int16((raw_data[2] << 8) | raw_data[3]).value 
-        imuData[2] = ctypes.c_int16((raw_data[4] << 8) | raw_data[5]).value
-        imuData[3] = ctypes.c_int16((raw_data[6] << 8) | raw_data[7]).value
-        imuData[4] = ctypes.c_int16((raw_data[8] << 8) | raw_data[9]).value
-        imuData[5] = ctypes.c_int16((raw_data[10] << 8) | raw_data[11]).value
-        imuData[6] = ctypes.c_int16((raw_data[12] << 8) | raw_data[13] ).value
+        print(raw_data)
+        # This is a temporary solution since we experienced an issue with the icm42605
+        # Sometimes this target is responding with shorter arrays or even with "NO_TRANSFER_ERROR" or "NACK"
+        if isinstance(raw_data, list) and len(raw_data)>=14:
+            imuData[0] = ctypes.c_int16((raw_data[0] << 8) | raw_data[1]).value
+            imuData[1] = ctypes.c_int16((raw_data[2] << 8) | raw_data[3]).value 
+            imuData[2] = ctypes.c_int16((raw_data[4] << 8) | raw_data[5]).value
+            imuData[3] = ctypes.c_int16((raw_data[6] << 8) | raw_data[7]).value
+            imuData[4] = ctypes.c_int16((raw_data[8] << 8) | raw_data[9]).value
+            imuData[5] = ctypes.c_int16((raw_data[10] << 8) | raw_data[11]).value
+            imuData[6] = ctypes.c_int16((raw_data[12] << 8) | raw_data[13] ).value
         return imuData
     
     # Calibrate IMU
