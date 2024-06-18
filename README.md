@@ -564,7 +564,7 @@ After installing the `SupernovaController` package, you can further explore its 
 - **Basic UART Example (`basic_uart_example.py`):** Try out the UART protocol Hands-On.
 - **Basic SPI Controller Example (`basic_spi_controller_example.py`):** Explore the fundamental SPI controller operations communicating with a SPI Target device.
 - **Hot-join example(`hot_join_example.py`):** Understand how to handle the hot-join procedure in I3C.
-- **IBI Example (`ibi_example.py`):** Understand handling In-Band Interrupts (IBI) in I3C.
+- **IBI Example (`i3c_ibi_example.py`):** Understand handling In-Band Interrupts (IBI) in I3C.
 - **ICM42605 I3C Example (`ICM42605_i3c_example.py`):** Explore a real-world application of I3C with the ICM42605 sensor.
 
 #### Accessing the Examples
