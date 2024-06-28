@@ -110,6 +110,24 @@ class SupernovaDevice:
 
         return openedDevices
 
+    def get_hardware_version(self):
+        """
+        Retrieves the hardware version of the connected Supernova device.
+
+        Returns:
+        str: The hardware version of the Supernova device.
+        """
+        try:
+            response = self.controller.sync_submit([
+                lambda transfer_id: self.driver.getUsbString(transfer_id, GetUsbStringSubCommand.HW_VERSION)
+            ])
+            if response[0]["name"] == "GET USB STRING" and "message" in response[0]:
+                return response[0]["message"]
+        except Exception as e:
+            raise BackendError(original_exception=e) from e
+
+        raise BackendError("Unable to retrieve hardware version.")
+
     def on_notification(self, name, filter_func, handler_func):
         if name not in self.notification_handlers:
             self.notification_handlers[name] = (filter_func, handler_func)
@@ -166,7 +184,11 @@ class SupernovaDevice:
         [interface, interface_class] = self.interfaces[interface_name]
 
         if interface is None:
-            self.interfaces[interface_name][0] = interface_class(self.driver, self.controller, self.on_notification)
+            if interface_name == "gpio":
+                hardware_version = self.get_hardware_version()
+                self.interfaces[interface_name][0] = interface_class(self.driver, self.controller, self.on_notification, hardware_version)
+            else:
+                self.interfaces[interface_name][0] = interface_class(self.driver, self.controller, self.on_notification)
             interface = self.interfaces[interface_name][0]
 
         return interface

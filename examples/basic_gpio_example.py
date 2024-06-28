@@ -33,9 +33,9 @@ def main():
     # - If Rev. B is used, voltage can be set in pins 1 and 2 with setI3cBusVoltage(). Pins 3 to 6 are fixed at 3.3 V.
     # - If Rev. C is used, voltage is set with setI2cSpiUartBusVoltage() for all pins.
     print("Initializing GPIO peripheral.")
-    (success, _) = gpio.set_bus_voltage(3300)
+    (success, _) = gpio.set_pins_voltage(3300)
     if not success:
-        print("Couldn't set the GPIO bus voltage.")
+        print("Couldn't set the GPIO pins voltage.")
         exit(1)
 
     print("Configuring GPIO pins...")

@@ -557,10 +557,10 @@ class TestSupernovaController(unittest.TestCase):
         
         gpio = self.device.create_interface("gpio")
         
-        (success, result) = gpio.set_bus_voltage(3300)
+        (success, result) = gpio.set_pins_voltage(3300)
         
         self.assertTupleEqual((success, result), (True, 3300))
-        self.assertEqual(gpio.bus_voltage, 3300)
+        self.assertEqual(gpio.pins_voltage, 3300)
         
         self.device.close()
 

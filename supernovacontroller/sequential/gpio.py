@@ -1,42 +1,23 @@
 from transfer_controller import TransferController
 from BinhoSupernova.Supernova import Supernova
 from BinhoSupernova.commands.definitions import (
-    GetUsbStringSubCommand, GpioPinNumber, GpioLogicLevel, GpioFunctionality, GpioTriggerType,
-    COMMANDS_DICTIONARY, GPIO_CONFIGURE_PIN, GPIO_DIGITAL_WRITE, GPIO_DIGITAL_READ,
-    GPIO_SET_INTERRUPT, GPIO_DISABLE_INTERRUPT
+    GpioPinNumber, GpioLogicLevel, GpioFunctionality, GpioTriggerType,
 )
 from supernovacontroller.errors import BackendError
+from sequential import SupernovaDevice
 
 class SupernovaGPIOInterface:
-    def __init__(self, driver: Supernova, controller: TransferController, notification_subscription):
+    def __init__(self, driver: Supernova, controller: TransferController, notification_subscription, hardware_version):
         """
         Initializes a new instance of the SupernovaGPIOInterface class. This interface is used for GPIO communication with the Supernova.
         """
         self.driver = driver
         self.controller = controller
         self.configured_pins = {}
-        self.bus_voltage = None
-        self.hardware_version = self.__get_hardware_version()
+        self.pins_voltage = None
+        self.hardware_version = hardware_version
 
-    def __get_hardware_version(self):
-        """
-        Retrieves the hardware version of the connected Supernova device.
-
-        Returns:
-        str: The hardware version of the Supernova device.
-        """
-        try:
-            response = self.controller.sync_submit([
-                lambda transfer_id: self.driver.getUsbString(transfer_id, GetUsbStringSubCommand.HW_VERSION)
-            ])
-            if response[0]["name"] == "GET USB STRING" and "message" in response[0]:
-                return response[0]["message"]
-        except Exception as e:
-            raise BackendError(original_exception=e) from e
-
-        raise BackendError("Unable to retrieve hardware version.")
-
-    def set_bus_voltage(self, voltage_mv: int):
+    def set_pins_voltage(self, voltage_mv: int):
         """
         Sets the bus voltage for the GPIO interface to a specified value.
 
@@ -59,10 +40,10 @@ class SupernovaGPIOInterface:
 
         if self.hardware_version.startswith("HW-B"):
             set_voltage_method = self.driver.setI3cBusVoltage
-            expected_name = "SET I3C BUS VOLTAGE"
+            expected_command_name = "SET I3C BUS VOLTAGE"
         elif self.hardware_version.startswith("HW-C"):
             set_voltage_method = self.driver.setI2cSpiUartBusVoltage
-            expected_name = "SET I2C-SPI-UART BUS VOLTAGE"
+            expected_command_name = "SET I2C-SPI-UART BUS VOLTAGE"
         else:
             raise BackendError(f"Unsupported hardware version: {self.hardware_version}")
 
@@ -74,15 +55,15 @@ class SupernovaGPIOInterface:
         except Exception as e:
             raise BackendError(original_exception=e) from e
 
-        response_success = responses[0]["name"] == expected_name and responses[0]["result"] == 0
+        response_success = responses[0]["name"] == expected_command_name and responses[0]["result"] == 0
 
         if response_success:
-            self.bus_voltage = voltage_mv
+            self.pins_voltage = voltage_mv
             return (True, voltage_mv)
         else:
-            return (False, "Set bus voltage failed")
+            return (False, "Set pins voltage failed")
 
-    def __check_if_response_is_correct(self, response):
+    def __check_if_response_is_successful(self, response):
         """
         Checks if the response received from the Supernova indicates successful execution of the GPIO method.
 
@@ -125,7 +106,7 @@ class SupernovaGPIOInterface:
         except Exception as e:
             raise BackendError(original_exception=e) from e
 
-        response_success = responses[0]["name"] == "CONFIGURE GPIO PIN" and self.__check_if_response_is_correct(responses[0])
+        response_success = responses[0]["name"] == "CONFIGURE GPIO PIN" and self.__check_if_response_is_successful(responses[0])
 
         if response_success:
             self.configured_pins[pin_number] = functionality
@@ -152,7 +133,7 @@ class SupernovaGPIOInterface:
         except Exception as e:
             raise BackendError(original_exception=e) from e
 
-        response_success = responses[0]["name"] == "GPIO DIGITAL WRITE" and self.__check_if_response_is_correct(responses[0])
+        response_success = responses[0]["name"] == "GPIO DIGITAL WRITE" and self.__check_if_response_is_successful(responses[0])
         return (response_success, "Success" if response_success else "Digital write failed, error from the Supernova")
 
     def digital_read(self, pin_number: GpioPinNumber):
@@ -175,7 +156,7 @@ class SupernovaGPIOInterface:
         except Exception as e:
             raise BackendError(original_exception=e) from e
 
-        response_success = responses[0]["name"] == "GPIO DIGITAL READ" and self.__check_if_response_is_correct(responses[0])
+        response_success = responses[0]["name"] == "GPIO DIGITAL READ" and self.__check_if_response_is_successful(responses[0])
         if response_success:
             return (True, responses[0]["logic_level"])
         return (False, "Digital read failed, error from the Supernova")
@@ -204,7 +185,7 @@ class SupernovaGPIOInterface:
         except Exception as e:
             raise BackendError(original_exception=e) from e
 
-        response_success = responses[0]["name"] == "GPIO SET INTERRUPT" and self.__check_if_response_is_correct(responses[0])
+        response_success = responses[0]["name"] == "GPIO SET INTERRUPT" and self.__check_if_response_is_successful(responses[0])
         return (response_success, "Success" if response_success else "Set interrupt failed, error from the Supernova")
 
     def disable_interrupt(self, pin_number: GpioPinNumber):
@@ -227,5 +208,5 @@ class SupernovaGPIOInterface:
         except Exception as e:
             raise BackendError(original_exception=e) from e
 
-        response_success = responses[0]["name"] == "GPIO DISABLE INTERRUPT" and self.__check_if_response_is_correct(responses[0])
+        response_success = responses[0]["name"] == "GPIO DISABLE INTERRUPT" and self.__check_if_response_is_successful(responses[0])
         return (response_success, "Success" if response_success else "Disable interrupt failed, error from the Supernova")

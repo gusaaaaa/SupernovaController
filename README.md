@@ -555,7 +555,7 @@ In a SPI bus, the Supernova can act as a controller.
     ```
 
 
-## GPIO protocol
+## GPIO
 
 ### GPIO features
 
@@ -602,12 +602,12 @@ This section describes how to get you started with the `SupernovaController` foc
 
 ### Operations intended for the Supernova GPIO peripheral
 
-1. ***Setting Bus Voltage:***
+1. ***Setting Pins Voltage:***
 
-    Sets the bus voltage (in mV) for the GPIO bus. This step is required before initializing the GPIO interface:
+    Sets the pins voltage (in mV) for the GPIO pins. This step is required before initializing the GPIO interface:
 
     ```python
-    success, response = gpio.set_bus_voltage(3300)
+    success, response = gpio.set_pins_voltage(3300)
     ```
     **Important note:**
     - If Supernova rev. B is used, voltage can be set in pins 1 and 2. Pins 3 to 6 are fixed at 3.3 V.
@@ -625,7 +625,7 @@ This section describes how to get you started with the `SupernovaController` foc
 
 3. ***Digital Write:***
 
-    Writes a digital logic level to a GPIO pin. For example, setting GPIO pin 6 to LOW:
+    Writes a digital logic level to a GPIO pin configured as a digital output. For example, setting GPIO pin 6 to LOW:
 
     ```python
     from BinhoSupernova.commands.definitions import GpioLogicLevel
@@ -635,7 +635,7 @@ This section describes how to get you started with the `SupernovaController` foc
 
 4. ***Digital Read:***
 
-    Reads the digital logic level from a GPIO pin. For example, reading the value from GPIO pin 5:
+    Reads the digital logic level from a GPIO pin configured as a digital input. For example, reading the value from GPIO pin 5:
 
     ```python
     success, value = gpio.digital_read(GpioPinNumber.GPIO_5)
@@ -643,7 +643,7 @@ This section describes how to get you started with the `SupernovaController` foc
 
 5. ***Set Interrupt:***
 
-    Sets an interrupt on a GPIO pin. For example, setting an interrupt on GPIO pin 5 for both rising and falling edges:
+    Sets an interrupt on a GPIO pin configured as a digital input. For example, setting an interrupt on GPIO pin 5 for both rising and falling edges:
 
     ```python
     from BinhoSupernova.commands.definitions import GpioTriggerType
@@ -661,7 +661,7 @@ This section describes how to get you started with the `SupernovaController` foc
 
     gpio_interrupt_event = Event()
 
-    # Asumes pin 6 initially at LOW level and shortcut between pins 5 and 6
+    # Asumes pin 6 initially at LOW level and pins 5 and 6 are connected to each other
     for level in [GpioLogicLevel.HIGH, GpioLogicLevel.LOW, GpioLogicLevel.HIGH, GpioLogicLevel.LOW]:
         gpio.digital_write(GpioPinNumber.GPIO_6, level)
 
