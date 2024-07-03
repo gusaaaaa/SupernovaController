@@ -89,11 +89,11 @@ class SupernovaDevice:
 
         return _process_device_info(responses)
 
-    #static method
+    @staticmethod
     def getAllConnectedSupernovaDevices():
         return getConnectedSupernovaDevicesList()
 
-    #static method
+    @staticmethod
     def openAllConnectedSupernovaDevices():
         allDevices = SupernovaDevice.getAllConnectedSupernovaDevices()
         openedDevices = []
