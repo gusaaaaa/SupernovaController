@@ -4,7 +4,6 @@ from BinhoSupernova.commands.definitions import (
     GpioPinNumber, GpioLogicLevel, GpioFunctionality, GpioTriggerType,
 )
 from supernovacontroller.errors import BackendError
-from sequential import SupernovaDevice
 
 class SupernovaGPIOInterface:
     def __init__(self, driver: Supernova, controller: TransferController, notification_subscription, hardware_version):
