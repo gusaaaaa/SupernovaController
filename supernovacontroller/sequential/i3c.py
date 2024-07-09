@@ -29,6 +29,17 @@ class SupernovaI3CBlockingInterface:
         self.bus_voltage = None
 
         self.controller_init()
+    
+    @staticmethod
+    def __get_error_from_response(response : dict):
+        errors = []
+        if response["usb_result"] != "CMD_SUCCESSFUL":
+            errors.append(response["usb_result"]) 
+        if response["manager_result"] != "I3C_CONTROLLER_MGR_NO_ERROR":
+            errors.append(response["manager_result"]) 
+        if "NO_TRANSFER_ERROR" not in response["driver_result"]:
+            errors.extend(response["driver_result"]) 
+        return errors
 
     def set_parameters(self, push_pull_clock_freq_mhz: I3cPushPullTransferRate, open_drain_clock_freq_mhz: I3cOpenDrainTransferRate):
         """
@@ -389,10 +400,12 @@ class SupernovaI3CBlockingInterface:
             raise BackendError(original_exception=e) from e
 
         response = responses[0]
-        if response["usb_result"] == "CMD_SUCCESSFUL" and response["manager_result"] == "I3C_CONTROLLER_MGR_NO_ERROR" and "NO_TRANSFER_ERROR" in response["driver_result"]:
+        errors = self.__get_error_from_response(response)
+
+        if len(errors) == 0: # manager, usb and driver are without error
             result = (True, None)
         else:
-            result = (False, response["descriptor"]["errors"])
+            result = (False, errors)
 
         return result
         
