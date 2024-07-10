@@ -29,6 +29,17 @@ class SupernovaI3CBlockingInterface:
         self.bus_voltage = None
 
         self.controller_init()
+    
+    @staticmethod
+    def __get_error_from_response(response : dict):
+        errors = []
+        if response["usb_result"] != "CMD_SUCCESSFUL":
+            errors.append(response["usb_result"]) 
+        if response["manager_result"] != "I3C_CONTROLLER_MGR_NO_ERROR":
+            errors.append(response["manager_result"]) 
+        if "NO_TRANSFER_ERROR" not in response["driver_result"]:
+            errors.extend(response["driver_result"]) 
+        return errors
 
     def set_parameters(self, push_pull_clock_freq_mhz: I3cPushPullTransferRate, open_drain_clock_freq_mhz: I3cOpenDrainTransferRate):
         """
@@ -368,6 +379,35 @@ class SupernovaI3CBlockingInterface:
             result = (False, responses[0]["errors"])
 
         return result
+
+    def trigger_target_reset_pattern(self):
+        """
+        Triggers the target reset pattern on the I3C bus.
+
+        It indicates the targets to execute the reset action configured via the RSTACT CCC.
+
+        Returns:
+        tuple: A tuple containing two elements:
+            - The first element is a Boolean indicating the success (True) or failure (False) of the operation.
+            - The second element is either None indicating success, or an error message
+                detailing the failure, obtained from the device's response.
+        """
+        try:
+            responses = self.controller.sync_submit([
+                lambda id: self.driver.i3cTriggerTargetResetPattern(id)
+            ])
+        except Exception as e:
+            raise BackendError(original_exception=e) from e
+
+        response = responses[0]
+        errors = self.__get_error_from_response(response)
+
+        if len(errors) == 0: # manager, usb and driver are without error
+            result = (True, None)
+        else:
+            result = (False, errors)
+
+        return result
         
     def _process_response(self, command_name, responses, extra_data=None):
         def format_response_payload(command_name, response):
@@ -389,6 +429,8 @@ class SupernovaI3CBlockingInterface:
                 return response["data"]
             elif command_name == "ccc_setnewda":
                 return None
+            elif command_name == "ccc_direct_rstact":
+                return response["data"] if response["descriptor"] and response["descriptor"]["dataLength"] > 0 else None
             elif command_name in ["ccc_unicast_setmrl", "ccc_unicast_setmwl", "ccc_broadcast_setmwl", "ccc_broadcast_setmrl"]:
                 return response["data"]
             return None
@@ -587,6 +629,75 @@ class SupernovaI3CBlockingInterface:
             raise BackendError(original_exception=e) from e
 
         return self._process_response("ccc_getacccr", responses)
+
+    def ccc_direct_rstact(self, target_address, defining_byte, read_or_write_reset_action):
+        """
+        Performs a DIRECT RSTACT (Target Reset Action) operation on a target device on the I3C bus.
+
+        This method is used to configure the next Target Reset action, and may be used to retrieve a Target's 
+        reset recovery timing or get the reset action of the target. 
+        The RSTACT CCC is used in conjunction with the Target Reset Pattern to reset targets.
+
+        Args:
+        target_address (c_uint8): The dynamic address of the target device. 
+            This should be the address that the device is currently using on the I3C bus.
+        defining_byte (I3cTargetResetDefByte): The defining byte used for the RSTACT CCC.
+        read_or_write_reset_action (TransferDirection): Determines whether to read or write the reset action.
+            It should be either TransferDirection.WRITE or TransferDirection.READ.
+
+        Returns:
+        tuple: A tuple containing two elements:
+            - The first element is a Boolean indicating the success (True) or failure (False) of the operation.
+            - The second element depends on the read_or_write_reset_action value:
+                - If it is a write, then the returned value can be either None indicating success, 
+                    or an error message detailing the failure obtained from the controller's response.
+                - If it is a read, the returned value is the reset action in case of success,
+                    or an error message detailing the failure obtained from the controller's response. 
+        """
+        try:
+            responses = self.controller.sync_submit([
+                lambda id: self.driver.i3cDirectRSTACT(
+                    id,
+                    target_address,
+                    defining_byte,
+                    read_or_write_reset_action,
+                    self.push_pull_clock_freq_mhz,
+                    self.push_pull_clock_freq_mhz,
+                )
+            ])
+        except Exception as e:
+            raise BackendError(original_exception=e) from e
+
+        return self._process_response("ccc_direct_rstact", responses)
+
+    def ccc_broadcast_rstact(self, defining_byte):
+        """
+        Performs a BROADCAST RSTACT (Target Reset Action) set operation on the I3C bus.
+
+        This method is used to configure the next Target Reset action on all targets.
+        The RSTACT CCC is used in conjunction with the Target Reset Pattern to reset targets.
+
+        Args:
+        defining_byte (I3cTargetResetDefByte): The defining byte used for the RSTACT CCC.
+
+        Returns:
+        tuple: A tuple containing two elements:
+            - The first element is a Boolean indicating the success (True) or failure (False) of the operation.
+            - The second element is None if the operation was succesful, or an error message detailing the failure.
+        """
+        try:
+            responses = self.controller.sync_submit([
+                lambda id: self.driver.i3cBroadcastRSTACT(
+                    id,
+                    defining_byte,
+                    self.push_pull_clock_freq_mhz,
+                    self.push_pull_clock_freq_mhz,
+                )
+            ])
+        except Exception as e:
+            raise BackendError(original_exception=e) from e
+
+        return self._process_response("ccc_broadcast_rstact", responses)
 
     def ccc_getmxds(self, target_address):
         """
