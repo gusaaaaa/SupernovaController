@@ -21,7 +21,7 @@ setup(
     long_description=open('README.md').read(),
     long_description_content_type='text/markdown',
     author='Binho LLC',
-    author_email='support@binho.io',
+    author_email='techsupport@binho.io',
     url='https://github.com/binhollc/SupernovaController',
     license='Private',
     install_requires=[
