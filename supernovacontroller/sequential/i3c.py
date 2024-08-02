@@ -431,7 +431,7 @@ class SupernovaI3CBlockingInterface:
                 return None
             elif command_name == "ccc_direct_rstact":
                 return response["data"] if response["descriptor"] and response["descriptor"]["dataLength"] > 0 else None
-            elif command_name in ["ccc_unicast_setmrl", "ccc_unicast_setmwl", "ccc_broadcast_setmwl", "ccc_broadcast_setmrl"]:
+            elif command_name in ["ccc_unicast_setmrl", "ccc_unicast_setmwl", "ccc_broadcast_setmwl", "ccc_broadcast_setmrl", "ccc_rstdaa"]:
                 return response["data"]
             return None
 
@@ -854,16 +854,13 @@ class SupernovaI3CBlockingInterface:
 
         return self._process_response("ccc_getcaps", responses)
 
-    def ccc_rstdaa(self, target_address):
+    def ccc_rstdaa(self):
         """
         Performs a RSTDAA (Reset Dynamic Address Assignment) operation on a target device on the I3C bus.
 
         This method initiates a Reset Dynamic Address Assignment process on the specified target device.
         The operation's success status is checked, and it returns a tuple indicating whether the operation
         was successful along with the relevant data or error message.
-
-        Args:
-        target_address: The address of the target device on the I3C bus on which the RSTDAA process is initiated.
 
         Returns:
         tuple: A tuple containing two elements:
@@ -875,7 +872,6 @@ class SupernovaI3CBlockingInterface:
             responses = self.controller.sync_submit([
                 lambda id: self.driver.i3cRSTDAA(
                     id,
-                    target_address,
                     self.push_pull_clock_freq_mhz,
                     self.push_pull_clock_freq_mhz,
                 )
