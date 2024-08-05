@@ -474,7 +474,7 @@ class SupernovaI3CBlockingInterface:
                     target_address,
                     mode,
                     self.push_pull_clock_freq_mhz,
-                    self.push_pull_clock_freq_mhz,
+                    self.open_drain_clock_freq_mhz,
                     subaddress,
                     buffer,
                 )
@@ -512,7 +512,7 @@ class SupernovaI3CBlockingInterface:
                     target_address,
                     mode,
                     self.push_pull_clock_freq_mhz,
-                    self.push_pull_clock_freq_mhz,
+                    self.open_drain_clock_freq_mhz,
                     subaddress,
                     length,
                 )
@@ -529,7 +529,7 @@ class SupernovaI3CBlockingInterface:
                     id,
                     target_address,
                     self.push_pull_clock_freq_mhz,
-                    self.push_pull_clock_freq_mhz,
+                    self.open_drain_clock_freq_mhz,
                 )
             ])
         except Exception as e:
@@ -560,7 +560,7 @@ class SupernovaI3CBlockingInterface:
                     id,
                     target_address,
                     self.push_pull_clock_freq_mhz,
-                    self.push_pull_clock_freq_mhz,
+                    self.open_drain_clock_freq_mhz,
                 )
             ])
         except Exception as e:
@@ -591,7 +591,7 @@ class SupernovaI3CBlockingInterface:
                     id,
                     target_address,
                     self.push_pull_clock_freq_mhz,
-                    self.push_pull_clock_freq_mhz,
+                    self.open_drain_clock_freq_mhz,
                 )
             ])
         except Exception as e:
@@ -622,7 +622,7 @@ class SupernovaI3CBlockingInterface:
                     id,
                     target_address,
                     self.push_pull_clock_freq_mhz,
-                    self.push_pull_clock_freq_mhz,
+                    self.open_drain_clock_freq_mhz,
                 )
             ])
         except Exception as e:
@@ -662,7 +662,7 @@ class SupernovaI3CBlockingInterface:
                     defining_byte,
                     read_or_write_reset_action,
                     self.push_pull_clock_freq_mhz,
-                    self.push_pull_clock_freq_mhz,
+                    self.open_drain_clock_freq_mhz,
                 )
             ])
         except Exception as e:
@@ -691,7 +691,7 @@ class SupernovaI3CBlockingInterface:
                     id,
                     defining_byte,
                     self.push_pull_clock_freq_mhz,
-                    self.push_pull_clock_freq_mhz,
+                    self.open_drain_clock_freq_mhz,
                 )
             ])
         except Exception as e:
@@ -722,7 +722,7 @@ class SupernovaI3CBlockingInterface:
                     id,
                     target_address,
                     self.push_pull_clock_freq_mhz,
-                    self.push_pull_clock_freq_mhz,
+                    self.open_drain_clock_freq_mhz,
                 )
             ])
         except Exception as e:
@@ -753,7 +753,7 @@ class SupernovaI3CBlockingInterface:
                     id,
                     target_address,
                     self.push_pull_clock_freq_mhz,
-                    self.push_pull_clock_freq_mhz,
+                    self.open_drain_clock_freq_mhz,
                 )
             ])
         except Exception as e:
@@ -784,7 +784,7 @@ class SupernovaI3CBlockingInterface:
                     id,
                     target_address,
                     self.push_pull_clock_freq_mhz,
-                    self.push_pull_clock_freq_mhz,
+                    self.open_drain_clock_freq_mhz,
                 )
             ])
         except Exception as e:
@@ -815,7 +815,7 @@ class SupernovaI3CBlockingInterface:
                     id,
                     target_address,
                     self.push_pull_clock_freq_mhz,
-                    self.push_pull_clock_freq_mhz,
+                    self.open_drain_clock_freq_mhz,
                 )
             ])
         except Exception as e:
@@ -846,7 +846,7 @@ class SupernovaI3CBlockingInterface:
                     id,
                     target_address,
                     self.push_pull_clock_freq_mhz,
-                    self.push_pull_clock_freq_mhz,
+                    self.open_drain_clock_freq_mhz,
                 )
             ])
         except Exception as e:
@@ -877,7 +877,7 @@ class SupernovaI3CBlockingInterface:
                     id,
                     target_address,
                     self.push_pull_clock_freq_mhz,
-                    self.push_pull_clock_freq_mhz,
+                    self.open_drain_clock_freq_mhz,
                 )
             ])
         except Exception as e:
@@ -904,7 +904,7 @@ class SupernovaI3CBlockingInterface:
                 lambda id: self.driver.i3cBroadcastENEC(
                     id,
                     self.push_pull_clock_freq_mhz,
-                    self.push_pull_clock_freq_mhz,
+                    self.open_drain_clock_freq_mhz,
                 )
             ])
         except Exception as e:
@@ -932,7 +932,7 @@ class SupernovaI3CBlockingInterface:
                 lambda id: self.driver.i3cBroadcastDISEC(
                     id,
                     self.push_pull_clock_freq_mhz,
-                    self.push_pull_clock_freq_mhz,
+                    self.open_drain_clock_freq_mhz,
                 )
             ])
         except Exception as e:
@@ -964,7 +964,7 @@ class SupernovaI3CBlockingInterface:
                     id,
                     target_address,
                     self.push_pull_clock_freq_mhz,
-                    self.push_pull_clock_freq_mhz,
+                    self.open_drain_clock_freq_mhz,
                 )
             ])
         except Exception as e:
@@ -995,7 +995,7 @@ class SupernovaI3CBlockingInterface:
                     id,
                     target_address,
                     self.push_pull_clock_freq_mhz,
-                    self.push_pull_clock_freq_mhz,
+                    self.open_drain_clock_freq_mhz,
                 )
             ])
         except Exception as e:
@@ -1028,7 +1028,7 @@ class SupernovaI3CBlockingInterface:
                     static_address,
                     dynamic_address,
                     self.push_pull_clock_freq_mhz,
-                    self.push_pull_clock_freq_mhz,
+                    self.open_drain_clock_freq_mhz,
                 )
             ])
         except Exception as e:
@@ -1061,7 +1061,7 @@ class SupernovaI3CBlockingInterface:
                     current_address,
                     new_address,
                     self.push_pull_clock_freq_mhz,
-                    self.push_pull_clock_freq_mhz,
+                    self.open_drain_clock_freq_mhz,
                 )
             ])
         except Exception as e:
@@ -1092,7 +1092,7 @@ class SupernovaI3CBlockingInterface:
                     id,
                     target_address,
                     self.push_pull_clock_freq_mhz,
-                    self.push_pull_clock_freq_mhz,
+                    self.open_drain_clock_freq_mhz,
                 )
             ])
         except Exception as e:
@@ -1123,7 +1123,7 @@ class SupernovaI3CBlockingInterface:
                     id,
                     target_address,
                     self.push_pull_clock_freq_mhz,
-                    self.push_pull_clock_freq_mhz,
+                    self.open_drain_clock_freq_mhz,
                 )
             ])
         except Exception as e:
@@ -1155,7 +1155,7 @@ class SupernovaI3CBlockingInterface:
                     id,
                     target_address,
                     self.push_pull_clock_freq_mhz,
-                    self.push_pull_clock_freq_mhz,
+                    self.open_drain_clock_freq_mhz,
                     max_read_length,
                 )
             ])
@@ -1188,7 +1188,7 @@ class SupernovaI3CBlockingInterface:
                     id,
                     target_address,
                     self.push_pull_clock_freq_mhz,
-                    self.push_pull_clock_freq_mhz,
+                    self.open_drain_clock_freq_mhz,
                     max_write_length,
                 )
             ])
@@ -1219,7 +1219,7 @@ class SupernovaI3CBlockingInterface:
                 lambda id: self.driver.i3cBroadcastSETMWL(
                     id,
                     self.push_pull_clock_freq_mhz,
-                    self.push_pull_clock_freq_mhz,
+                    self.open_drain_clock_freq_mhz,
                     max_write_length,
                 )
             ])
@@ -1250,7 +1250,7 @@ class SupernovaI3CBlockingInterface:
                 lambda id: self.driver.i3cBroadcastSETMWL(
                     id,
                     self.push_pull_clock_freq_mhz,
-                    self.push_pull_clock_freq_mhz,
+                    self.open_drain_clock_freq_mhz,
                     max_read_length,
                 )
             ])
@@ -1278,7 +1278,7 @@ class SupernovaI3CBlockingInterface:
                 lambda id: self.driver.i3cSETAASA(
                     id,
                     self.push_pull_clock_freq_mhz,
-                    self.push_pull_clock_freq_mhz,
+                    self.open_drain_clock_freq_mhz,
                 )
             ])
         except Exception as e:
@@ -1305,7 +1305,7 @@ class SupernovaI3CBlockingInterface:
                 lambda id: self.driver.i3cBroadcastENDXFED(
                     id,
                     self.push_pull_clock_freq_mhz,
-                    self.push_pull_clock_freq_mhz,
+                    self.open_drain_clock_freq_mhz,
                 )
             ])
         except Exception as e:
@@ -1336,7 +1336,7 @@ class SupernovaI3CBlockingInterface:
                     id,
                     target_address,
                     self.push_pull_clock_freq_mhz,
-                    self.push_pull_clock_freq_mhz,
+                    self.open_drain_clock_freq_mhz,
                 )
             ])
         except Exception as e:
@@ -1367,7 +1367,7 @@ class SupernovaI3CBlockingInterface:
                     id,
                     timing_parameter,
                     self.push_pull_clock_freq_mhz,
-                    self.push_pull_clock_freq_mhz,
+                    self.open_drain_clock_freq_mhz,
                 )
             ])
         except Exception as e:
@@ -1402,7 +1402,7 @@ class SupernovaI3CBlockingInterface:
                 lambda id: self.driver.i3cBroadcastSETBUSCON(
                     id,
                     self.push_pull_clock_freq_mhz,
-                    self.push_pull_clock_freq_mhz,
+                    self.open_drain_clock_freq_mhz,
                     context,
                     data
                 )
@@ -1435,7 +1435,7 @@ class SupernovaI3CBlockingInterface:
                 lambda id: self.driver.i3cBroadcastENTAS0(
                     id,
                     self.push_pull_clock_freq_mhz,
-                    self.push_pull_clock_freq_mhz,
+                    self.open_drain_clock_freq_mhz,
                 )
             ])
         except Exception as e:
@@ -1460,7 +1460,7 @@ class SupernovaI3CBlockingInterface:
                 lambda id: self.driver.i3cBroadcastENTAS1(
                     id,
                     self.push_pull_clock_freq_mhz,
-                    self.push_pull_clock_freq_mhz,
+                    self.open_drain_clock_freq_mhz,
                 )
             ])
         except Exception as e:
@@ -1485,7 +1485,7 @@ class SupernovaI3CBlockingInterface:
                 lambda id: self.driver.i3cBroadcastENTAS2(
                     id,
                     self.push_pull_clock_freq_mhz,
-                    self.push_pull_clock_freq_mhz,
+                    self.open_drain_clock_freq_mhz,
                 )
             ])
         except Exception as e:
@@ -1510,7 +1510,7 @@ class SupernovaI3CBlockingInterface:
                 lambda id: self.driver.i3cBroadcastENTAS3(
                     id,
                     self.push_pull_clock_freq_mhz,
-                    self.push_pull_clock_freq_mhz,
+                    self.open_drain_clock_freq_mhz,
                 )
             ])
         except Exception as e:
