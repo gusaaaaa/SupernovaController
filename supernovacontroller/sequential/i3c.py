@@ -894,7 +894,12 @@ class SupernovaI3CBlockingInterface:
         was successful along with the relevant data or error message.
 
         Args:
-        events: A list containing events to be enabled.
+        events (list): A list of events to be enabled. Each element in the list must be an instance
+                   of the ENEC enum, which includes the following options:
+                   - ENEC.ENINT
+                   - ENEC.ENCR
+                   - ENEC.ENHJ
+                   For example: [ENEC.ENINT, ENEC.ENHJ]
 
         Returns:
         tuple: A tuple containing two elements:
@@ -926,7 +931,12 @@ class SupernovaI3CBlockingInterface:
         was successful along with the relevant data or error message.
 
         Args:
-        events: A list containing events to be disabled.
+        events (list): A list containing events to be disabled. Each element in the list must be an instance
+                   of the DISEC enum, which includes the following options:
+                   - DISEC.DISINT
+                   - DISEC.DISCR
+                   - DISEC.DISHJ
+                   For example: [DISEC.DISINT, DISEC.DISHJ]
 
         Returns:
         tuple: A tuple containing two elements:
@@ -959,7 +969,12 @@ class SupernovaI3CBlockingInterface:
 
         Args:
         target_address: The address of the target device on the I3C bus to which the ENEC command is directed.
-        events: A list containing events to be enabled.
+        events (list): A list of events to be enabled. Each element in the list must be an instance
+                   of the ENEC enum, which includes the following options:
+                   - ENEC.ENINT
+                   - ENEC.ENCR
+                   - ENEC.ENHJ
+                   For example: [ENEC.ENINT, ENEC.ENHJ]
 
         Returns:
         tuple: A tuple containing two elements:
@@ -992,7 +1007,12 @@ class SupernovaI3CBlockingInterface:
 
         Args:
         target_address: The address of the target device on the I3C bus to which the DISEC command is directed.
-        events: A list containing events to be disabled.
+        events (list): A list containing events to be disabled. Each element in the list must be an instance
+                   of the DISEC enum, which includes the following options:
+                   - DISEC.DISINT
+                   - DISEC.DISCR
+                   - DISEC.DISHJ
+                   For example: [DISEC.DISINT, DISEC.DISHJ]
 
         Returns:
         tuple: A tuple containing two elements:
