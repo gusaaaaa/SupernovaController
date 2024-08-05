@@ -458,7 +458,7 @@ class TestSupernovaController(unittest.TestCase):
 
         (success, result) = i3c.ccc_rstdaa()
 
-        self.assertTupleEqual((success, result), (True, [0]))
+        self.assertTupleEqual((success, result), (True, None))
 
         (success, result) = i3c.ccc_getpid(0x08)
 
