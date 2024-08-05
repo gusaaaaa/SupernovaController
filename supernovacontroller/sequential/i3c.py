@@ -917,7 +917,7 @@ class SupernovaI3CBlockingInterface:
         # Note: The command name 'ccc_broadcast_ENEC' should be handled appropriately in _process_response
         return self._process_response("ccc_broadcast_enec", responses)
 
-    def ccc_broadcast_disec(self, events):
+    def ccc_broadcast_disec(self, events: list):
         """
         Performs a broadcast DISEC (Disable Events Command) operation on the I3C bus.
 
@@ -949,7 +949,7 @@ class SupernovaI3CBlockingInterface:
         # Note: The command name 'ccc_broadcast_DISEC' should be handled appropriately in _process_response
         return self._process_response("ccc_broadcast_disec", responses)
 
-    def ccc_unicast_enec(self, target_address, events):
+    def ccc_unicast_enec(self, target_address, events: list):
         """
         Performs a unicast ENEC (Enable Events Command) operation on a specific target device on the I3C bus.
 
@@ -982,7 +982,7 @@ class SupernovaI3CBlockingInterface:
 
         return self._process_response("ccc_unicast_enec", responses)
 
-    def ccc_unicast_disec(self, target_address, events):
+    def ccc_unicast_disec(self, target_address, events: list):
         """
         Performs a unicast DISEC (Disable Events Command) operation on a specific target device on the I3C bus.
 
