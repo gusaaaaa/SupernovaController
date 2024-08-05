@@ -427,11 +427,11 @@ class SupernovaI3CBlockingInterface:
                 return response["maxWriteLength"]
             elif command_name == "ccc_get_status":
                 return response["data"]
-            elif command_name == "ccc_setnewda":
+            elif command_name in ["ccc_setnewda", "ccc_rstdaa"]:
                 return None
             elif command_name == "ccc_direct_rstact":
                 return response["data"] if response["descriptor"] and response["descriptor"]["dataLength"] > 0 else None
-            elif command_name in ["ccc_unicast_setmrl", "ccc_unicast_setmwl", "ccc_broadcast_setmwl", "ccc_broadcast_setmrl", "ccc_rstdaa"]:
+            elif command_name in ["ccc_unicast_setmrl", "ccc_unicast_setmwl", "ccc_broadcast_setmwl", "ccc_broadcast_setmrl"]:
                 return response["data"]
             return None
 
