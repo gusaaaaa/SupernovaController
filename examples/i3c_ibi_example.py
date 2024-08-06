@@ -74,7 +74,7 @@ def main():
 
     device.on_notification(name="ibi", filter_func=is_ibi, handler_func=handle_ibi)
 
-    # Supernova SDK offers 3 ways of disabling IBIs:
+    # Supernova Controller SDK offers 3 ways of disabling IBIs:
     # - toggle_ibi method
     # - Direct DISEC CCC
     # - Broadcast DISEC CCC
@@ -101,7 +101,7 @@ def main():
     i3c.write(target_address, i3c.TransferMode.I3C_SDR, [0x76], [0x00])
     i3c.write(target_address, i3c.TransferMode.I3C_SDR, [0x4E], [0x02])
 
-    # Supernova SDK offers 3 ways of enabling IBIs:
+    # Supernova Controller SDK offers 3 ways of enabling IBIs:
     # - toggle_ibi method
     # - Direct ENEC CCC
     # - Broadcast ENEC CCC
