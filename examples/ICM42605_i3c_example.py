@@ -43,8 +43,8 @@ def main():
     Gscale = 0x03 # 250 dps full scale
     aRes = 2.0 / 32768.0 # 2 g full scale
     gRes = 250.0 / 32768.0 # 250 dps full scale
-    AODR = 0x06 #AODR_1000Hz
-    GODR = 0x06 #GODR_1000Hz
+    AODR = 0x0A #AODR_25Hz
+    GODR = 0x0A #GODR_25Hz
 
     # Initialize Sensor
 
@@ -172,7 +172,7 @@ def main():
     accel_data = []
     gyro_data = []
     # Read and plot IMU Data for 30 seconds
-    while True and time.time() < start_time + 30:
+    while True and time.time() < start_time + 10:
         # Read data
         imuData = readIMUData()
 
