@@ -446,6 +446,26 @@ class TestSupernovaController(unittest.TestCase):
 
         self.device.close()
 
+    def test_ccc_rstdaa(self):
+        if self.use_simulator:
+            self.skipTest("For real device only")
+
+        self.device.open()
+
+        i3c = self.device.create_interface("i3c.controller")
+
+        i3c.init_bus(3300)
+
+        (success, result) = i3c.ccc_rstdaa()
+
+        self.assertTupleEqual((success, result), (True, None))
+
+        (success, result) = i3c.ccc_getpid(0x08)
+
+        self.assertTupleEqual((success, result), (False, "NACK_ERROR"))
+
+        self.device.close()
+
     def test_spi_controller_set_bus_voltage(self):
         self.device.open()
 
