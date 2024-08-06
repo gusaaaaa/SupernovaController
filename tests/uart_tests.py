@@ -23,7 +23,7 @@ class TestSupernovaControllerUART(unittest.TestCase):
         based on the "USE_REAL_DEVICE" environment variable. Default is to use the simulator.
         """
         # NOTE: These tests only work for the real device until BMC2-1512 is solved
-        cls.use_simulator = False
+        cls.use_simulator = not os.getenv("USE_REAL_DEVICE", "False") == "True"
 
     def setUp(self):
         self.device = SupernovaDevice()
