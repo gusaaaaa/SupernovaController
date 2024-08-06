@@ -223,7 +223,7 @@ In an I3C bus, the Supernova can act either as a controller or as a target.
     Sets the PID of the Supernova acting as an I3C target via USB:
 
     ```python
-   success, error = device.set_pid([0x02, 0x03, 0x04, 0x05, 0x06, 0x07])
+   success, error = i3c_target.set_pid([0x02, 0x03, 0x04, 0x05, 0x06, 0x07])
    ```
 
 3. ***Set BCR:***
@@ -231,7 +231,7 @@ In an I3C bus, the Supernova can act either as a controller or as a target.
     Sets the BCR of the Supernova acting as an I3C target via USB:
 
     ```python
-   success, error = device.set_bcr(I3cTargetMaxDataSpeedLimit_t.MAX_DATA_SPEED_LIMIT, I3cTargetIbiCapable_t.NOT_IBI_CAPABLE, 
+   success, error = i3c_target.set_bcr(I3cTargetMaxDataSpeedLimit_t.MAX_DATA_SPEED_LIMIT, I3cTargetIbiCapable_t.NOT_IBI_CAPABLE, 
                                 I3cTargetIbiPayload_t.IBI_WITH_PAYLOAD, I3cTargetOfflineCap_t.OFFLINE_CAPABLE, 
                                 I3cTargetVirtSupport_t.VIRTUAL_TARGET_SUPPORT, I3cTargetDeviceRole_t.I3C_TARGET)
    ```
@@ -244,7 +244,7 @@ In an I3C bus, the Supernova can act either as a controller or as a target.
     Sets the DCR of the Supernova acting as an I3C target via USB:
 
     ```python
-   success, error = device.set_dcr(I3cTargetDcr_t.I3C_TARGET_MEMORY)
+   success, error = i3c_target.set_dcr(I3cTargetDcr_t.I3C_TARGET_MEMORY)
    ```
 
     The input parameter (of I3cTargetDcr_t) indicates the type of device the Supernova represents, which determines the [DCR value as defined by the MIPI alliance](https://www.mipi.org/hubfs/I3C-Public-Tables/MIPI-I3C-v1-1-Current-DCR-Table.pdf). For this case `I3cTargetDcr_t` can take the values `I3C_SECONDARY_CONTROLLER`, `I3C_TARGET_MEMORY` and `I3C_TARGET_MICROCONTROLLER`. 
@@ -254,7 +254,7 @@ In an I3C bus, the Supernova can act either as a controller or as a target.
     Sets the static address of the Supernova acting as an I3C target via USB:
 
     ```python
-   success, error = device.set_static_address(0x73)
+   success, error = i3c_target.set_static_address(0x73)
    ```
 
 6. ***Set Supernova configuration:***
@@ -278,7 +278,7 @@ In an I3C bus, the Supernova can act either as a controller or as a target.
     Writes the internal memory of the Supernova via USB:
 
     ```python
-   success, error = device.write_memory(0x010A, [0xFF for i in range(0,10)])
+   success, error = i3c_target.write_memory(0x010A, [0xFF for i in range(0,10)])
    ```
     
 8. ***Read memory:***
@@ -286,7 +286,7 @@ In an I3C bus, the Supernova can act either as a controller or as a target.
     Retrieves data from the Supernova internal memory via USB:
 
     ```python
-   success, data = device.read_memory(0x0000, 255)
+   success, data = i3c_target.read_memory(0x0000, 255)
    ```
     
 ***Target Notification:***
