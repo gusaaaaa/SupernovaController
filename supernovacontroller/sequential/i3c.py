@@ -881,13 +881,21 @@ class SupernovaI3CBlockingInterface:
 
         return self._process_response("ccc_rstdaa", responses)
 
-    def ccc_broadcast_enec(self):
+    def ccc_broadcast_enec(self, events: list):
         """
         Performs a broadcast ENEC (Enable Events Command) operation on the I3C bus.
 
         This method sends a broadcast command to enable events on all devices on the I3C bus.
         The operation's success status is checked, and it returns a tuple indicating whether the operation
         was successful along with the relevant data or error message.
+
+        Args:
+        events (list): A list of events to be enabled. Each element in the list must be an instance
+                   of the ENEC enum, which includes the following options:
+                   - ENEC.ENINT
+                   - ENEC.ENCR
+                   - ENEC.ENHJ
+                   For example: [ENEC.ENINT, ENEC.ENHJ]
 
         Returns:
         tuple: A tuple containing two elements:
@@ -901,6 +909,7 @@ class SupernovaI3CBlockingInterface:
                     id,
                     self.push_pull_clock_freq_mhz,
                     self.open_drain_clock_freq_mhz,
+                    events
                 )
             ])
         except Exception as e:
@@ -909,13 +918,21 @@ class SupernovaI3CBlockingInterface:
         # Note: The command name 'ccc_broadcast_ENEC' should be handled appropriately in _process_response
         return self._process_response("ccc_broadcast_enec", responses)
 
-    def ccc_broadcast_disec(self):
+    def ccc_broadcast_disec(self, events: list):
         """
         Performs a broadcast DISEC (Disable Events Command) operation on the I3C bus.
 
         This method sends a broadcast command to disable events on all devices on the I3C bus.
         The operation's success status is checked, and it returns a tuple indicating whether the operation
         was successful along with the relevant data or error message.
+
+        Args:
+        events (list): A list containing events to be disabled. Each element in the list must be an instance
+                   of the DISEC enum, which includes the following options:
+                   - DISEC.DISINT
+                   - DISEC.DISCR
+                   - DISEC.DISHJ
+                   For example: [DISEC.DISINT, DISEC.DISHJ]
 
         Returns:
         tuple: A tuple containing two elements:
@@ -929,6 +946,7 @@ class SupernovaI3CBlockingInterface:
                     id,
                     self.push_pull_clock_freq_mhz,
                     self.open_drain_clock_freq_mhz,
+                    events
                 )
             ])
         except Exception as e:
@@ -937,7 +955,7 @@ class SupernovaI3CBlockingInterface:
         # Note: The command name 'ccc_broadcast_DISEC' should be handled appropriately in _process_response
         return self._process_response("ccc_broadcast_disec", responses)
 
-    def ccc_unicast_enec(self, target_address):
+    def ccc_unicast_enec(self, target_address, events: list):
         """
         Performs a unicast ENEC (Enable Events Command) operation on a specific target device on the I3C bus.
 
@@ -947,6 +965,12 @@ class SupernovaI3CBlockingInterface:
 
         Args:
         target_address: The address of the target device on the I3C bus to which the ENEC command is directed.
+        events (list): A list of events to be enabled. Each element in the list must be an instance
+                   of the ENEC enum, which includes the following options:
+                   - ENEC.ENINT
+                   - ENEC.ENCR
+                   - ENEC.ENHJ
+                   For example: [ENEC.ENINT, ENEC.ENHJ]
 
         Returns:
         tuple: A tuple containing two elements:
@@ -961,6 +985,7 @@ class SupernovaI3CBlockingInterface:
                     target_address,
                     self.push_pull_clock_freq_mhz,
                     self.open_drain_clock_freq_mhz,
+                    events
                 )
             ])
         except Exception as e:
@@ -968,7 +993,7 @@ class SupernovaI3CBlockingInterface:
 
         return self._process_response("ccc_unicast_enec", responses)
 
-    def ccc_unicast_disec(self, target_address):
+    def ccc_unicast_disec(self, target_address, events: list):
         """
         Performs a unicast DISEC (Disable Events Command) operation on a specific target device on the I3C bus.
 
@@ -978,6 +1003,12 @@ class SupernovaI3CBlockingInterface:
 
         Args:
         target_address: The address of the target device on the I3C bus to which the DISEC command is directed.
+        events (list): A list containing events to be disabled. Each element in the list must be an instance
+                   of the DISEC enum, which includes the following options:
+                   - DISEC.DISINT
+                   - DISEC.DISCR
+                   - DISEC.DISHJ
+                   For example: [DISEC.DISINT, DISEC.DISHJ]
 
         Returns:
         tuple: A tuple containing two elements:
@@ -992,6 +1023,7 @@ class SupernovaI3CBlockingInterface:
                     target_address,
                     self.push_pull_clock_freq_mhz,
                     self.open_drain_clock_freq_mhz,
+                    events
                 )
             ])
         except Exception as e:
