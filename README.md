@@ -39,7 +39,7 @@ To install the SupernovaController package, follow these steps:
      ```sh
      pip install --upgrade pip
      ```
-   - For any other issues or support, please contact [support@binho.io](mailto:support@binho.io).
+   - For any other issues or support, please contact [techsupport@binho.io](mailto:techsupport@binho.io).
 
 ## Getting started
 
@@ -829,7 +829,7 @@ SupernovaController is licensed under a Proprietary License. See the [LICENSE](L
 For any inquiries, support requests, or contributions regarding the `SupernovaController` package, please contact us:
 
 - **Organization:** Binho LLC
-- **Email:** [support@binho.io](mailto:support@binho.io)
+- **Email:** [techsupport@binho.io](mailto:techsupport@binho.io)
 
 We welcome feedback and we are happy to provide assistance with any issues you may encounter.
 
