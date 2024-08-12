@@ -56,11 +56,12 @@ class SupernovaGPIOInterface:
 
         response_success = responses[0]["name"] == expected_command_name and responses[0]["result"] == 0
 
-        if response_success:
-            self.pins_voltage = voltage_mv
-            return (True, voltage_mv)
-        else:
+        if not response_success:
             return (False, "Set pins voltage failed")
+
+        self.pins_voltage = voltage_mv
+
+        return (True, voltage_mv)
 
     def __check_if_response_is_successful(self, response):
         """
@@ -107,9 +108,12 @@ class SupernovaGPIOInterface:
 
         response_success = responses[0]["name"] == "CONFIGURE GPIO PIN" and self.__check_if_response_is_successful(responses[0])
 
-        if response_success:
-            self.configured_pins[pin_number] = functionality
-        return (response_success, None if response_success else "Configuration failed, error from the Supernova")
+        if not response_success:
+            return (False, "Configuration failed, error from the Supernova")
+
+        self.configured_pins[pin_number] = functionality
+
+        return (True, None)
 
     def digital_write(self, pin_number: GpioPinNumber, logic_level: GpioLogicLevel):
         """
@@ -133,7 +137,11 @@ class SupernovaGPIOInterface:
             raise BackendError(original_exception=e) from e
 
         response_success = responses[0]["name"] == "GPIO DIGITAL WRITE" and self.__check_if_response_is_successful(responses[0])
-        return (response_success, None if response_success else "Digital write failed, error from the Supernova")
+
+        if not response_success:
+            return (False, "Digital write failed, error from the Supernova")
+
+        return (True, None)
 
     def digital_read(self, pin_number: GpioPinNumber):
         """
@@ -156,9 +164,11 @@ class SupernovaGPIOInterface:
             raise BackendError(original_exception=e) from e
 
         response_success = responses[0]["name"] == "GPIO DIGITAL READ" and self.__check_if_response_is_successful(responses[0])
-        if response_success:
-            return (True, responses[0]["logic_level"])
-        return (False, "Digital read failed, error from the Supernova")
+
+        if not response_success:
+            return (False, "Digital read failed, error from the Supernova")
+
+        return (True, responses[0]["logic_level"])
 
     def set_interrupt(self, pin_number: GpioPinNumber, trigger: GpioTriggerType):
         """
@@ -173,7 +183,7 @@ class SupernovaGPIOInterface:
             - The first element is a Boolean indicating the success (True) or failure (False) of setting the interrupt.
             - The second element is a string describing the result of setting the interrupt.
 
-        Note: 
+        Note:
         -  In hardware revision B, all pins support GPIO interruption except for pin 3.
         """
         responses = None
@@ -185,7 +195,11 @@ class SupernovaGPIOInterface:
             raise BackendError(original_exception=e) from e
 
         response_success = responses[0]["name"] == "GPIO SET INTERRUPT" and self.__check_if_response_is_successful(responses[0])
-        return (response_success, None if response_success else "Set interrupt failed, error from the Supernova")
+
+        if not response_success:
+            return (False, "Set interrupt failed, error from the Supernova")
+
+        return (True, None)
 
     def disable_interrupt(self, pin_number: GpioPinNumber):
         """
@@ -208,4 +222,8 @@ class SupernovaGPIOInterface:
             raise BackendError(original_exception=e) from e
 
         response_success = responses[0]["name"] == "GPIO DISABLE INTERRUPT" and self.__check_if_response_is_successful(responses[0])
-        return (response_success, None if response_success else "Disable interrupt failed, error from the Supernova")
+
+        if not response_success:
+            return (False, "Disable interrupt failed, error from the Supernova")
+
+        return (True, None)
