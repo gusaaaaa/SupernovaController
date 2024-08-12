@@ -109,7 +109,7 @@ class SupernovaGPIOInterface:
 
         if response_success:
             self.configured_pins[pin_number] = functionality
-        return (response_success, "Success" if response_success else "Configuration failed, error from the Supernova")
+        return (response_success, None if response_success else "Configuration failed, error from the Supernova")
 
     def digital_write(self, pin_number: GpioPinNumber, logic_level: GpioLogicLevel):
         """
@@ -133,7 +133,7 @@ class SupernovaGPIOInterface:
             raise BackendError(original_exception=e) from e
 
         response_success = responses[0]["name"] == "GPIO DIGITAL WRITE" and self.__check_if_response_is_successful(responses[0])
-        return (response_success, "Success" if response_success else "Digital write failed, error from the Supernova")
+        return (response_success, None if response_success else "Digital write failed, error from the Supernova")
 
     def digital_read(self, pin_number: GpioPinNumber):
         """
@@ -185,7 +185,7 @@ class SupernovaGPIOInterface:
             raise BackendError(original_exception=e) from e
 
         response_success = responses[0]["name"] == "GPIO SET INTERRUPT" and self.__check_if_response_is_successful(responses[0])
-        return (response_success, "Success" if response_success else "Set interrupt failed, error from the Supernova")
+        return (response_success, None if response_success else "Set interrupt failed, error from the Supernova")
 
     def disable_interrupt(self, pin_number: GpioPinNumber):
         """
@@ -208,4 +208,4 @@ class SupernovaGPIOInterface:
             raise BackendError(original_exception=e) from e
 
         response_success = responses[0]["name"] == "GPIO DISABLE INTERRUPT" and self.__check_if_response_is_successful(responses[0])
-        return (response_success, "Success" if response_success else "Disable interrupt failed, error from the Supernova")
+        return (response_success, None if response_success else "Disable interrupt failed, error from the Supernova")

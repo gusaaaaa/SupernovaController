@@ -593,12 +593,10 @@ class TestSupernovaController(unittest.TestCase):
         gpio = self.device.create_interface("gpio")
         
         (success, result) = gpio.configure_pin(GpioPinNumber.GPIO_6, GpioFunctionality.DIGITAL_OUTPUT)
-        self.assertEqual(success, True)
-        self.assertEqual(result, "Success")
+        self.assertTupleEqual((success, result), (True, None))
         
         (success, result) = gpio.configure_pin(GpioPinNumber.GPIO_5, GpioFunctionality.DIGITAL_INPUT)
-        self.assertEqual(success, True)
-        self.assertEqual(result, "Success")
+        self.assertTupleEqual((success, result), (True, None))
         
         self.device.close()
 
@@ -639,12 +637,10 @@ class TestSupernovaController(unittest.TestCase):
         gpio.configure_pin(GpioPinNumber.GPIO_5, GpioFunctionality.DIGITAL_INPUT)
         
         (success, result) = gpio.set_interrupt(GpioPinNumber.GPIO_5, GpioTriggerType.TRIGGER_BOTH_EDGES)
-        self.assertEqual(success, True)
-        self.assertEqual(result, "Success")
+        self.assertTupleEqual((success, result), (True, None))
         
         (success, result) = gpio.disable_interrupt(GpioPinNumber.GPIO_5)
-        self.assertEqual(success, True)
-        self.assertEqual(result, "Success")
+        self.assertTupleEqual((success, result), (True, None))
         
         self.device.close()
 
