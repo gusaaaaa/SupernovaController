@@ -653,13 +653,26 @@ This section describes how to get you started with the `SupernovaController` foc
 
 6. ***Handle interruptions:***
 
+    To manage GPIO notifications, we have to pass to the `on_notification()` method these functions:
+     - Filter function: it checks if the notification is a GPIO interrupt.
+     - Handler function: it processes the interruption, setting the gpio interruption event.
+
     The following code snippet illustrates a non-concurrent way of handling GPIO interruptions:
 
     ```python
     from threading import Event
-    from BinhoSupernova.commands.definitions import GpioLogicLevel
 
+    # Defines gpio interruption event
     gpio_interrupt_event = Event()
+
+    # Defines filter and handler functions to be passed to the on_notification() method
+    def is_gpio_interrupt(name, message):
+        return message['name'].strip() == "GPIO INTERRUPTION"
+    
+    def handle_gpio_interrupt(name, message):
+        gpio_interrupt_event.set()
+
+    device.on_notification(name="GPIO INTERRUPTION", filter_func=is_gpio_interrupt, handler_func=handle_gpio_interrupt)
 
     # Asumes pin 6 initially at LOW level and pins 5 and 6 are connected to each other
     for level in [GpioLogicLevel.HIGH, GpioLogicLevel.LOW, GpioLogicLevel.HIGH, GpioLogicLevel.LOW]:
