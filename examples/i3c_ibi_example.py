@@ -1,5 +1,6 @@
 from supernovacontroller.sequential import SupernovaDevice
 from threading import Event
+from BinhoSupernova.commands.definitions import (ENEC, DISEC)
 
 counter = 0
 last_ibi = Event()
@@ -73,7 +74,14 @@ def main():
 
     device.on_notification(name="ibi", filter_func=is_ibi, handler_func=handle_ibi)
 
-    i3c.toggle_ibi(target_address, False)
+    # Supernova Controller SDK offers 3 ways of disabling IBIs:
+    # - toggle_ibi method
+    # - Direct DISEC CCC
+    # - Broadcast DISEC CCC
+    # 
+    #i3c.toggle_ibi(target_address, False)
+    #i3c.ccc_unicast_disec(target_address, [DISEC.DISINT])
+    i3c.ccc_broadcast_disec([DISEC.DISINT])
 
     # Setup IBIs on ICM device
     # Change this part if you are using another target with its procedure to start IBIs
@@ -93,9 +101,20 @@ def main():
     i3c.write(target_address, i3c.TransferMode.I3C_SDR, [0x76], [0x00])
     i3c.write(target_address, i3c.TransferMode.I3C_SDR, [0x4E], [0x02])
 
-    i3c.toggle_ibi(target_address, True)
+    # Supernova Controller SDK offers 3 ways of enabling IBIs:
+    # - toggle_ibi method
+    # - Direct ENEC CCC
+    # - Broadcast ENEC CCC
+    # 
+    #i3c.toggle_ibi(target_address, True)
+    #i3c.ccc_unicast_enec(target_address, [ENEC.ENINT])
+    i3c.ccc_broadcast_enec([ENEC.ENINT])
 
     last_ibi.wait()
+
+    #i3c.toggle_ibi(target_address, False)
+    #i3c.ccc_unicast_disec(target_address, [DISEC.DISINT])
+    i3c.ccc_broadcast_disec([DISEC.DISINT])
 
     device.close()
 

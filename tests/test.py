@@ -13,7 +13,8 @@ from supernovacontroller.errors import UnknownInterfaceError
 from supernovacontroller.errors import BackendError
 from BinhoSupernova.commands.definitions import (
     SpiControllerBitOrder, SpiControllerMode, SpiControllerDataWidth,
-    SpiControllerChipSelect, SpiControllerChipSelectPolarity)
+    SpiControllerChipSelect, SpiControllerChipSelectPolarity,
+    GpioPinNumber, GpioLogicLevel, GpioFunctionality, GpioTriggerType)
 from BinhoSupernova.Supernova import I3cTargetResetDefByte
 from BinhoSupernova.Supernova import TransferDirection
 
@@ -31,58 +32,51 @@ class TestSupernovaController(unittest.TestCase):
 
     def setUp(self):
         self.device = SupernovaDevice()
+
         if self.use_simulator:
             self.device.driver = BinhoSupernovaSimulator()
 
+        self.device_info = self.device.open()
+
+    def tearDown(self):
+        self.device.close()
+
     def test_open_device_with_wrong_address(self):
+        d = SupernovaDevice()
+
         with self.assertRaises(DeviceOpenError):
-            self.device.open("whatever")
+            d.open("whatever")
 
     def test_open_device_and_close(self):
-        info = self.device.open()
-
-        self.assertRegex(info["hw_version"], r"^[A-Za-z0-9]$", "Invalid hw_version format")
-        self.assertRegex(info["fw_version"], r"^\d+\.\d+\.\d+$", "Invalid fw_version format")
-        self.assertRegex(info["serial_number"], r"^[A-Fa-f0-9]+$", "Invalid serial_number format")
-        self.assertEqual(info["manufacturer"], "Binho LLC", "Invalid manufacturer string")
-        self.assertEqual(info["product_name"], "Binho Supernova", "Invalid product name")
-
-        self.device.close()
+        self.assertRegex(self.device_info["hw_version"], r"^[A-Za-z0-9]$", "Invalid hw_version format")
+        self.assertRegex(self.device_info["fw_version"], r"^\d+\.\d+\.\d+$", "Invalid fw_version format")
+        self.assertRegex(self.device_info["serial_number"], r"^[A-Fa-f0-9]+$", "Invalid serial_number format")
+        self.assertEqual(self.device_info["manufacturer"], "Binho LLC", "Invalid manufacturer string")
+        self.assertEqual(self.device_info["product_name"], "Binho Supernova", "Invalid product name")
 
     def test_open_device_more_than_once(self):
         if not self.use_simulator:
             self.skipTest("For simulator only")
 
-        self.device.open()
-
         with self.assertRaises(DeviceAlreadyMountedError):
             self.device.open()
 
     def test_create_interface_before_open_throws_error(self):
+        d = SupernovaDevice()
         with self.assertRaises(DeviceNotMountedError):
-            self.device.create_interface("i3c.controller")
+            d.create_interface("i3c.controller")
 
     def test_subsequent_calls_to_create_interface_retrieve_the_same_instance(self):
-        self.device.open()
-
         instance_1 = self.device.create_interface("i3c.controller")
         instance_2 = self.device.create_interface("i3c.controller")
 
         self.assertEqual(instance_1, instance_2)
 
-        self.device.close()
-
     def test_create_interface_wrong_name(self):
-        self.device.open()
-
         with self.assertRaises(UnknownInterfaceError):
             self.device.create_interface("foo")
 
-        self.device.close()
-
     def test_i2c_set_parameters(self):
-        self.device.open()
-
         i2c = self.device.create_interface("i2c")
 
         (success, result) = i2c.set_parameters(500000)
@@ -90,22 +84,14 @@ class TestSupernovaController(unittest.TestCase):
         self.assertEqual(success, True)
         self.assertEqual(result, (500000))
 
-        self.device.close()
-
     def test_i2c_should_not_throw_error_if_bus_voltage_is_not_set(self):
-        self.device.open()
-
         i2c = self.device.create_interface("i2c")
 
         (success, _) = i2c.read_from(0x50, [0x00,0x00], 4)
 
         self.assertEqual(success, True)
 
-        self.device.close()
-
     def test_i2c_set_bus_voltage_or_init_bus_are_equivalent(self):
-        self.device.open()
-
         i2c = self.device.create_interface("i2c")
 
         i2c.set_bus_voltage(3300)
@@ -116,11 +102,7 @@ class TestSupernovaController(unittest.TestCase):
         except Exception as e:
             self.fail(f"I2C read raised an exception {e}")
 
-        self.device.close()
-
     def test_i2c_write(self):
-        self.device.open()
-
         i2c = self.device.create_interface("i2c")
 
         i2c.init_bus(3300)
@@ -130,11 +112,7 @@ class TestSupernovaController(unittest.TestCase):
         self.assertEqual(success, True)
         self.assertEqual(result, None)
 
-        self.device.close()
-
     def test_i2c_write_read_from(self):
-        self.device.open()
-
         i2c = self.device.create_interface("i2c")
 
         i2c.init_bus(3300)
@@ -146,11 +124,7 @@ class TestSupernovaController(unittest.TestCase):
         self.assertEqual(success, True)
         self.assertEqual(data, [0xDE, 0xAD, 0xBE, 0xEF])
 
-        self.device.close()
-
     def test_i2c_write_continuous_read(self):
-        self.device.open()
-
         i2c = self.device.create_interface("i2c")
 
         i2c.init_bus(3300)
@@ -167,11 +141,7 @@ class TestSupernovaController(unittest.TestCase):
         self.assertEqual(b, [0x02])
         self.assertEqual(cd, [0x03, 0x04])
 
-        self.device.close()
-
     def test_set_i3c_bus_voltage_attribute(self):
-        self.device.open()
-
         i3c = self.device.create_interface("i3c.controller")
 
         (success, result) = i3c.set_bus_voltage(3300)
@@ -179,11 +149,7 @@ class TestSupernovaController(unittest.TestCase):
         self.assertTupleEqual((success, result), (True, 3300))
         self.assertEqual(i3c.bus_voltage, 3300)
 
-        self.device.close()
-
     def test_set_i3c_frequencies(self):
-        self.device.open()
-
         i3c = self.device.create_interface("i3c.controller")
 
         (success, result) = i3c.set_parameters(
@@ -193,24 +159,16 @@ class TestSupernovaController(unittest.TestCase):
 
         self.assertEqual((success, result), (True, (i3c.I3cPushPullTransferRate.PUSH_PULL_3_75_MHZ, i3c.I3cOpenDrainTransferRate.OPEN_DRAIN_100_KHZ)))
 
-        self.device.close()
-
     def test_i3c_frequencies_should_take_default_values_if_not_set(self):
-        self.device.open()
-
         i3c = self.device.create_interface("i3c.controller")
 
         (success, result) = i3c.get_parameters()
 
         self.assertEqual((success, result), (True, (i3c.I3cPushPullTransferRate.PUSH_PULL_3_75_MHZ, i3c.I3cOpenDrainTransferRate.OPEN_DRAIN_100_KHZ)))
 
-        self.device.close()
-
     def test_set_i3c_bus_voltage_attribute_error(self):
         if not self.use_simulator:
             self.skipTest("For simulator only")
-
-        self.device.open()
 
         i3c = self.device.create_interface("i3c.controller")
 
@@ -227,15 +185,11 @@ class TestSupernovaController(unittest.TestCase):
             self.assertTupleEqual((success, result), (False, "Set bus voltage failed"))
             self.assertEqual(i3c.bus_voltage, None)
 
-        self.device.close()
-
     def test_i3c_init_bus_with_no_targets_connected(self):
         # This test assumes that the are no devices connected to the bus.
 
         if self.use_simulator:
             self.skipTest("For real device only")
-
-        self.device.open()
 
         i3c = self.device.create_interface("i3c.controller")
 
@@ -244,13 +198,9 @@ class TestSupernovaController(unittest.TestCase):
         self.assertEqual(success, False)
         self.assertTrue("errors" in result)
 
-        self.device.close()
-
     def test_i3c_reset_bus(self):
         if not self.use_simulator:
             self.skipTest("For simulator only")
-
-        self.device.open()
 
         i3c = self.device.create_interface("i3c.controller")
 
@@ -259,13 +209,9 @@ class TestSupernovaController(unittest.TestCase):
 
         self.assertTupleEqual((success, result), (True, 2000))
 
-        self.device.close()
-
     def test_i3c_reset_bus_before_init(self):
         if not self.use_simulator:
             self.skipTest("For simulator only")
-
-        self.device.open()
 
         i3c = self.device.create_interface("i3c.controller")
 
@@ -273,13 +219,9 @@ class TestSupernovaController(unittest.TestCase):
 
         self.assertEqual(success, True)
 
-        self.device.close()
-
     def test_i3c_targets(self):
         if not self.use_simulator:
             self.skipTest("For simulator only")
-
-        self.device.open()
 
         i3c = self.device.create_interface("i3c.controller")
 
@@ -310,14 +252,9 @@ class TestSupernovaController(unittest.TestCase):
             "pid": ["0x06", "0x06", "0x06", "0x06", "0x66", "0x66"],
         })
 
-
-        self.device.close()
-
     def test_i3c_targets_when_bus_not_initialized(self):
         if not self.use_simulator:
             self.skipTest("For simulator only")
-
-        self.device.open()
 
         i3c = self.device.create_interface("i3c.controller")
 
@@ -325,13 +262,9 @@ class TestSupernovaController(unittest.TestCase):
 
         self.assertTupleEqual((success, targets), (True, []))
 
-        self.device.close()
-
     def test_i3c_write_operation_when_bus_not_initialized(self):
         if not self.use_simulator:
             self.skipTest("For simulator only")
-
-        self.device.open()
 
         i3c = self.device.create_interface("i3c.controller")
 
@@ -344,13 +277,9 @@ class TestSupernovaController(unittest.TestCase):
 
         self.assertEqual(success, False)
 
-        self.device.close()
-
     def test_i3c_read_operation_when_bus_not_initialized(self):
         if not self.use_simulator:
             self.skipTest("For simulator only")
-
-        self.device.open()
 
         i3c = self.device.create_interface("i3c.controller")
 
@@ -363,13 +292,9 @@ class TestSupernovaController(unittest.TestCase):
 
         self.assertEqual(success, False)
 
-        self.device.close()
-
     def test_i3c_successful_write_operation_on_target_should_return_none(self):
         if not self.use_simulator:
             self.skipTest("For simulator only")
-
-        self.device.open()
 
         i3c = self.device.create_interface("i3c.controller")
 
@@ -386,8 +311,6 @@ class TestSupernovaController(unittest.TestCase):
 
         self.assertTupleEqual((success, result), (True, None))
 
-        self.device.close()
-
     # Mock the controller's sync_submit method to simulate an exception.
     # It's important to note that this approach makes the test somewhat dependent
     # on the internal implementation of the device class.
@@ -397,13 +320,11 @@ class TestSupernovaController(unittest.TestCase):
             self.skipTest("For simulator only")
 
         with self.assertRaises(BackendError):
-            self.device.open()
+            self.device.get_hardware_version()
 
     def test_i3c_successful_write_read_operations_on_target(self):
         if not self.use_simulator:
             self.skipTest("For simulator only")
-
-        self.device.open()
 
         i3c = self.device.create_interface("i3c.controller")
 
@@ -427,13 +348,9 @@ class TestSupernovaController(unittest.TestCase):
 
         self.assertTupleEqual((success, result), (True, [0xDE, 0xAD, 0xBE, 0xEF]))
 
-        self.device.close()
-
     def test_ccc_getpid(self):
         if not self.use_simulator:
             self.skipTest("For simulator only")
-
-        self.device.open()
 
         i3c = self.device.create_interface("i3c.controller")
 
@@ -443,11 +360,23 @@ class TestSupernovaController(unittest.TestCase):
 
         self.assertTupleEqual((success, result), (True, [0x00, 0x00, 0x00, 0x00, 0x64, 0x65]))
 
-        self.device.close()
+    def test_ccc_rstdaa(self):
+        if self.use_simulator:
+            self.skipTest("For real device only")
+
+        i3c = self.device.create_interface("i3c.controller")
+
+        i3c.init_bus(3300)
+
+        (success, result) = i3c.ccc_rstdaa()
+
+        self.assertTupleEqual((success, result), (True, None))
+
+        (success, result) = i3c.ccc_getpid(0x08)
+
+        self.assertTupleEqual((success, result), (False, "NACK_ERROR"))
 
     def test_spi_controller_set_bus_voltage(self):
-        self.device.open()
-
         spi_controller = self.device.create_interface("spi.controller")
 
         (success, result) = spi_controller.set_bus_voltage(3300)
@@ -455,22 +384,14 @@ class TestSupernovaController(unittest.TestCase):
         self.assertTupleEqual((success, result), (True, 3300))
         self.assertEqual(spi_controller.bus_voltage, 3300)
 
-        self.device.close()
-
     def test_spi_controller_init_bus(self):
-        self.device.open()
-
         spi_controller = self.device.create_interface("spi.controller")
 
         (success, _) = spi_controller.init_bus()
 
         self.assertEqual(success, True)
 
-        self.device.close()
-
     def test_spi_controller_set_parameters(self):
-        self.device.open()
-
         spi_controller = self.device.create_interface("spi.controller")
 
         spi_controller.init_bus()
@@ -480,11 +401,7 @@ class TestSupernovaController(unittest.TestCase):
         self.assertEqual(success, True)
         self.assertEqual(spi_controller.mode, SpiControllerMode.MODE_2)
 
-        self.device.close()
-
     def test_spi_controller_get_parameters(self):
-        self.device.open()
-
         spi_controller = self.device.create_interface("spi.controller")
 
         spi_controller.init_bus()
@@ -503,16 +420,12 @@ class TestSupernovaController(unittest.TestCase):
         self.assertTupleEqual(response,(SpiControllerBitOrder.LSB, SpiControllerMode.MODE_0, SpiControllerDataWidth._8_BITS_DATA,
                                          SpiControllerChipSelect.CHIP_SELECT_2, SpiControllerChipSelectPolarity.ACTIVE_HIGH, 10000000))
 
-        self.device.close()
-
     # To run this test, it's necessary to connect the SPI Target device of Adafruit: FRAM memory MB85RS64V
     # Use the Supernova's breakout board and connect the VCC, GND, SCK, MISO, MOSI and CS signals of the memory
     # to its correspondent signal in the breakout board
     def test_spi_who_am_i_fram_MB85RS64V(self):
         if self.use_simulator:
             self.skipTest("For real device only")
-
-        self.device.open()
 
         spi_controller = self.device.create_interface("spi.controller")
 
@@ -532,8 +445,6 @@ class TestSupernovaController(unittest.TestCase):
         if not self.use_simulator:
             self.skipTest("For simulated device only")
 
-        self.device.open()
-
         spi_controller = self.device.create_interface("spi.controller")
 
         spi_controller.set_bus_voltage(3300)
@@ -547,6 +458,115 @@ class TestSupernovaController(unittest.TestCase):
         (success, result) = spi_controller.transfer(data, transfer_length)
 
         self.assertTupleEqual((success, result), (True, [0xAA, 0xBB, 0xCC, 0x00, 0x00]))
+        
+    def test_gpio_set_bus_voltage(self):
+        if self.use_simulator:
+            self.skipTest("For real device only")
 
+        gpio = self.device.create_interface("gpio")
+        
+        (success, result) = gpio.set_pins_voltage(3300)
+        
+        self.assertTupleEqual((success, result), (True, 3300))
+        self.assertEqual(gpio.pins_voltage, 3300)
+
+    def test_gpio_configure_pin(self):
+        if self.use_simulator:
+            self.skipTest("For real device only")
+        
+        gpio = self.device.create_interface("gpio")
+        
+        (success, result) = gpio.configure_pin(GpioPinNumber.GPIO_6, GpioFunctionality.DIGITAL_OUTPUT)
+        self.assertTupleEqual((success, result), (True, None))
+        
+        (success, result) = gpio.configure_pin(GpioPinNumber.GPIO_5, GpioFunctionality.DIGITAL_INPUT)
+        self.assertTupleEqual((success, result), (True, None))
+
+    def test_gpio_digital_write_read(self):
+        if self.use_simulator:
+            self.skipTest("For real device only")
+        
+        gpio = self.device.create_interface("gpio")
+        
+        gpio.configure_pin(GpioPinNumber.GPIO_6, GpioFunctionality.DIGITAL_OUTPUT)
+        gpio.configure_pin(GpioPinNumber.GPIO_5, GpioFunctionality.DIGITAL_INPUT)
+        
+        (success, _) = gpio.digital_write(GpioPinNumber.GPIO_6, GpioLogicLevel.HIGH)
+        self.assertEqual(success, True)
+        
+        (success, value) = gpio.digital_read(GpioPinNumber.GPIO_5)
+        self.assertEqual(success, True)
+        self.assertEqual(value, GpioLogicLevel.HIGH.name)
+        
+        (success, _) = gpio.digital_write(GpioPinNumber.GPIO_6, GpioLogicLevel.LOW)
+        self.assertEqual(success, True)
+        
+        (success, value) = gpio.digital_read(GpioPinNumber.GPIO_5)
+        self.assertEqual(success, True)
+        self.assertEqual(value, GpioLogicLevel.LOW.name)
+
+    def test_gpio_set_disable_interrupt(self):
+        if self.use_simulator:
+            self.skipTest("For real device only")
+        
+        gpio = self.device.create_interface("gpio")
+        
+        gpio.configure_pin(GpioPinNumber.GPIO_5, GpioFunctionality.DIGITAL_INPUT)
+        
+        (success, result) = gpio.set_interrupt(GpioPinNumber.GPIO_5, GpioTriggerType.TRIGGER_BOTH_EDGES)
+        self.assertTupleEqual((success, result), (True, None))
+        
+        (success, result) = gpio.disable_interrupt(GpioPinNumber.GPIO_5)
+        self.assertTupleEqual((success, result), (True, None))
+
+    def test_direct_rstact_read(self):
+        if self.use_simulator:
+            self.skipTest("For real device only")
+
+        i3c = self.device.create_interface("i3c.controller")
+
+        i3c.init_bus(3300)
+
+        (success, result) = i3c.ccc_direct_rstact(0x08,I3cTargetResetDefByte.RESET_I3C_PERIPHERAL, TransferDirection.READ)
+
+        self.assertTupleEqual((success, result), (True, [0x00]))
+
+    def test_direct_rstact_write(self):
+        if self.use_simulator:
+            self.skipTest("For real device only")
+
+        i3c = self.device.create_interface("i3c.controller")
+
+        i3c.init_bus(3300)
+
+        (success, result) = i3c.ccc_direct_rstact(0x08,I3cTargetResetDefByte.RESET_I3C_PERIPHERAL, TransferDirection.WRITE)
+
+        self.assertTupleEqual((success, result), (True, None))
+
+    def test_broadcast_rstact(self):
+        if self.use_simulator:
+            self.skipTest("For real device only")
+
+        i3c = self.device.create_interface("i3c.controller")
+
+        i3c.init_bus(3300)
+
+        (success, result) = i3c.ccc_broadcast_rstact(I3cTargetResetDefByte.RESET_I3C_PERIPHERAL)
+
+        self.assertTupleEqual((success, result), (True, None))
+
+    def test_trigger_target_reset_pattern(self):
+        if self.use_simulator:
+            self.skipTest("For real device only")
+
+        i3c = self.device.create_interface("i3c.controller")
+
+        i3c.init_bus(3300)
+
+        (success, result) = i3c.trigger_target_reset_pattern()
+
+        self.assertTupleEqual((success, result), (True, None))
+
+        
 if __name__ == "__main__":
     unittest.main()

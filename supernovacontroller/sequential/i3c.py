@@ -29,6 +29,17 @@ class SupernovaI3CBlockingInterface:
         self.bus_voltage = None
 
         self.controller_init()
+    
+    @staticmethod
+    def __get_error_from_response(response : dict):
+        errors = []
+        if response["usb_result"] != "CMD_SUCCESSFUL":
+            errors.append(response["usb_result"]) 
+        if response["manager_result"] != "I3C_CONTROLLER_MGR_NO_ERROR":
+            errors.append(response["manager_result"]) 
+        if "NO_TRANSFER_ERROR" not in response["driver_result"]:
+            errors.extend(response["driver_result"]) 
+        return errors
 
     def set_parameters(self, push_pull_clock_freq_mhz: I3cPushPullTransferRate, open_drain_clock_freq_mhz: I3cOpenDrainTransferRate):
         """
@@ -368,6 +379,35 @@ class SupernovaI3CBlockingInterface:
             result = (False, responses[0]["errors"])
 
         return result
+
+    def trigger_target_reset_pattern(self):
+        """
+        Triggers the target reset pattern on the I3C bus.
+
+        It indicates the targets to execute the reset action configured via the RSTACT CCC.
+
+        Returns:
+        tuple: A tuple containing two elements:
+            - The first element is a Boolean indicating the success (True) or failure (False) of the operation.
+            - The second element is either None indicating success, or an error message
+                detailing the failure, obtained from the device's response.
+        """
+        try:
+            responses = self.controller.sync_submit([
+                lambda id: self.driver.i3cTriggerTargetResetPattern(id)
+            ])
+        except Exception as e:
+            raise BackendError(original_exception=e) from e
+
+        response = responses[0]
+        errors = self.__get_error_from_response(response)
+
+        if len(errors) == 0: # manager, usb and driver are without error
+            result = (True, None)
+        else:
+            result = (False, errors)
+
+        return result
         
     def _process_response(self, command_name, responses, extra_data=None):
         def format_response_payload(command_name, response):
@@ -387,8 +427,10 @@ class SupernovaI3CBlockingInterface:
                 return response["maxWriteLength"]
             elif command_name == "ccc_get_status":
                 return response["data"]
-            elif command_name == "ccc_setnewda":
+            elif command_name in ["ccc_setnewda", "ccc_rstdaa"]:
                 return None
+            elif command_name == "ccc_direct_rstact":
+                return response["data"] if response["descriptor"] and response["descriptor"]["dataLength"] > 0 else None
             elif command_name in ["ccc_unicast_setmrl", "ccc_unicast_setmwl", "ccc_broadcast_setmwl", "ccc_broadcast_setmrl"]:
                 return response["data"]
             return None
@@ -432,7 +474,7 @@ class SupernovaI3CBlockingInterface:
                     target_address,
                     mode,
                     self.push_pull_clock_freq_mhz,
-                    self.push_pull_clock_freq_mhz,
+                    self.open_drain_clock_freq_mhz,
                     subaddress,
                     buffer,
                 )
@@ -470,7 +512,7 @@ class SupernovaI3CBlockingInterface:
                     target_address,
                     mode,
                     self.push_pull_clock_freq_mhz,
-                    self.push_pull_clock_freq_mhz,
+                    self.open_drain_clock_freq_mhz,
                     subaddress,
                     length,
                 )
@@ -487,7 +529,7 @@ class SupernovaI3CBlockingInterface:
                     id,
                     target_address,
                     self.push_pull_clock_freq_mhz,
-                    self.push_pull_clock_freq_mhz,
+                    self.open_drain_clock_freq_mhz,
                 )
             ])
         except Exception as e:
@@ -518,7 +560,7 @@ class SupernovaI3CBlockingInterface:
                     id,
                     target_address,
                     self.push_pull_clock_freq_mhz,
-                    self.push_pull_clock_freq_mhz,
+                    self.open_drain_clock_freq_mhz,
                 )
             ])
         except Exception as e:
@@ -549,7 +591,7 @@ class SupernovaI3CBlockingInterface:
                     id,
                     target_address,
                     self.push_pull_clock_freq_mhz,
-                    self.push_pull_clock_freq_mhz,
+                    self.open_drain_clock_freq_mhz,
                 )
             ])
         except Exception as e:
@@ -580,13 +622,82 @@ class SupernovaI3CBlockingInterface:
                     id,
                     target_address,
                     self.push_pull_clock_freq_mhz,
-                    self.push_pull_clock_freq_mhz,
+                    self.open_drain_clock_freq_mhz,
                 )
             ])
         except Exception as e:
             raise BackendError(original_exception=e) from e
 
         return self._process_response("ccc_getacccr", responses)
+
+    def ccc_direct_rstact(self, target_address, defining_byte, read_or_write_reset_action):
+        """
+        Performs a DIRECT RSTACT (Target Reset Action) operation on a target device on the I3C bus.
+
+        This method is used to configure the next Target Reset action, and may be used to retrieve a Target's 
+        reset recovery timing or get the reset action of the target. 
+        The RSTACT CCC is used in conjunction with the Target Reset Pattern to reset targets.
+
+        Args:
+        target_address (c_uint8): The dynamic address of the target device. 
+            This should be the address that the device is currently using on the I3C bus.
+        defining_byte (I3cTargetResetDefByte): The defining byte used for the RSTACT CCC.
+        read_or_write_reset_action (TransferDirection): Determines whether to read or write the reset action.
+            It should be either TransferDirection.WRITE or TransferDirection.READ.
+
+        Returns:
+        tuple: A tuple containing two elements:
+            - The first element is a Boolean indicating the success (True) or failure (False) of the operation.
+            - The second element depends on the read_or_write_reset_action value:
+                - If it is a write, then the returned value can be either None indicating success, 
+                    or an error message detailing the failure obtained from the controller's response.
+                - If it is a read, the returned value is the reset action in case of success,
+                    or an error message detailing the failure obtained from the controller's response. 
+        """
+        try:
+            responses = self.controller.sync_submit([
+                lambda id: self.driver.i3cDirectRSTACT(
+                    id,
+                    target_address,
+                    defining_byte,
+                    read_or_write_reset_action,
+                    self.push_pull_clock_freq_mhz,
+                    self.open_drain_clock_freq_mhz,
+                )
+            ])
+        except Exception as e:
+            raise BackendError(original_exception=e) from e
+
+        return self._process_response("ccc_direct_rstact", responses)
+
+    def ccc_broadcast_rstact(self, defining_byte):
+        """
+        Performs a BROADCAST RSTACT (Target Reset Action) set operation on the I3C bus.
+
+        This method is used to configure the next Target Reset action on all targets.
+        The RSTACT CCC is used in conjunction with the Target Reset Pattern to reset targets.
+
+        Args:
+        defining_byte (I3cTargetResetDefByte): The defining byte used for the RSTACT CCC.
+
+        Returns:
+        tuple: A tuple containing two elements:
+            - The first element is a Boolean indicating the success (True) or failure (False) of the operation.
+            - The second element is None if the operation was succesful, or an error message detailing the failure.
+        """
+        try:
+            responses = self.controller.sync_submit([
+                lambda id: self.driver.i3cBroadcastRSTACT(
+                    id,
+                    defining_byte,
+                    self.push_pull_clock_freq_mhz,
+                    self.open_drain_clock_freq_mhz,
+                )
+            ])
+        except Exception as e:
+            raise BackendError(original_exception=e) from e
+
+        return self._process_response("ccc_broadcast_rstact", responses)
 
     def ccc_getmxds(self, target_address):
         """
@@ -611,7 +722,7 @@ class SupernovaI3CBlockingInterface:
                     id,
                     target_address,
                     self.push_pull_clock_freq_mhz,
-                    self.push_pull_clock_freq_mhz,
+                    self.open_drain_clock_freq_mhz,
                 )
             ])
         except Exception as e:
@@ -642,7 +753,7 @@ class SupernovaI3CBlockingInterface:
                     id,
                     target_address,
                     self.push_pull_clock_freq_mhz,
-                    self.push_pull_clock_freq_mhz,
+                    self.open_drain_clock_freq_mhz,
                 )
             ])
         except Exception as e:
@@ -673,7 +784,7 @@ class SupernovaI3CBlockingInterface:
                     id,
                     target_address,
                     self.push_pull_clock_freq_mhz,
-                    self.push_pull_clock_freq_mhz,
+                    self.open_drain_clock_freq_mhz,
                 )
             ])
         except Exception as e:
@@ -704,7 +815,7 @@ class SupernovaI3CBlockingInterface:
                     id,
                     target_address,
                     self.push_pull_clock_freq_mhz,
-                    self.push_pull_clock_freq_mhz,
+                    self.open_drain_clock_freq_mhz,
                 )
             ])
         except Exception as e:
@@ -735,7 +846,7 @@ class SupernovaI3CBlockingInterface:
                     id,
                     target_address,
                     self.push_pull_clock_freq_mhz,
-                    self.push_pull_clock_freq_mhz,
+                    self.open_drain_clock_freq_mhz,
                 )
             ])
         except Exception as e:
@@ -743,16 +854,13 @@ class SupernovaI3CBlockingInterface:
 
         return self._process_response("ccc_getcaps", responses)
 
-    def ccc_rstdaa(self, target_address):
+    def ccc_rstdaa(self):
         """
         Performs a RSTDAA (Reset Dynamic Address Assignment) operation on a target device on the I3C bus.
 
         This method initiates a Reset Dynamic Address Assignment process on the specified target device.
         The operation's success status is checked, and it returns a tuple indicating whether the operation
         was successful along with the relevant data or error message.
-
-        Args:
-        target_address: The address of the target device on the I3C bus on which the RSTDAA process is initiated.
 
         Returns:
         tuple: A tuple containing two elements:
@@ -764,9 +872,8 @@ class SupernovaI3CBlockingInterface:
             responses = self.controller.sync_submit([
                 lambda id: self.driver.i3cRSTDAA(
                     id,
-                    target_address,
                     self.push_pull_clock_freq_mhz,
-                    self.push_pull_clock_freq_mhz,
+                    self.open_drain_clock_freq_mhz,
                 )
             ])
         except Exception as e:
@@ -774,13 +881,21 @@ class SupernovaI3CBlockingInterface:
 
         return self._process_response("ccc_rstdaa", responses)
 
-    def ccc_broadcast_enec(self):
+    def ccc_broadcast_enec(self, events: list):
         """
         Performs a broadcast ENEC (Enable Events Command) operation on the I3C bus.
 
         This method sends a broadcast command to enable events on all devices on the I3C bus.
         The operation's success status is checked, and it returns a tuple indicating whether the operation
         was successful along with the relevant data or error message.
+
+        Args:
+        events (list): A list of events to be enabled. Each element in the list must be an instance
+                   of the ENEC enum, which includes the following options:
+                   - ENEC.ENINT
+                   - ENEC.ENCR
+                   - ENEC.ENHJ
+                   For example: [ENEC.ENINT, ENEC.ENHJ]
 
         Returns:
         tuple: A tuple containing two elements:
@@ -793,7 +908,8 @@ class SupernovaI3CBlockingInterface:
                 lambda id: self.driver.i3cBroadcastENEC(
                     id,
                     self.push_pull_clock_freq_mhz,
-                    self.push_pull_clock_freq_mhz,
+                    self.open_drain_clock_freq_mhz,
+                    events
                 )
             ])
         except Exception as e:
@@ -802,13 +918,21 @@ class SupernovaI3CBlockingInterface:
         # Note: The command name 'ccc_broadcast_ENEC' should be handled appropriately in _process_response
         return self._process_response("ccc_broadcast_enec", responses)
 
-    def ccc_broadcast_disec(self):
+    def ccc_broadcast_disec(self, events: list):
         """
         Performs a broadcast DISEC (Disable Events Command) operation on the I3C bus.
 
         This method sends a broadcast command to disable events on all devices on the I3C bus.
         The operation's success status is checked, and it returns a tuple indicating whether the operation
         was successful along with the relevant data or error message.
+
+        Args:
+        events (list): A list containing events to be disabled. Each element in the list must be an instance
+                   of the DISEC enum, which includes the following options:
+                   - DISEC.DISINT
+                   - DISEC.DISCR
+                   - DISEC.DISHJ
+                   For example: [DISEC.DISINT, DISEC.DISHJ]
 
         Returns:
         tuple: A tuple containing two elements:
@@ -821,7 +945,8 @@ class SupernovaI3CBlockingInterface:
                 lambda id: self.driver.i3cBroadcastDISEC(
                     id,
                     self.push_pull_clock_freq_mhz,
-                    self.push_pull_clock_freq_mhz,
+                    self.open_drain_clock_freq_mhz,
+                    events
                 )
             ])
         except Exception as e:
@@ -830,7 +955,7 @@ class SupernovaI3CBlockingInterface:
         # Note: The command name 'ccc_broadcast_DISEC' should be handled appropriately in _process_response
         return self._process_response("ccc_broadcast_disec", responses)
 
-    def ccc_unicast_enec(self, target_address):
+    def ccc_unicast_enec(self, target_address, events: list):
         """
         Performs a unicast ENEC (Enable Events Command) operation on a specific target device on the I3C bus.
 
@@ -840,6 +965,12 @@ class SupernovaI3CBlockingInterface:
 
         Args:
         target_address: The address of the target device on the I3C bus to which the ENEC command is directed.
+        events (list): A list of events to be enabled. Each element in the list must be an instance
+                   of the ENEC enum, which includes the following options:
+                   - ENEC.ENINT
+                   - ENEC.ENCR
+                   - ENEC.ENHJ
+                   For example: [ENEC.ENINT, ENEC.ENHJ]
 
         Returns:
         tuple: A tuple containing two elements:
@@ -853,7 +984,8 @@ class SupernovaI3CBlockingInterface:
                     id,
                     target_address,
                     self.push_pull_clock_freq_mhz,
-                    self.push_pull_clock_freq_mhz,
+                    self.open_drain_clock_freq_mhz,
+                    events
                 )
             ])
         except Exception as e:
@@ -861,7 +993,7 @@ class SupernovaI3CBlockingInterface:
 
         return self._process_response("ccc_unicast_enec", responses)
 
-    def ccc_unicast_disec(self, target_address):
+    def ccc_unicast_disec(self, target_address, events: list):
         """
         Performs a unicast DISEC (Disable Events Command) operation on a specific target device on the I3C bus.
 
@@ -871,6 +1003,12 @@ class SupernovaI3CBlockingInterface:
 
         Args:
         target_address: The address of the target device on the I3C bus to which the DISEC command is directed.
+        events (list): A list containing events to be disabled. Each element in the list must be an instance
+                   of the DISEC enum, which includes the following options:
+                   - DISEC.DISINT
+                   - DISEC.DISCR
+                   - DISEC.DISHJ
+                   For example: [DISEC.DISINT, DISEC.DISHJ]
 
         Returns:
         tuple: A tuple containing two elements:
@@ -884,7 +1022,8 @@ class SupernovaI3CBlockingInterface:
                     id,
                     target_address,
                     self.push_pull_clock_freq_mhz,
-                    self.push_pull_clock_freq_mhz,
+                    self.open_drain_clock_freq_mhz,
+                    events
                 )
             ])
         except Exception as e:
@@ -917,7 +1056,7 @@ class SupernovaI3CBlockingInterface:
                     static_address,
                     dynamic_address,
                     self.push_pull_clock_freq_mhz,
-                    self.push_pull_clock_freq_mhz,
+                    self.open_drain_clock_freq_mhz,
                 )
             ])
         except Exception as e:
@@ -950,7 +1089,7 @@ class SupernovaI3CBlockingInterface:
                     current_address,
                     new_address,
                     self.push_pull_clock_freq_mhz,
-                    self.push_pull_clock_freq_mhz,
+                    self.open_drain_clock_freq_mhz,
                 )
             ])
         except Exception as e:
@@ -981,7 +1120,7 @@ class SupernovaI3CBlockingInterface:
                     id,
                     target_address,
                     self.push_pull_clock_freq_mhz,
-                    self.push_pull_clock_freq_mhz,
+                    self.open_drain_clock_freq_mhz,
                 )
             ])
         except Exception as e:
@@ -1012,7 +1151,7 @@ class SupernovaI3CBlockingInterface:
                     id,
                     target_address,
                     self.push_pull_clock_freq_mhz,
-                    self.push_pull_clock_freq_mhz,
+                    self.open_drain_clock_freq_mhz,
                 )
             ])
         except Exception as e:
@@ -1044,7 +1183,7 @@ class SupernovaI3CBlockingInterface:
                     id,
                     target_address,
                     self.push_pull_clock_freq_mhz,
-                    self.push_pull_clock_freq_mhz,
+                    self.open_drain_clock_freq_mhz,
                     max_read_length,
                 )
             ])
@@ -1077,7 +1216,7 @@ class SupernovaI3CBlockingInterface:
                     id,
                     target_address,
                     self.push_pull_clock_freq_mhz,
-                    self.push_pull_clock_freq_mhz,
+                    self.open_drain_clock_freq_mhz,
                     max_write_length,
                 )
             ])
@@ -1108,7 +1247,7 @@ class SupernovaI3CBlockingInterface:
                 lambda id: self.driver.i3cBroadcastSETMWL(
                     id,
                     self.push_pull_clock_freq_mhz,
-                    self.push_pull_clock_freq_mhz,
+                    self.open_drain_clock_freq_mhz,
                     max_write_length,
                 )
             ])
@@ -1139,7 +1278,7 @@ class SupernovaI3CBlockingInterface:
                 lambda id: self.driver.i3cBroadcastSETMWL(
                     id,
                     self.push_pull_clock_freq_mhz,
-                    self.push_pull_clock_freq_mhz,
+                    self.open_drain_clock_freq_mhz,
                     max_read_length,
                 )
             ])
@@ -1167,7 +1306,7 @@ class SupernovaI3CBlockingInterface:
                 lambda id: self.driver.i3cSETAASA(
                     id,
                     self.push_pull_clock_freq_mhz,
-                    self.push_pull_clock_freq_mhz,
+                    self.open_drain_clock_freq_mhz,
                 )
             ])
         except Exception as e:
@@ -1194,7 +1333,7 @@ class SupernovaI3CBlockingInterface:
                 lambda id: self.driver.i3cBroadcastENDXFED(
                     id,
                     self.push_pull_clock_freq_mhz,
-                    self.push_pull_clock_freq_mhz,
+                    self.open_drain_clock_freq_mhz,
                 )
             ])
         except Exception as e:
@@ -1225,7 +1364,7 @@ class SupernovaI3CBlockingInterface:
                     id,
                     target_address,
                     self.push_pull_clock_freq_mhz,
-                    self.push_pull_clock_freq_mhz,
+                    self.open_drain_clock_freq_mhz,
                 )
             ])
         except Exception as e:
@@ -1256,7 +1395,7 @@ class SupernovaI3CBlockingInterface:
                     id,
                     timing_parameter,
                     self.push_pull_clock_freq_mhz,
-                    self.push_pull_clock_freq_mhz,
+                    self.open_drain_clock_freq_mhz,
                 )
             ])
         except Exception as e:
@@ -1291,7 +1430,7 @@ class SupernovaI3CBlockingInterface:
                 lambda id: self.driver.i3cBroadcastSETBUSCON(
                     id,
                     self.push_pull_clock_freq_mhz,
-                    self.push_pull_clock_freq_mhz,
+                    self.open_drain_clock_freq_mhz,
                     context,
                     data
                 )
@@ -1324,7 +1463,7 @@ class SupernovaI3CBlockingInterface:
                 lambda id: self.driver.i3cBroadcastENTAS0(
                     id,
                     self.push_pull_clock_freq_mhz,
-                    self.push_pull_clock_freq_mhz,
+                    self.open_drain_clock_freq_mhz,
                 )
             ])
         except Exception as e:
@@ -1349,7 +1488,7 @@ class SupernovaI3CBlockingInterface:
                 lambda id: self.driver.i3cBroadcastENTAS1(
                     id,
                     self.push_pull_clock_freq_mhz,
-                    self.push_pull_clock_freq_mhz,
+                    self.open_drain_clock_freq_mhz,
                 )
             ])
         except Exception as e:
@@ -1374,7 +1513,7 @@ class SupernovaI3CBlockingInterface:
                 lambda id: self.driver.i3cBroadcastENTAS2(
                     id,
                     self.push_pull_clock_freq_mhz,
-                    self.push_pull_clock_freq_mhz,
+                    self.open_drain_clock_freq_mhz,
                 )
             ])
         except Exception as e:
@@ -1399,7 +1538,7 @@ class SupernovaI3CBlockingInterface:
                 lambda id: self.driver.i3cBroadcastENTAS3(
                     id,
                     self.push_pull_clock_freq_mhz,
-                    self.push_pull_clock_freq_mhz,
+                    self.open_drain_clock_freq_mhz,
                 )
             ])
         except Exception as e:

@@ -39,7 +39,7 @@ To install the SupernovaController package, follow these steps:
      ```sh
      pip install --upgrade pip
      ```
-   - For any other issues or support, please contact [support@binho.io](mailto:support@binho.io).
+   - For any other issues or support, please contact [techsupport@binho.io](mailto:techsupport@binho.io).
 
 ## Getting started
 
@@ -223,7 +223,7 @@ In an I3C bus, the Supernova can act either as a controller or as a target.
     Sets the PID of the Supernova acting as an I3C target via USB:
 
     ```python
-   success, error = device.set_pid([0x02, 0x03, 0x04, 0x05, 0x06, 0x07])
+   success, error = i3c_target.set_pid([0x02, 0x03, 0x04, 0x05, 0x06, 0x07])
    ```
 
 3. ***Set BCR:***
@@ -231,7 +231,7 @@ In an I3C bus, the Supernova can act either as a controller or as a target.
     Sets the BCR of the Supernova acting as an I3C target via USB:
 
     ```python
-   success, error = device.set_bcr(I3cTargetMaxDataSpeedLimit_t.MAX_DATA_SPEED_LIMIT, I3cTargetIbiCapable_t.NOT_IBI_CAPABLE, 
+   success, error = i3c_target.set_bcr(I3cTargetMaxDataSpeedLimit_t.MAX_DATA_SPEED_LIMIT, I3cTargetIbiCapable_t.NOT_IBI_CAPABLE, 
                                 I3cTargetIbiPayload_t.IBI_WITH_PAYLOAD, I3cTargetOfflineCap_t.OFFLINE_CAPABLE, 
                                 I3cTargetVirtSupport_t.VIRTUAL_TARGET_SUPPORT, I3cTargetDeviceRole_t.I3C_TARGET)
    ```
@@ -244,7 +244,7 @@ In an I3C bus, the Supernova can act either as a controller or as a target.
     Sets the DCR of the Supernova acting as an I3C target via USB:
 
     ```python
-   success, error = device.set_dcr(I3cTargetDcr_t.I3C_TARGET_MEMORY)
+   success, error = i3c_target.set_dcr(I3cTargetDcr_t.I3C_TARGET_MEMORY)
    ```
 
     The input parameter (of I3cTargetDcr_t) indicates the type of device the Supernova represents, which determines the [DCR value as defined by the MIPI alliance](https://www.mipi.org/hubfs/I3C-Public-Tables/MIPI-I3C-v1-1-Current-DCR-Table.pdf). For this case `I3cTargetDcr_t` can take the values `I3C_SECONDARY_CONTROLLER`, `I3C_TARGET_MEMORY` and `I3C_TARGET_MICROCONTROLLER`. 
@@ -254,7 +254,7 @@ In an I3C bus, the Supernova can act either as a controller or as a target.
     Sets the static address of the Supernova acting as an I3C target via USB:
 
     ```python
-   success, error = device.set_static_address(0x73)
+   success, error = i3c_target.set_static_address(0x73)
    ```
 
 6. ***Set Supernova configuration:***
@@ -278,7 +278,7 @@ In an I3C bus, the Supernova can act either as a controller or as a target.
     Writes the internal memory of the Supernova via USB:
 
     ```python
-   success, error = device.write_memory(0x010A, [0xFF for i in range(0,10)])
+   success, error = i3c_target.write_memory(0x010A, [0xFF for i in range(0,10)])
    ```
     
 8. ***Read memory:***
@@ -286,7 +286,7 @@ In an I3C bus, the Supernova can act either as a controller or as a target.
     Retrieves data from the Supernova internal memory via USB:
 
     ```python
-   success, data = device.read_memory(0x0000, 255)
+   success, data = i3c_target.read_memory(0x0000, 255)
    ```
     
 ***Target Notification:***
@@ -554,6 +554,143 @@ In a SPI bus, the Supernova can act as a controller.
     data_from_target = response[3:]
     ```
 
+
+## GPIO
+
+### GPIO features
+
+This section describes how to get you started with the `SupernovaController` focusing on the GPIO protocol.
+
+* The supported features are:
+    * Setting of bus voltage.
+    * Configuring pins as digital inputs or outputs.
+    * Digital read/write operations.
+    * Setting and disabling interrupts on pins.
+    
+### Basic GPIO Communication
+
+#### Generic operations
+
+1. ***Initializing the Supernova Device:***
+
+   Imports and initializes the `SupernovaDevice`. Optionally, specifies the USB HID path if multiple devices are connected:
+
+   ```python
+   from supernovacontroller.sequential import SupernovaDevice
+
+   device = SupernovaDevice()
+   
+   # Optionally specify the USB HID path
+   device.open(usb_address='your_usb_hid_path')
+   ```
+
+   Call `open()` without parameters if you don't need to specify a particular device.
+
+2. ***Creates a GPIO interface:***
+
+    ```python
+    gpio = device.create_interface("gpio")
+    ```
+ 
+3. ***Closing the Device:***
+
+    Closes the device when done:
+
+    ```python
+    device.close()
+    ```
+
+### Operations intended for the Supernova GPIO peripheral
+
+1. ***Setting Pins Voltage:***
+
+    Sets the pins voltage (in mV) for the GPIO pins. This step is required before initializing the GPIO interface:
+
+    ```python
+    success, response = gpio.set_pins_voltage(3300)
+    ```
+    **Important note:**
+    - If Supernova rev. B is used, voltage can be set in pins 1 and 2. Pins 3 to 6 are fixed at 3.3 V.
+    - If Supernova rev. C is used, voltage is set for all pins.
+
+2. ***Configuring a GPIO pin:***
+
+    Configures a GPIO pin with the specified functionality. For example, configuring GPIO pin 6 as a digital output:
+
+    ```python
+    from BinhoSupernova.commands.definitions import GpioPinNumber, GpioFunctionality
+
+    success, response = gpio.configure_pin(GpioPinNumber.GPIO_6, GpioFunctionality.DIGITAL_OUTPUT)
+    ```
+
+3. ***Digital Write:***
+
+    Writes a digital logic level to a GPIO pin configured as a digital output. For example, setting GPIO pin 6 to LOW:
+
+    ```python
+    from BinhoSupernova.commands.definitions import GpioLogicLevel
+
+    success, response = gpio.digital_write(GpioPinNumber.GPIO_6, GpioLogicLevel.LOW)
+    ```
+
+4. ***Digital Read:***
+
+    Reads the digital logic level from a GPIO pin configured as a digital input. For example, reading the value from GPIO pin 5:
+
+    ```python
+    success, value = gpio.digital_read(GpioPinNumber.GPIO_5)
+    ```
+
+5. ***Set Interrupt:***
+
+    Sets an interrupt on a GPIO pin configured as a digital input. For example, setting an interrupt on GPIO pin 5 for both rising and falling edges:
+
+    ```python
+    from BinhoSupernova.commands.definitions import GpioTriggerType
+
+    success, response = gpio.set_interrupt(GpioPinNumber.GPIO_5, GpioTriggerType.TRIGGER_BOTH_EDGES)
+    ```
+
+6. ***Handle interruptions:***
+
+    To manage GPIO notifications, we have to pass to the `on_notification()` method these functions:
+     - Filter function: it checks if the notification is a GPIO interrupt.
+     - Handler function: it processes the interruption, setting the gpio interruption event.
+
+    The following code snippet illustrates a non-concurrent way of handling GPIO interruptions:
+
+    ```python
+    from threading import Event
+
+    # Defines gpio interruption event
+    gpio_interrupt_event = Event()
+
+    # Defines filter and handler functions to be passed to the on_notification() method
+    def is_gpio_interrupt(name, message):
+        return message['name'].strip() == "GPIO INTERRUPTION"
+    
+    def handle_gpio_interrupt(name, message):
+        gpio_interrupt_event.set()
+
+    device.on_notification(name="GPIO INTERRUPTION", filter_func=is_gpio_interrupt, handler_func=handle_gpio_interrupt)
+
+    # Asumes pin 6 initially at LOW level and pins 5 and 6 are connected to each other
+    for level in [GpioLogicLevel.HIGH, GpioLogicLevel.LOW, GpioLogicLevel.HIGH, GpioLogicLevel.LOW]:
+        gpio.digital_write(GpioPinNumber.GPIO_6, level)
+
+        # Wait for the GPIO interrupt to be processed
+        gpio_interrupt_event.wait()
+        gpio_interrupt_event.clear()
+    ```
+
+7. ***Disable Interrupt:***
+
+    Disables an interrupt on a GPIO pin. For example, disabling the interrupt on GPIO pin 5:
+
+    ```python
+    success, response = gpio.disable_interrupt(GpioPinNumber.GPIO_5)
+    ```
+
 ## Next Steps
 
 After installing the `SupernovaController` package, you can further explore its capabilities by trying out the examples included in the installation. These examples demonstrate practical applications of SPI, UART, I2C and I3C protocols:
@@ -563,7 +700,7 @@ After installing the `SupernovaController` package, you can further explore its 
 - **Basic I2C Example (`basic_i2c_example.py`):** Get started with fundamental I2C operations.
 - **Basic UART Example (`basic_uart_example.py`):** Try out the UART protocol Hands-On.
 - **Basic SPI Controller Example (`basic_spi_controller_example.py`):** Explore the fundamental SPI controller operations communicating with a SPI Target device.
-- **Hot-join example(`hot_join_example.py`):** Understand how to handle the hot-join procedure in I3C.
+- **Hot-join example(`i3c_hot_join_example.py`):** Understand how to handle the hot-join procedure in I3C.
 - **IBI Example (`i3c_ibi_example.py`):** Understand handling In-Band Interrupts (IBI) in I3C.
 - **ICM42605 I3C Example (`ICM42605_i3c_example.py`):** Explore a real-world application of I3C with the ICM42605 sensor.
 
@@ -705,7 +842,7 @@ SupernovaController is licensed under a Proprietary License. See the [LICENSE](L
 For any inquiries, support requests, or contributions regarding the `SupernovaController` package, please contact us:
 
 - **Organization:** Binho LLC
-- **Email:** [support@binho.io](mailto:support@binho.io)
+- **Email:** [techsupport@binho.io](mailto:techsupport@binho.io)
 
 We welcome feedback and we are happy to provide assistance with any issues you may encounter.
 
