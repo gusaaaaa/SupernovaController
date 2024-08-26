@@ -252,6 +252,50 @@ class SupernovaI2CBlockingInterface:
 
         return result
 
+    def write_non_stop(self, address, register, data):
+        """
+        Performs a write operation to a specified register on an I2C device, without issuing a stop condition at the end.
+
+        This method sends data to a specified register of a device with a given I2C address, without issuing a stop condition at the end.
+        Before performing the write operation, it checks if the bus voltage is initialized.
+        If the bus is not initialized (i.e., bus voltage is None), it raises an error. The
+        success or failure of the write operation is determined based on the response from the hardware.
+
+        Args:
+        address (int): The I2C address of the device to write to.
+        register (int): The register address within the device where the data will be written.
+        data (bytes): The data to be written to the specified register.
+
+        Returns:
+        tuple: A tuple containing two elements:
+            - The first element is a Boolean indicating the success (True) or failure (False)
+              of the write operation.
+            - The second element is None. It is reserved for future use where additional information
+              might be returned in case of success or failure.
+
+        Note:
+        - It is important to ensure that the bus voltage is correctly set before attempting a write operation,
+          as the correct voltage is crucial for the proper functioning of I2C communications.
+        - The method does not perform any validation on the input parameters (address, register, data). Users
+          should ensure these parameters are correct and within the acceptable range for the intended device.
+        """
+        responses = None
+        try:
+            responses = self.controller.sync_submit([
+                lambda transfer_id: self.driver.i2cWriteNonStop(transfer_id, address, register, data),
+            ])
+        except Exception as e:
+            raise BackendError(original_exception=e) from e
+
+        response_ok = responses[0]["name"] == "I2C WRITE WITHOUT STOP" and responses[0]["status"] == 0
+        
+        if response_ok:
+            result = (True, None)
+        else:
+            result = (False, CodeTranslator.get_message("i2c", responses[0]["status"]))
+
+        return result
+    
     def read(self, address, length):
         """
         Performs a read operation from an I2C device.
