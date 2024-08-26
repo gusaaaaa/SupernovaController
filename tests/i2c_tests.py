@@ -46,6 +46,44 @@ class TestSupernovaController(unittest.TestCase):
             self.i2c.read_from(0x50, [0x00,0x00], 1)
         except Exception as e:
             self.fail(f"self.i2c read raised an exception {e}")
+            
+    def test_i2c_set_pull_up_resistor(self):
+        if self.use_simulator:
+            self.skipTest("For real device only")
+
+        (success, message) = self.i2c.set_pull_up_resistors(150)
+        self.assertTupleEqual((True, None), (success, message), f"Setting 150 Ohm failed: {message}")
+        (success, message) = self.i2c.set_pull_up_resistors(220)
+        self.assertTupleEqual((True, None), (success, message), f"Setting 220 Ohm failed: {message}")
+        (success, message) = self.i2c.set_pull_up_resistors(330)
+        self.assertTupleEqual((True, None), (success, message), f"Setting 330 Ohm failed: {message}")
+        (success, message) = self.i2c.set_pull_up_resistors(470)
+        self.assertTupleEqual((True, None), (success, message), f"Setting 470 Ohm failed: {message}")
+        (success, message) = self.i2c.set_pull_up_resistors(680)
+        self.assertTupleEqual((True, None), (success, message), f"Setting 680 Ohm failed: {message}")
+        (success, message) = self.i2c.set_pull_up_resistors(1000)
+        self.assertTupleEqual((True, None), (success, message), f"Setting 1000 Ohm failed: {message}")
+        (success, message) = self.i2c.set_pull_up_resistors(1500)
+        self.assertTupleEqual((True, None), (success, message), f"Setting 1500 Ohm failed: {message}")
+        (success, message) = self.i2c.set_pull_up_resistors(2200)
+        self.assertTupleEqual((True, None), (success, message), f"Setting 2200 Ohm failed: {message}")
+        (success, message) = self.i2c.set_pull_up_resistors(3300)
+        self.assertTupleEqual((True, None), (success, message), f"Setting 3300 Ohm failed: {message}")
+        (success, message) = self.i2c.set_pull_up_resistors(4700)
+        self.assertTupleEqual((True, None), (success, message), f"Setting 4700 Ohm failed: {message}")
+        (success, message) = self.i2c.set_pull_up_resistors(10000)
+        self.assertTupleEqual((True, None), (success, message), f"Setting 10000 Ohm failed: {message}")
+
+    def test_i2c_set_pull_up_resistor_exception_unsupported_value(self):
+        if self.use_simulator:
+            self.skipTest("For real device only")
+
+        with self.assertRaises(ValueError):
+            self.i2c.set_pull_up_resistors(0)
+        with self.assertRaises(ValueError):
+            self.i2c.set_pull_up_resistors(18993)
+        with self.assertRaises(ValueError):
+            self.i2c.set_pull_up_resistors(1501)
 
     def test_i2c_write(self):
         self.i2c.init_bus(3300)
