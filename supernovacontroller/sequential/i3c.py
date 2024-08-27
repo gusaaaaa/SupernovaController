@@ -7,6 +7,7 @@ from BinhoSupernova.commands.definitions import I3cSetFeatureSelector
 from BinhoSupernova.commands.definitions import I3cClearFeatureSelector
 from BinhoSupernova.commands.definitions import I3cPushPullTransferRate
 from BinhoSupernova.commands.definitions import I3cOpenDrainTransferRate
+from BinhoSupernova.commands.definitions import I3cChangeDynAddrError
 from supernovacontroller.errors import BusVoltageError
 from supernovacontroller.errors import BackendError
 
@@ -372,11 +373,12 @@ class SupernovaI3CBlockingInterface:
         except Exception as e:
             raise BackendError(original_exception=e) from e
 
-        status = responses[0]["errors"][0]
-        if status == "NO_TRANSFER_ERROR":
+        status = responses[0]["result"]
+
+        if status == I3cChangeDynAddrError.I3C_CHANGE_DYNAMIC_ADDRESS_SUCCESS:
             result = (True, "OK")
         else:
-            result = (False, responses[0]["errors"])
+            result = (False, status)
 
         return result
 
