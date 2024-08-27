@@ -161,12 +161,12 @@ class SupernovaI2CBlockingInterface:
         except Exception as e:
             raise BackendError(original_exception=e) from e
 
-        response_ok = responses[0]["name"] == "SET I2C-SPI-UART BUS VOLTAGE" and responses[0]["result"] == 0
+        response_ok = responses[0]["name"] == "SET I2C-SPI-UART BUS VOLTAGE" and responses[0]["result"] == "SYS_NO_ERROR"
         if response_ok:
             result = (True, voltage_mv)
             self.bus_voltage = voltage_mv
         else:
-            result = (False, "Set bus voltage failed")
+            result = (False, responses[0]["result"])
             self.bus_voltage = None
 
         return result

@@ -102,7 +102,7 @@ class SupernovaI3CBlockingInterface:
         except Exception as e:
             raise BackendError(original_exception=e) from e
 
-        response_ok = responses[0]["name"] == "SET I3C BUS VOLTAGE" and responses[0]["result"] == 0
+        response_ok = responses[0]["name"] == "SET I3C BUS VOLTAGE" and responses[0]["result"] == "SYS_NO_ERROR"
         if response_ok:
             result = (True, voltage)
             # We want to set the bus_voltage when we know the operation was successful
@@ -185,7 +185,7 @@ class SupernovaI3CBlockingInterface:
         # TODO: Toggle IBIs off
 
         status = responses[0]["result"]
-        if status == "I3C_BUS_INIT_SUCCESS":
+        if status == "I3C_INIT_BUS_SUCCESS":
             result = (True, voltage)
         else:
             result = (False, {"errors": responses[0]["errors"]})
