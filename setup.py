@@ -7,11 +7,11 @@ gh_token = os.environ.get('GH_TOKEN')
 dev_dependencies = []
 
 if gh_token:
-    dev_dependencies.append(f'binhosimulators @ git+https://{gh_token}@github.com/binhollc/BinhoSimulators.git@v0.2.1')
+    dev_dependencies.append(f'binhosimulators @ git+https://{gh_token}@github.com/binhollc/BinhoSimulators.git@v0.3.0')
 
 setup(
     name='supernovacontroller',
-    version='1.4.0',
+    version='1.5.0',
     packages=find_packages(),
     data_files=[
         ('lib/site-packages/supernovacontrollerexamples', ['examples/basic_i2c_example.py', 'examples/basic_i3c_example.py', 'examples/i3c_ibi_example.py', 'examples/ICM42605_i3c_example.py', 'examples/basic_i3c_target_example.py',
