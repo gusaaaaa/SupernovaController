@@ -66,7 +66,7 @@ def main():
     pic_dynamic_address = int(pic_hot_joined_info['dynamic_address'])
 
     print(i3c.targets())
-    time.sleep(1)
+    time.sleep(0.5)
 
     # ---
     # I2C
@@ -77,19 +77,17 @@ def main():
     DATA_TO_WRITE = [0x06, 0x07, 0x08, 0x09, 0x0A]
     BYTES_TO_READ = 0x05
 
-    # Write at Register 00 00 data 06 07 08 09 0A
-    print(i3c.write(pic_dynamic_address, i3c.TransferMode.I3C_SDR, [], [PIC_I2C_WRITE_COMMAND, SHIFTED_ADDRESS] + REGISTER_TO_WRITE_READ + DATA_TO_WRITE))
-    time.sleep(1)
-    # print(i3c.targets())
+    (success, _) = i3c.write(pic_dynamic_address, i3c.TransferMode.I3C_SDR, [], [PIC_I2C_WRITE_COMMAND, SHIFTED_ADDRESS] + REGISTER_TO_WRITE_READ + DATA_TO_WRITE)
+    print("Write at Register 00 00 data 06 07 08 09 0A :", "SUCCESS" if success else "FAIL")
+    time.sleep(0.5)
 
-    # Reset data pointer to 00 00
-    print(i3c.write(pic_dynamic_address, i3c.TransferMode.I3C_SDR, [], [PIC_I2C_WRITE_COMMAND, SHIFTED_ADDRESS] + REGISTER_TO_WRITE_READ))
-    time.sleep(1)
-    # print(i3c.targets())
+    (success, _) = i3c.write(pic_dynamic_address, i3c.TransferMode.I3C_SDR, [], [PIC_I2C_WRITE_COMMAND, SHIFTED_ADDRESS] + REGISTER_TO_WRITE_READ)
+    print("Reset data pointer to 00 00", "SUCCESS" if success else "FAIL")
+    time.sleep(0.5)
 
-    # Read 5 bytes
-    print(i3c.write(pic_dynamic_address, i3c.TransferMode.I3C_SDR, [], [PIC_I2C_READ_COMMAND, SHIFTED_ADDRESS, BYTES_TO_READ]))
-    time.sleep(1)
+    (success, _) = i3c.write(pic_dynamic_address, i3c.TransferMode.I3C_SDR, [], [PIC_I2C_READ_COMMAND, SHIFTED_ADDRESS, BYTES_TO_READ])
+    print("Read 5 bytes", "SUCCESS" if success else "FAIL")
+    time.sleep(0.5)
 
     try:
         reading_ibi = caught_ibis.get(timeout=3)
@@ -112,8 +110,8 @@ def main():
     DATA_TO_WRITE = 0x60
     BYTES_TO_READ = 0x03
 
-    # Read JEDEC ID
-    print("JEDEC", i3c.write(pic_dynamic_address, i3c.TransferMode.I3C_SDR, [], [PIC_SPI_WRITE_READ_COMMAND, BYTES_TO_READ, SPI_GET_JEDEC_COMMAND]))
+    (success, _) = i3c.write(pic_dynamic_address, i3c.TransferMode.I3C_SDR, [], [PIC_SPI_WRITE_READ_COMMAND, BYTES_TO_READ, SPI_GET_JEDEC_COMMAND])
+    print("Read JEDEC ID:", "SUCCESS" if success else "FAIL")
 
     try:
         reading_ibi = caught_ibis.get(timeout=3)
@@ -122,19 +120,19 @@ def main():
         exit(1)
 
     print("Read from SPI target:", reading_ibi)
-    time.sleep(1)   
+    time.sleep(0.5)   
 
-    # Enable writing in the Memory via Write Enable
-    print(i3c.write(pic_dynamic_address, i3c.TransferMode.I3C_SDR, [], [PIC_SPI_WRITE_COMMAND, SPI_WRITE_ENABLE_COMMAND]))
-    time.sleep(1)
+    (success, _) = i3c.write(pic_dynamic_address, i3c.TransferMode.I3C_SDR, [], [PIC_SPI_WRITE_COMMAND, SPI_WRITE_ENABLE_COMMAND])
+    print("Enable writing in the Memory via Write Enable", "SUCCESS" if success else "FAIL")
+    time.sleep(0.5)
 
-    # Write in SPI Status Register data
-    print(i3c.write(pic_dynamic_address, i3c.TransferMode.I3C_SDR, [], [PIC_SPI_WRITE_COMMAND, SPI_STATUS_REGISTER1, DATA_TO_WRITE]))
-    time.sleep(1)
+    (success, _) = i3c.write(pic_dynamic_address, i3c.TransferMode.I3C_SDR, [], [PIC_SPI_WRITE_COMMAND, SPI_STATUS_REGISTER1, DATA_TO_WRITE])
+    print("Write in SPI Status Register data", "SUCCESS" if success else "FAIL")
+    time.sleep(0.5)
 
-    # Read in SPI Memory
-    print(i3c.write(pic_dynamic_address, i3c.TransferMode.I3C_SDR, [], [PIC_SPI_WRITE_READ_COMMAND, SPI_STATUS_REGISTER1, SPI_READ_STATUS_REGISTER1_COMMAND]))
-    time.sleep(1)
+    (success, _) = i3c.write(pic_dynamic_address, i3c.TransferMode.I3C_SDR, [], [PIC_SPI_WRITE_READ_COMMAND, SPI_STATUS_REGISTER1, SPI_READ_STATUS_REGISTER1_COMMAND])
+    print("Read in SPI Memory", "SUCCESS" if success else "FAIL")
+    time.sleep(0.5)
 
     try:
         reading_ibi = caught_ibis.get(timeout=3)
