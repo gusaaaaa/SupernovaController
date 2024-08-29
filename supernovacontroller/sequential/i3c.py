@@ -189,7 +189,7 @@ class SupernovaI3CBlockingInterface:
         if status == "I3C_INIT_BUS_SUCCESS":
             result = (True, voltage)
         else:
-            result = (False, {"errors": responses[0]["errors"]})
+            result = (False, {"errors": responses[0]["result"]})
 
         return result
 
