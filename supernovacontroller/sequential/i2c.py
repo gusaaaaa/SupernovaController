@@ -271,7 +271,7 @@ class SupernovaI2CBlockingInterface:
         errors = self.__get_set_pullup_response_errors(responses[0])
         response_ok = responses[0]["name"].strip() == "I2C SET PULL UP RESISTORS" and len(errors) == 0
         if response_ok:
-            result = (True, None)
+            result = (True, resistor_value)
         else:
             result = (False, errors)
 
