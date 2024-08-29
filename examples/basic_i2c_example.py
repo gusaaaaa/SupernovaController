@@ -43,6 +43,18 @@ def main():
         print(f'Read from operation result: {result} \n')
     else:
         print(f"Operation failed with error: {result}")
+    # Write non-stop to address
+    success, result = i2c.write_non_stop(0x50, [0x01, 0x00], [255 for i in range(0,20)])
+    if success:
+        print(f'Write Non-Stop from operation result: {result} \n')
+    else:
+        print(f"Operation failed with error: {result}")
+    # Read data specifying register
+    success, result = i2c.read_from(0x50, [0x01, 0x00], 20)
+    if success:
+        print(f'Read from operation result: {result} \n')
+    else:
+        print(f"Operation failed with error: {result}")
 
     device.close()
 
