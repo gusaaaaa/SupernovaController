@@ -244,7 +244,7 @@ class SupernovaI2CBlockingInterface:
             A tuple containing two elements:
                 - The first element is a Boolean indicating the success (True) or failure (False)
                 of the operation.
-                - The second element is either None (indicating success) or an error
+                - The second element is either the set value (indicating success) or an error
                 message detailing the failure.  
 
         Notes: 
@@ -269,13 +269,11 @@ class SupernovaI2CBlockingInterface:
             raise BackendError(original_exception=e) from e
         
         errors = self.__get_set_pullup_response_errors(responses[0])
-        response_ok = responses[0]["name"].strip() == "I2C SET PULL UP RESISTORS" and len(errors) == 0
-        if response_ok:
-            result = (True, resistor_value)
-        else:
-            result = (False, errors)
+        success = responses[0]["name"].strip() == "I2C SET PULL UP RESISTORS" and len(errors) == 0
+        if not success:
+           return (False, errors)
 
-        return result
+        return (True, resistor_value_in_ohm)
 
     def write(self, address, register, data):
         """
