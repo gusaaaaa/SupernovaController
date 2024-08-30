@@ -186,7 +186,7 @@ class SupernovaI3CBlockingInterface:
         # TODO: Toggle IBIs off
 
         status = responses[0]["result"]
-        if status == "I3C_INIT_BUS_SUCCESS":
+        if status == "DAA_SUCCESS":
             result = (True, voltage)
         else:
             result = (False, {"errors": responses[0]["result"]})
