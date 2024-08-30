@@ -14,9 +14,7 @@ from supernovacontroller.errors import BackendError
 from BinhoSupernova.commands.definitions import (
     SpiControllerBitOrder, SpiControllerMode, SpiControllerDataWidth,
     SpiControllerChipSelect, SpiControllerChipSelectPolarity,
-    GpioPinNumber, GpioLogicLevel, GpioFunctionality, GpioTriggerType,
-    I2cPullUpResistorsValue
-)
+    GpioPinNumber, GpioLogicLevel, GpioFunctionality, GpioTriggerType)
 from BinhoSupernova.Supernova import I3cTargetResetDefByte
 from BinhoSupernova.Supernova import TransferDirection
 
