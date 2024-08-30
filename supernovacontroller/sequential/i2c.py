@@ -244,7 +244,7 @@ class SupernovaI2CBlockingInterface:
         except Exception as e:
             raise BackendError(original_exception=e) from e
 
-        response_ok = responses[0]["name"] == "I2C WRITE" and responses[0]["status"] == 0
+        response_ok = responses[0]["name"] == "I2C WRITE" and responses[0]["status"] == "NO_TRANSFER_ERROR"
         if response_ok:
             result = (True, None)
         else:
@@ -330,7 +330,7 @@ class SupernovaI2CBlockingInterface:
         except Exception as e:
             raise BackendError(original_exception=e) from e
 
-        response_ok = responses[0]["name"] == "I2C READ" and responses[0]["status"] == 0
+        response_ok = responses[0]["name"] == "I2C READ" and responses[0]["status"] == "NO_TRANSFER_ERROR"
         if response_ok:
             result = (True, responses[0]["data"])
         else:
@@ -373,7 +373,7 @@ class SupernovaI2CBlockingInterface:
         except Exception as e:
             raise BackendError(original_exception=e) from e
 
-        response_ok = responses[0]["name"] == "I2C READ FROM" and responses[0]["status"] == 0
+        response_ok = responses[0]["name"] == "I2C READ FROM" and responses[0]["status"] == "NO_TRANSFER_ERROR"
         if response_ok:
             result = (True, responses[0]["data"])
         else:
