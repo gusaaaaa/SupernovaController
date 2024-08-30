@@ -438,7 +438,7 @@ class SupernovaI3CBlockingInterface:
             return None
 
         response = responses[0]
-        if response["header"]["result"] == "I3C_TRANSFER_SUCCESS":
+        if response["header"]["result"] == "I3C_TRANSFER_SUCCESS" or response["header"]["result"] == "DAA_SUCCESS":
             data = format_response_payload(command_name, response)
             result_data = data
             if extra_data:
@@ -1289,13 +1289,16 @@ class SupernovaI3CBlockingInterface:
 
         return self._process_response("ccc_broadcast_setmrl", responses)
 
-    def ccc_setaasa(self):
+    def ccc_setaasa(self, static_addresses : list[int]):
         """
         Performs a broadcast SETAASA (Set All Agents to Static Address) operation on the I3C bus.
 
         This method sends a broadcast command to set all agents on the I3C bus to a static address.
         The operation's success status is checked, and it returns a tuple indicating whether the operation
         was successful along with the relevant data or error message.
+
+        Args:
+        static_addresses: A list of the static addresses to update the internal device table.
 
         Returns:
         tuple: A tuple containing two elements:
@@ -1307,6 +1310,7 @@ class SupernovaI3CBlockingInterface:
             responses = self.controller.sync_submit([
                 lambda id: self.driver.i3cSETAASA(
                     id,
+                    static_addresses,
                     self.push_pull_clock_freq_mhz,
                     self.open_drain_clock_freq_mhz,
                 )
