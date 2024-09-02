@@ -438,7 +438,7 @@ class SupernovaI3CBlockingInterface:
             return None
         def format_error_response_payload(command_name, response):
             error_data = None
-            if command_name in ["ccc_setaasa", "ccc_setdasa"]:
+            if command_name in ["ccc_setaasa", "ccc_setdasa", "ccc_entdaa"]:
                 if (response['invalidAddresses']):
                     error_data = response['invalidAddresses']
                 result = {"error": response["header"]["result"]}
@@ -894,6 +894,43 @@ class SupernovaI3CBlockingInterface:
             raise BackendError(original_exception=e) from e
 
         return self._process_response("ccc_rstdaa", responses)
+
+    def ccc_entdaa(self, device_table : dict):
+        """
+        Performs a broadcast ENTDAA (Enter Dynamic Address Assignment) operation on the I3C Bus.
+
+        This CCC indicates to all I3C Devices to enter the Dynamic Address Assignment procedure.
+        Target Devices that already have a Dynamic Address assigned shall not respond to this command.
+
+        Args:
+            device_table: A dictionary of the shape:  
+            ```  
+            {
+                "static_address" : static_address,
+                "dynamic_address" : dynamic_address,
+                "bcr" : bcr,
+                "dcr" : dcr,
+                "pid" : pid
+            }  
+            ```
+
+        Returns:
+            tuple: A tuple containing two elements:
+                - The first element is a Boolean indicating the success (True) or failure (False) of the operation.
+                - The second element is either an error message detailing the failure or a success message.
+                Specific data is usually not returned in this operation, only the success or failure status.
+        """
+        try:
+            responses = self.controller.sync_submit([
+                lambda id: self.driver.i3cENTDAA(
+                    id,
+                    device_table
+                )
+            ])
+        except Exception as e:
+            raise BackendError(original_exception=e) from e
+
+        return self._process_response("ccc_entdaa", responses)
 
     def ccc_broadcast_enec(self, events: list):
         """
