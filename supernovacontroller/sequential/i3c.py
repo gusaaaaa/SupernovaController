@@ -412,7 +412,7 @@ class SupernovaI3CBlockingInterface:
         return result
         
     def _process_response(self, command_name, responses, extra_data=None):
-        def format_response_payload(command_name, response):
+        def format_successful_response_payload(command_name, response):
             if command_name == "write":
                 return None
             elif command_name == "read":
@@ -436,17 +436,29 @@ class SupernovaI3CBlockingInterface:
             elif command_name in ["ccc_unicast_setmrl", "ccc_unicast_setmwl", "ccc_broadcast_setmwl", "ccc_broadcast_setmrl"]:
                 return response["data"]
             return None
+        def format_error_response_payload(command_name, response):
+            error_data = None
+            if command_name in ["ccc_setaasa", "ccc_setdasa"]:
+                if (response['invalidAddresses']):
+                    error_data = response['invalidAddresses']
+                result = {"error": response["header"]["result"]}
+                if error_data: result["error_data"] = error_data
+                return result
+
+            return response["descriptor"]["errors"][0]
 
         response = responses[0]
-        if response["header"]["result"] == "I3C_TRANSFER_SUCCESS" or response["header"]["result"] == "DAA_SUCCESS":
-            data = format_response_payload(command_name, response)
-            result_data = data
-            if extra_data:
-                result_data.update(extra_data)
-            result = (True, result_data)
+        success = response["header"]["result"] == "I3C_TRANSFER_SUCCESS" or response["header"]["result"] == "DAA_SUCCESS"
+
+        if success:
+            data = format_successful_response_payload(command_name, response)
         else:
-            result = (False, response["descriptor"]["errors"][0])
-        return result
+            data = format_error_response_payload(command_name, response)
+
+        if extra_data:
+            data.update(extra_data)
+
+        return (success, data)
 
     def write(self, target_address, mode: TransferMode, subaddress: [], buffer: list):
         """
