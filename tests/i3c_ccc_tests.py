@@ -48,5 +48,23 @@ class TestSupernovaController(unittest.TestCase):
         (success, response) = self.i3c.ccc_getpid(0x14)
         self.assertTupleEqual((True, BMM350_PID["asInt"]), (success, response))
 
+    def test_i3c_ccc_broadcast_setxtime(self):
+        if self.use_simulator:
+            self.skipTest("For real device only")
+
+        self.i3c.init_bus(3300)
+
+        (success, response) = self.i3c.ccc_broadcast_setxtime(0xDF)
+        self.assertTupleEqual((True, None), (success, response))
+
+        # Once getxtime is updated to return the current state, use it here to check the setxtime works (BMC2-1663)
+        # print(self.i3c.ccc_getxtime(0x08))
+
+        (success, response) = self.i3c.ccc_broadcast_setxtime(0x00, [0xAA, 0xBB])
+        self.assertTupleEqual((True, None), (success, response))
+
+        # Idem (BMC2-1663)
+        # print(self.i3c.ccc_getxtime(0x08)) 
+
 if __name__ == "__main__":
     unittest.main()
