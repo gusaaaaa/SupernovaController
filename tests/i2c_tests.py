@@ -83,7 +83,7 @@ class TestSupernovaController(unittest.TestCase):
         data_to_write = [55 for i in range(0, data_length)]
         
         (success, result) = self.i2c.write_non_stop(0x56, [0x01,0x00], data_to_write)
-        self.assertTupleEqual((success, result), (False, "NACK_ERROR"))
+        self.assertTupleEqual((success, result), (False, "I2C_NACK_ADDRESS"))
 
     def test_i2c_write_read_from(self):
         self.i2c.init_bus(3300)

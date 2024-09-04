@@ -286,12 +286,12 @@ class SupernovaI2CBlockingInterface:
         except Exception as e:
             raise BackendError(original_exception=e) from e
 
-        response_ok = responses[0]["name"] == "I2C WRITE WITHOUT STOP" and responses[0]["status"] == 0
+        response_ok = responses[0]["name"] == "I2C WRITE WITHOUT STOP" and responses[0]["status"] == "NO_TRANSFER_ERROR"
         
         if response_ok:
             result = (True, None)
         else:
-            result = (False, CodeTranslator.get_message("i2c", responses[0]["status"]))
+            result = (False, responses[0]["status"])
 
         return result
     
