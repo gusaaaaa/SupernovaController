@@ -5,7 +5,7 @@ from supernovacontroller.sequential.i3c import SupernovaI3CBlockingInterface
 
 from binhosimulators import BinhoSupernovaSimulator
 
-BMM350_PID = {"asString": ['0x07', '0x70', '0x10', '0x33', '0x00', '0x00'], "asInt": [7, 112, 16, 51, 0, 0]}
+BMM350_PID = {"asString": ["0x07", "0x70", "0x10", "0x33", "0x00", "0x00"], "asInt": [7, 112, 16, 51, 0, 0]}
 
 class TestSupernovaController(unittest.TestCase):
     @classmethod
