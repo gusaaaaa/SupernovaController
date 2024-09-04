@@ -60,7 +60,7 @@ class TestSupernovaController(unittest.TestCase):
         (res, msg) = self.i3c.ccc_setaasa([0x00])
         self.assertTupleEqual((res, msg), 
                               (False,
-                               {'error': 'INVALID_ADDRESS', 'error_data': [{'address': '0x00', 'error': 'ADDRESS_RESERVED'}]}))
+                               {"error": "INVALID_ADDRESS", "error_data": [{"address": "0x00", "error": "ADDRESS_RESERVED"}]}))
 
         (res, msg) = self.i3c.ccc_setaasa([0x14]) # Correctly set DA
         self.assertTupleEqual((True, None), (res, msg))
@@ -68,7 +68,7 @@ class TestSupernovaController(unittest.TestCase):
         (res, msg) = self.i3c.ccc_setaasa([0x14])
         self.assertTupleEqual((res, msg), 
                               (False,
-                               {'error': 'INVALID_ADDRESS', 'error_data': [{'address': '0x14', 'error': 'ADDRESS_ALREADY_ASSIGNED_TO_I3C_DEVICE'}]}))
+                               {"error": "INVALID_ADDRESS", "error_data": [{"address": "0x14", "error": "ADDRESS_ALREADY_ASSIGNED_TO_I3C_DEVICE"}]}))
 
     def test_i3c_ccc_setdasa_errors(self):
         if self.use_simulator:
@@ -82,7 +82,7 @@ class TestSupernovaController(unittest.TestCase):
         (res, msg) = self.i3c.ccc_setdasa(0x14, 0x00)
         self.assertTupleEqual((res, msg), 
                               (False,
-                               {'error': 'INVALID_ADDRESS', 'error_data': [{'address': '0x00', 'error': 'ADDRESS_RESERVED'}]}))
+                               {"error": "INVALID_ADDRESS", "error_data": [{"address": "0x00", "error": "ADDRESS_RESERVED"}]}))
 
         (res, msg) = self.i3c.ccc_setdasa(0x14, 0x08) # Correctly set DA
         self.assertTupleEqual((True, None), (res, msg))
@@ -90,7 +90,7 @@ class TestSupernovaController(unittest.TestCase):
         (res, msg) = self.i3c.ccc_setdasa(0x14, 0x08)
         self.assertTupleEqual((res, msg), 
                               (False,
-                               {'error': 'INVALID_ADDRESS', 'error_data': [{'address': '0x08', 'error': 'ADDRESS_ALREADY_ASSIGNED_TO_I3C_DEVICE'}]}))
+                               {"error": "INVALID_ADDRESS", "error_data": [{"address": "0x08", "error": "ADDRESS_ALREADY_ASSIGNED_TO_I3C_DEVICE"}]}))
 
 if __name__ == "__main__":
     unittest.main()
