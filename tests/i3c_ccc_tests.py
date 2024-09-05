@@ -98,9 +98,9 @@ class TestSupernovaController(unittest.TestCase):
             self.skipTest("For real device only")
 
         self.i3c.init_bus(3300)
-        (deviceFound, bmm323) = self.i3c.find_target_device_by_pid(BMI323_DATA["asString"])
+        (deviceFound, bmi323) = self.i3c.find_target_device_by_pid(BMI323_DATA["asString"])
         if not deviceFound:
-            self.skipTest("For BMM323")
+            self.skipTest("For BMI323")
 
         entdaa_target_dict = {
             "bmm323" : {
@@ -114,7 +114,7 @@ class TestSupernovaController(unittest.TestCase):
             },
         }
 
-        (success, response) = self.i3c.ccc_getpid(bmm323["dynamic_address"])
+        (success, response) = self.i3c.ccc_getpid(bmi323["dynamic_address"])
         self.assertTupleEqual((True, BMI323_DATA["asInt"]), (success, response))
 
         (res, msg) = self.i3c.reset_bus()
@@ -126,14 +126,14 @@ class TestSupernovaController(unittest.TestCase):
         (success, response) = self.i3c.ccc_getpid(0x09)
         self.assertTupleEqual((True, BMI323_DATA["asInt"]), (success, response))
 
-        (success, response) = self.i3c.targets()
+        (deviceFound, bmi323) = self.i3c.find_target_device_by_pid(BMI323_DATA["asString"])
         self.assertTupleEqual((True, {
                 "static_address" : 0x14,
                 "dynamic_address" : 0x09,
                 "bcr" : 6,
                 "dcr" : 239,
                 "pid" : ["0x07", "0x70", "0x10", "0x43", "0x10", "0x00"]
-                },), (success, response[0]))
+                },), (deviceFound, bmi323))
     
     def test_i3c_ccc_entdaa_invalid_address(self):
         if self.use_simulator:
