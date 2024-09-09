@@ -1380,14 +1380,14 @@ class SupernovaI3CBlockingInterface:
 
     def ccc_broadcast_setxtime(self, timing_parameter, aditional_data = []):
         """
-        Performs a broadcast SETXTIME (Set Extra Timing) operation on the I3C bus.
+        Performs a broadcast SETXTIME (Set Exchange Timing) operation on the I3C bus.
 
-        This method sends a broadcast command to configure extra timing parameters for all devices on the I3C bus.
+        This method sends a broadcast command to configure exchange timing parameters for all devices on the I3C bus.
         The operation's success status is checked, and it returns a tuple indicating whether the operation
         was successful along with the relevant data or error message.
 
         Args:
-            timing_parameter: The extra timing parameter to be set for all devices on the I3C bus, A.K.A. the SubCommand Byte.
+            timing_parameter: The exchange timing parameter to be set for all devices on the I3C bus, A.K.A. the SubCommand Byte.
             aditional_data (optional): Additional data bytes which may be neccesary for certains Sub-Commands.
 
         Returns:
