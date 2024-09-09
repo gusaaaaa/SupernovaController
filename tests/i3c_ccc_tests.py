@@ -103,7 +103,7 @@ class TestSupernovaController(unittest.TestCase):
             self.skipTest("For BMI323")
 
         entdaa_target_dict = {
-            "bmm323" : {
+            "bmi323" : {
             "staticAddress" : 0x14,
             "dynamicAddress" : 0x09,
             "i3cFeatures": 11,
