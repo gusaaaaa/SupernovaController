@@ -1,6 +1,5 @@
 from transfer_controller import TransferController
 from BinhoSupernova.Supernova import Supernova
-from supernovacontroller.utils.status_codes import CodeTranslator
 from supernovacontroller.errors import BackendError
 from supernovacontroller.errors import BusVoltageError
 
@@ -161,12 +160,12 @@ class SupernovaI2CBlockingInterface:
         except Exception as e:
             raise BackendError(original_exception=e) from e
 
-        response_ok = responses[0]["name"] == "SET I2C-SPI-UART BUS VOLTAGE" and responses[0]["result"] == 0
+        response_ok = responses[0]["name"] == "SET I2C-SPI-UART BUS VOLTAGE" and responses[0]["result"] == "SYS_NO_ERROR"
         if response_ok:
             result = (True, voltage_mv)
             self.bus_voltage = voltage_mv
         else:
-            result = (False, "Set bus voltage failed")
+            result = (False, responses[0]["result"])
             self.bus_voltage = None
 
         return result
@@ -244,11 +243,11 @@ class SupernovaI2CBlockingInterface:
         except Exception as e:
             raise BackendError(original_exception=e) from e
 
-        response_ok = responses[0]["name"] == "I2C WRITE" and responses[0]["status"] == 0
+        response_ok = responses[0]["name"] == "I2C WRITE" and responses[0]["status"] == "NO_TRANSFER_ERROR"
         if response_ok:
             result = (True, None)
         else:
-            result = (False, CodeTranslator.get_message("i2c", responses[0]["status"]))
+            result = (False, responses[0]["status"])
 
         return result
 
@@ -287,12 +286,12 @@ class SupernovaI2CBlockingInterface:
         except Exception as e:
             raise BackendError(original_exception=e) from e
 
-        response_ok = responses[0]["name"] == "I2C WRITE WITHOUT STOP" and responses[0]["status"] == 0
+        response_ok = responses[0]["name"] == "I2C WRITE WITHOUT STOP" and responses[0]["status"] == "NO_TRANSFER_ERROR"
         
         if response_ok:
             result = (True, None)
         else:
-            result = (False, CodeTranslator.get_message("i2c", responses[0]["status"]))
+            result = (False, responses[0]["status"])
 
         return result
     
@@ -330,11 +329,11 @@ class SupernovaI2CBlockingInterface:
         except Exception as e:
             raise BackendError(original_exception=e) from e
 
-        response_ok = responses[0]["name"] == "I2C READ" and responses[0]["status"] == 0
+        response_ok = responses[0]["name"] == "I2C READ" and responses[0]["status"] == "NO_TRANSFER_ERROR"
         if response_ok:
             result = (True, responses[0]["data"])
         else:
-            result = (False, CodeTranslator.get_message("i2c", responses[0]["status"]))
+            result = (False, responses[0]["status"])
 
         return result
 
@@ -373,10 +372,10 @@ class SupernovaI2CBlockingInterface:
         except Exception as e:
             raise BackendError(original_exception=e) from e
 
-        response_ok = responses[0]["name"] == "I2C READ FROM" and responses[0]["status"] == 0
+        response_ok = responses[0]["name"] == "I2C READ FROM" and responses[0]["status"] == "NO_TRANSFER_ERROR"
         if response_ok:
             result = (True, responses[0]["data"])
         else:
-            result = (False, CodeTranslator.get_message("i2c", responses[0]["status"]))
+            result = (False, responses[0]["status"])
 
         return result

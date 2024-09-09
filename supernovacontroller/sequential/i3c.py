@@ -7,6 +7,7 @@ from BinhoSupernova.commands.definitions import I3cSetFeatureSelector
 from BinhoSupernova.commands.definitions import I3cClearFeatureSelector
 from BinhoSupernova.commands.definitions import I3cPushPullTransferRate
 from BinhoSupernova.commands.definitions import I3cOpenDrainTransferRate
+from BinhoSupernova.commands.definitions import I3cChangeDynAddrError
 from supernovacontroller.errors import BusVoltageError
 from supernovacontroller.errors import BackendError
 
@@ -102,7 +103,7 @@ class SupernovaI3CBlockingInterface:
         except Exception as e:
             raise BackendError(original_exception=e) from e
 
-        response_ok = responses[0]["name"] == "SET I3C BUS VOLTAGE" and responses[0]["result"] == 0
+        response_ok = responses[0]["name"] == "SET I3C BUS VOLTAGE" and responses[0]["result"] == "SYS_NO_ERROR"
         if response_ok:
             result = (True, voltage)
             # We want to set the bus_voltage when we know the operation was successful
@@ -185,10 +186,10 @@ class SupernovaI3CBlockingInterface:
         # TODO: Toggle IBIs off
 
         status = responses[0]["result"]
-        if status == "I3C_BUS_INIT_SUCCESS":
+        if status == "DAA_SUCCESS" and responses[0]["errors"] == "NO_TRANSFER_ERROR":
             result = (True, voltage)
         else:
-            result = (False, {"errors": responses[0]["errors"]})
+            result = (False, {"errors": responses[0]["result"]})
 
         return result
 
@@ -372,11 +373,12 @@ class SupernovaI3CBlockingInterface:
         except Exception as e:
             raise BackendError(original_exception=e) from e
 
-        status = responses[0]["errors"][0]
-        if status == "NO_TRANSFER_ERROR":
+        status = responses[0]["result"]
+
+        if status == I3cChangeDynAddrError.I3C_CHANGE_DYNAMIC_ADDRESS_SUCCESS:
             result = (True, "OK")
         else:
-            result = (False, responses[0]["errors"])
+            result = (False, status)
 
         return result
 

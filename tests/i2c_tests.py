@@ -83,7 +83,7 @@ class TestSupernovaController(unittest.TestCase):
         data_to_write = [55 for i in range(0, data_length)]
         
         (success, result) = self.i2c.write_non_stop(0x56, [0x01,0x00], data_to_write)
-        self.assertTupleEqual((success, result), (False, "NACK_ERROR"))
+        self.assertTupleEqual((success, result), (False, "I2C_NACK_ADDRESS"))
 
     def test_i2c_write_read_from(self):
         self.i2c.init_bus(3300)
@@ -109,6 +109,23 @@ class TestSupernovaController(unittest.TestCase):
         self.assertEqual(a, [0x01])
         self.assertEqual(b, [0x02])
         self.assertEqual(cd, [0x03, 0x04])
+
+    def test_i2c_write_NACK(self):
+        self.i2c.init_bus(3300)
+        self.i2c.set_parameters(500000)
+        (success, result) = self.i2c.write(0x99, [0x00,0x00], [0xDE, 0xAD, 0xBE, 0xEF])
+
+        self.assertEqual(result, "I2C_NACK_ADDRESS")
+        self.assertEqual(success, False)
+
+    def test_i2c_write_read_from_NACK(self):
+        self.i2c.init_bus(3300)
+        self.i2c.set_parameters(500000)
+
+        (success, data) = self.i2c.read_from(0x99, [0x00,0x00], 4)
+
+        self.assertEqual(data, "I2C_NACK_ADDRESS")
+        self.assertEqual(success, False)
         
 if __name__ == "__main__":
     unittest.main()
