@@ -173,14 +173,18 @@ class TestSupernovaController(unittest.TestCase):
         (success, response) = self.i3c.ccc_broadcast_setxtime(0xDF)
         self.assertTupleEqual((True, None), (success, response))
 
-        # Once getxtime is updated to return the current state, use it here to check the setxtime works (BMC2-1663)
-        # print(self.i3c.ccc_getxtime(0x08))
+        (success, response) = self.i3c.ccc_getxtime(0x08)
+        self.assertEqual(success, True, "Could not getxtime for validation")
 
-        (success, response) = self.i3c.ccc_broadcast_setxtime(0x00, [0xAA, 0xBB])
+        self.assertEqual(response["stateByte"], 2, "xtime state does not match set")
+
+        (success, response) = self.i3c.ccc_broadcast_setxtime(0xFF, [0xAA, 0xBB])
         self.assertTupleEqual((True, None), (success, response))
 
-        # Idem (BMC2-1663)
-        # print(self.i3c.ccc_getxtime(0x08)) 
+        (success, response) = self.i3c.ccc_getxtime(0x08)
+        self.assertEqual(success, True, "Could not getxtime for validation")
+
+        self.assertEqual(response["stateByte"], 0, "xtime state does not match reset")
 
 if __name__ == "__main__":
     unittest.main()
