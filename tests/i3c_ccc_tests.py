@@ -186,5 +186,37 @@ class TestSupernovaController(unittest.TestCase):
 
         self.assertEqual(response["stateByte"], 0, "xtime state does not match reset")
 
+    def test_i3c_ccc_getxtime(self):
+        if self.use_simulator:
+            self.skipTest("For real device only")
+
+        self.i3c.init_bus(3300)
+        (deviceFound, bmi323) = self.i3c.find_target_device_by_pid(BMI323_DATA["asString"])
+        if not deviceFound:
+            self.skipTest("For BMI323")
+
+        def expected_getxtime_result(expected_state):
+            return {
+                    "supportedModesByte": 3,
+                    "stateByte": expected_state,
+                    "frequency": 6.5,
+                    "inaccuracy": 12
+                }
+
+        (success, response) = self.i3c.ccc_broadcast_setxtime(0xDF)
+        self.assertEqual(True, success)
+
+        (success, response) = self.i3c.ccc_getxtime(bmi323["dynamic_address"])
+        self.assertTupleEqual((success, response), (True, expected_getxtime_result(2)), "got unexpected xtime")
+
+
+        (success, response) = self.i3c.ccc_broadcast_setxtime(0xFF, [0xAA, 0xBB])
+        self.assertEqual(True, success)
+
+        (success, response) = self.i3c.ccc_getxtime(bmi323["dynamic_address"])
+        self.assertTupleEqual((success, response), (True, expected_getxtime_result(0)), "got unexpected xtime")
+
+        self.assertEqual(response["stateByte"], 0, "xtime state does not match reset")
+
 if __name__ == "__main__":
     unittest.main()
