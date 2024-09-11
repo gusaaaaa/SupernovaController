@@ -12,6 +12,8 @@ def main():
     (success, _) = i2c.init_bus(3300)
     if not success:
         print("I couldn't initialize the bus. Are you sure there's any target connected?")
+        print("Closing the Supernova...")
+        device.close()
         exit(1)
 
     success, result = i2c.set_parameters(400000)
@@ -55,6 +57,7 @@ def main():
         print(f"Operation failed with error: {result}")
     print(f"Read from operation result: {result} ")
 
+    print("Closing the Supernova...")
     device.close()
 
 if __name__ == "__main__":
