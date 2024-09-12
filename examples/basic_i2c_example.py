@@ -1,10 +1,17 @@
+from supernovacontroller.errors.exceptions import DeviceOpenError
 from supernovacontroller.sequential import SupernovaDevice
 
 def main():
 
     device = SupernovaDevice()
     print("Opening Supernova host adapter device and getting access to the I2C protocol interface...")
-    info = device.open()
+
+    try:
+        info = device.open()
+    except DeviceOpenError:
+        print("I couldn't connect to the Supernova. Are you sure it is connected?")
+        exit(1)
+
     i2c = device.create_interface("i2c")
     print(info)
 
