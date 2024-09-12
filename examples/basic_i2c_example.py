@@ -26,7 +26,10 @@ def main():
     print("Setting the frequency to 400kHz...")
     success, result = i2c.set_parameters(400000)
     if not success:
-        print(f"Operation failed with error: {result}")
+        print(f"Could not set the frequency with error: {result}")
+        print("Closing the Supernova...")
+        device.close()
+        exit(1)
     print(f"Frequency set in: {result} Hz")
 
     # Write data
