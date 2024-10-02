@@ -221,6 +221,35 @@ class SupernovaI3CBlockingInterface:
 
         return result
 
+    def get_connector_status(self):
+        """
+        """
+        
+        try:
+            responses = self.controller.sync_submit([
+                lambda id: self.driver.getI3cConnectorsStatus(id)
+            ])
+        except Exception as e:
+            raise BackendError(original_exception=e) from e
+        
+        response = responses[0]
+        errors = []
+        if response["usb_error"] != "CMD_SUCCESSFUL":
+            errors.append(response["usb_error"]) 
+        if response["manager_error"] != "SYS_NO_ERROR":
+            errors.append(response["manager_error"]) 
+        if response["driver_error"] != "DRIVER_NO_ERROR":
+            errors.append(response["driver_error"]) 
+        
+        if len(errors) > 0:
+            return (False, errors)
+        
+        result = {
+            "i3c_low_voltage_port_status" : response["i3c_low_voltage_port"]["connector_type"],
+            "i3c_high_voltage_port_status" : response["i3c_high_voltage_port"]["connector_type"],
+        }
+        return (True, result)
+
     def targets(self):
         """
         Retrieves the target device table from the I3C bus.
