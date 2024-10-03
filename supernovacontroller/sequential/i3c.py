@@ -221,8 +221,23 @@ class SupernovaI3CBlockingInterface:
 
         return result
 
-    def get_connector_status(self):
+    def get_i3c_connector_status(self):
         """
+        Retrieves the current status of the I3C connector ports. 
+
+        Returns:
+            tuple: A tuple containing two elements:
+                - The first element is a Boolean indicating the success (True) or failure (False) of the operation.
+                - The second element is either a dictionary, or an error message detailing the failure,
+                obtained from the device's response.
+                The dictionary entry contains formatted information about the ports, with the shape:
+                {
+                    "i3c_low_voltage_port_status" : String
+                    "i3c_high_voltage_port_status" : String
+                }
+                The possible values are Strings with the connected connector type, if any. These can be:
+                'CONNECTOR_IDENTIFICATION_NOT_SUPPORTED', 'I3C_HARNESS', 'QWIIC_ADAPTOR', 
+                'SENSEPEEK_PROBES', 'NO_CONNECTOR' or 'ERROR_IDENTIFYING_CONNECTOR'
         """
         
         try:
