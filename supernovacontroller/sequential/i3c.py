@@ -410,7 +410,32 @@ class SupernovaI3CBlockingInterface:
             result = (False, errors)
 
         return result
-        
+
+    def trigger_exit_pattern(self):
+        """
+        Triggers the HDR exit pattern on the I3C bus.
+
+        Returns:
+        tuple: A tuple containing two elements:
+            - The first element is a Boolean indicating the success (True) or failure (False) of the operation.
+            - The second element is either None indicating success, or an error message
+                detailing the failure, obtained from the device's response.
+        """
+        try:
+            responses = self.controller.sync_submit([
+                lambda id: self.driver.i3cTriggerExitPattern(id)
+            ])
+        except Exception as e:
+            raise BackendError(original_exception=e) from e
+
+        response = responses[0]
+        errors = self.__get_error_from_response(response)
+
+        if len(errors) != 0: # manager, usb and/or driver have error
+            return (False, errors)
+
+        return (True, None)
+
     def _process_response(self, command_name, responses, extra_data=None):
         def format_successful_response_payload(command_name, response):
             if command_name == "write":
