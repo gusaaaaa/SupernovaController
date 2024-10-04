@@ -186,7 +186,7 @@ class SupernovaI3CBlockingInterface:
         # TODO: Toggle IBIs off
 
         status = responses[0]["result"]
-        if status == "DAA_SUCCESS" and responses[0]["errors"] == "NO_TRANSFER_ERROR":
+        if status == "DAA_SUCCESS" and "NO_TRANSFER_ERROR" in responses[0]["errors"]:
             result = (True, voltage)
         else:
             result = (False, {"errors": responses[0]["result"]})
