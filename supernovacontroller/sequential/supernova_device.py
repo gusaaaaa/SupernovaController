@@ -16,12 +16,38 @@ from .uart import SupernovaUARTBlockingInterface
 from .i3c_target import SupernovaI3CTargetBlockingInterface
 from .spi_controller import SupernovaSPIControllerBlockingInterface
 from .gpio import SupernovaGPIOInterface
+from ..utils.logging import logger
+import inspect
 
 def id_gen(start=0):
     i = start
     while True:
         i += 1
         yield i
+
+def log_signature_and_args(func):
+    """Decorator to log function signature and arguments."""
+    def wrapper(*args, **kwargs):
+        signature = inspect.signature(func)
+        bound_args = signature.bind(*args, **kwargs)
+        bound_args.apply_defaults()
+        logger.debug(f"Calling {func.__name__} with args {bound_args.arguments}")
+        return func(*args, **kwargs)
+    return wrapper
+
+def log_driver_method_calls(func):
+    """Decorator to wrap all driver methods with logging before executing the decorated method."""
+    def wrapper(self, *args, **kwargs):
+        # Re-wrap all methods in self.driver for logging
+        for attr_name in dir(self.driver):
+            if not attr_name.startswith('__'):
+                attr = getattr(self.driver, attr_name)
+                if callable(attr) and not hasattr(attr, "_wrapped"):  # Avoid double wrapping
+                    wrapped = log_signature_and_args(attr)
+                    wrapped._wrapped = True
+                    setattr(self.driver, attr_name, wrapped)
+        return func(self, *args, **kwargs)
+    return wrapper
 
 class SupernovaDevice:
     def __init__(self, start_id=0):
@@ -51,6 +77,7 @@ class SupernovaDevice:
 
         self.mounted = False
 
+    @log_driver_method_calls
     def open(self, usb_address=None):
         if self.mounted:
             raise DeviceAlreadyMountedError
@@ -133,6 +160,8 @@ class SupernovaDevice:
             self.notification_handlers[name] = (filter_func, handler_func)
 
     def _push_sdk_response(self, supernova_response, system_message):
+        logger.debug("SDK RESPONSE: supernova_response == %s, system_message == %s", supernova_response, system_message)
+
         if supernova_response:
             # Check if the id is non-zero (zero is reserved for notifications)
             if supernova_response["id"] != 0:
