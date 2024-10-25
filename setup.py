@@ -11,7 +11,7 @@ if gh_token:
 
 setup(
     name='supernovacontroller',
-    version='2.0.0',
+    version='2.0.1',
     packages=find_packages(),
     data_files=[
         ('lib/site-packages/supernovacontrollerexamples', ['examples/basic_i2c_example.py', 'examples/basic_i3c_example.py', 'examples/i3c_ibi_example.py', 'examples/ICM42605_i3c_example.py', 'examples/basic_i3c_target_example.py',
@@ -25,7 +25,7 @@ setup(
     url='https://github.com/binhollc/SupernovaController',
     license='Private',
     install_requires=[
-      'transfer_controller==0.4.0',
+      'transfer_controller==0.4.1',
       'BinhoSupernova==3.1.1',
     ] + dev_dependencies,
     classifiers=[
