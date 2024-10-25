@@ -47,12 +47,17 @@ def log_function_call(func):
         # Log function name and arguments
         logger.debug("Calling %s with args: %s and kwargs: %s", func.__name__, args, kwargs)
 
-        # Call the original function
-        result = func(*args, **kwargs)
+        try:
+            # Call the original function
+            result = func(*args, **kwargs)
 
-        # Log the return value
-        logger.debug("%s returned %s", func.__name__, result)
-        return result
+            # Log the return value
+            logger.debug("%s returned %s", func.__name__, result)
+            return result
+
+        except Exception as e:
+            # Log the exception with traceback
+            logger.exception("Exception occurred in %s: %s", func.__name__, e)
+            raise  # Re-raise the exception after logging it
 
     return wrapper
-
