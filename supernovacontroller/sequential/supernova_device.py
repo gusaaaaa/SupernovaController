@@ -141,6 +141,12 @@ class SupernovaDevice:
             else:
                 # Add the response to the notification queue for id zero
                 self.notification_queue.put((supernova_response, system_message))
+        if system_message and system_message.opcode == SystemOpcode.UNEXPECTED_DISCONNECTION: # Special case when the SN device is disconnected
+            self.notification_queue.put((
+                {"name": "UNEXPECTED_DISCONNECTION", "message": "Unexpected Supernova disconnection."},
+                system_message
+            ))
+            self.__handle_disconnect()
 
     def _pull_sdk_response(self):
         while self.running:
@@ -196,3 +202,9 @@ class SupernovaDevice:
     def close(self):
         self.driver.close()
         self.running = False
+
+    def __handle_disconnect(self):
+        for interface_instance in self.interfaces.values():
+            interface_instance[0] = None
+
+        self.mounted = False
