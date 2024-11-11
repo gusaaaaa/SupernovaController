@@ -38,8 +38,6 @@ class SupernovaDevice:
         self.process_response_thread.start()
         self.process_notifications_thread.start()
 
-        self.driver = Supernova()
-
         self.interfaces = {
             "i2c": [None, SupernovaI2CBlockingInterface],
             "i3c.controller": [None, SupernovaI3CBlockingInterface],
@@ -55,11 +53,14 @@ class SupernovaDevice:
         if self.mounted:
             raise DeviceAlreadyMountedError
 
+        self.driver = Supernova()
         result = self.driver.open(path=usb_address)
         if result["opcode"] != SystemOpcode.OK.value:
             raise DeviceOpenError(result["message"])
 
         self.driver.onEvent(self._push_sdk_response)
+        for interface in self.interfaces.values(): # Update any existing interfaces
+                if interface[0] is not None: interface[0].driver = self.driver
 
         try:
             responses = self.controller.sync_submit([
@@ -141,6 +142,10 @@ class SupernovaDevice:
             else:
                 # Add the response to the notification queue for id zero
                 self.notification_queue.put((supernova_response, system_message))
+        elif system_message:
+            # Got a system message to process and update system status
+            self._process_system_message(system_message)
+        
 
     def _pull_sdk_response(self):
         while self.running:
@@ -173,6 +178,10 @@ class SupernovaDevice:
             if filter_func(name, supernova_response):
                 handler_func(name, supernova_response)
                 break
+
+    def _process_system_message(self, system_message):
+        if system_message.opcode == SystemOpcode.UNEXPECTED_DISCONNECTION:
+            self.mounted = False
 
     def create_interface(self, interface_name):
         if not self.mounted:
