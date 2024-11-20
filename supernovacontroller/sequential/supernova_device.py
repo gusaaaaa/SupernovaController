@@ -1,23 +1,28 @@
-from transfer_controller import TransferController
-from BinhoSupernova import getConnectedSupernovaDevicesList;
-from BinhoSupernova.Supernova import Supernova
-from BinhoSupernova.commands.definitions import GetUsbStringSubCommand
-from BinhoSupernova.utils.system_message import SystemOpcode
-from supernovacontroller.errors import DeviceOpenError
-from supernovacontroller.errors import DeviceNotMountedError
-from supernovacontroller.errors import DeviceAlreadyMountedError
-from supernovacontroller.errors import UnknownInterfaceError
-from supernovacontroller.errors import BackendError
+import inspect
+import os
 import queue
 import threading
+
+from BinhoSupernova import getConnectedSupernovaDevicesList
+from BinhoSupernova.commands.definitions import GetUsbStringSubCommand
+from BinhoSupernova.Supernova import Supernova
+from BinhoSupernova.utils.system_message import SystemOpcode
+from transfer_controller import TransferController
+
+from supernovacontroller.errors import (BackendError,
+                                        DeviceAlreadyMountedError,
+                                        DeviceNotMountedError, DeviceOpenError,
+                                        UnknownInterfaceError)
+
+from ..utils.logging import logging
+from .gpio import SupernovaGPIOInterface
 from .i2c import SupernovaI2CBlockingInterface
 from .i3c import SupernovaI3CBlockingInterface
-from .uart import SupernovaUARTBlockingInterface
 from .i3c_target import SupernovaI3CTargetBlockingInterface
 from .spi_controller import SupernovaSPIControllerBlockingInterface
-from .gpio import SupernovaGPIOInterface
-from ..utils.logging import logger
-import inspect
+from .uart import SupernovaUARTBlockingInterface
+
+logger = logging.getLogger("supernovacontroller")
 
 def id_gen(start=0):
     i = start
@@ -35,19 +40,19 @@ def log_signature_and_args(func):
         return func(*args, **kwargs)
     return wrapper
 
-def log_driver_method_calls(func):
-    """Decorator to wrap all driver methods with logging before executing the decorated method."""
-    def wrapper(self, *args, **kwargs):
-        # Re-wrap all methods in self.driver for logging
-        for attr_name in dir(self.driver):
-            if not attr_name.startswith('__'):
-                attr = getattr(self.driver, attr_name)
-                if callable(attr) and not hasattr(attr, "_wrapped"):  # Avoid double wrapping
-                    wrapped = log_signature_and_args(attr)
-                    wrapped._wrapped = True
-                    setattr(self.driver, attr_name, wrapped)
-        return func(self, *args, **kwargs)
-    return wrapper
+def log_driver_method_calls(driver: Supernova, enabled: bool):
+    if not enabled:
+        return driver
+
+    for attr_name in dir(driver):
+        if not attr_name.startswith('__'):
+            attr = getattr(driver, attr_name)
+            if callable(attr) and not hasattr(attr, "_wrapped"):  # Avoid double wrapping
+                wrapped = log_signature_and_args(attr)
+                wrapped._wrapped = True
+                setattr(driver, attr_name, wrapped)
+
+    return driver
 
 class SupernovaDevice:
     def __init__(self, start_id=0):
@@ -64,7 +69,7 @@ class SupernovaDevice:
         self.process_response_thread.start()
         self.process_notifications_thread.start()
 
-        self.driver = Supernova()
+        self.driver = log_driver_method_calls(Supernova(), os.environ.get('PYTHON_LOG_PATH') is not None)
 
         self.interfaces = {
             "i2c": [None, SupernovaI2CBlockingInterface],
@@ -77,7 +82,6 @@ class SupernovaDevice:
 
         self.mounted = False
 
-    @log_driver_method_calls
     def open(self, usb_address=None):
         if self.mounted:
             raise DeviceAlreadyMountedError
