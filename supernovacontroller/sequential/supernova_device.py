@@ -14,7 +14,7 @@ from supernovacontroller.errors import (BackendError,
                                         DeviceNotMountedError, DeviceOpenError,
                                         UnknownInterfaceError)
 
-from ..utils.logging import logging
+from ..utils.logging import log_instance_method_calls, logging
 from .gpio import SupernovaGPIOInterface
 from .i2c import SupernovaI2CBlockingInterface
 from .i3c import SupernovaI3CBlockingInterface
@@ -29,30 +29,6 @@ def id_gen(start=0):
     while True:
         i += 1
         yield i
-
-def log_signature_and_args(func):
-    """Decorator to log function signature and arguments."""
-    def wrapper(*args, **kwargs):
-        signature = inspect.signature(func)
-        bound_args = signature.bind(*args, **kwargs)
-        bound_args.apply_defaults()
-        logger.debug(f"Calling {func.__name__} with args {bound_args.arguments}")
-        return func(*args, **kwargs)
-    return wrapper
-
-def log_driver_method_calls(driver: Supernova, enabled: bool):
-    if not enabled:
-        return driver
-
-    for attr_name in dir(driver):
-        if not attr_name.startswith('__'):
-            attr = getattr(driver, attr_name)
-            if callable(attr) and not hasattr(attr, "_wrapped"):  # Avoid double wrapping
-                wrapped = log_signature_and_args(attr)
-                wrapped._wrapped = True
-                setattr(driver, attr_name, wrapped)
-
-    return driver
 
 class SupernovaDevice:
     def __init__(self, start_id=0):
@@ -69,7 +45,7 @@ class SupernovaDevice:
         self.process_response_thread.start()
         self.process_notifications_thread.start()
 
-        self.driver = log_driver_method_calls(Supernova(), os.environ.get('PYTHON_LOG_PATH') is not None)
+        self.__driver = log_instance_method_calls(Supernova(), os.environ.get('PYTHON_LOG_PATH') is not None)
 
         self.interfaces = {
             "i2c": [None, SupernovaI2CBlockingInterface],
@@ -81,6 +57,15 @@ class SupernovaDevice:
         }
 
         self.mounted = False
+
+    @property
+    def driver(self):
+        return self.__driver
+
+    # we override driver setter to wrap with log (if enabled)
+    @driver.setter
+    def driver(self, newDriver):
+        self.__driver = log_instance_method_calls(newDriver, os.environ.get('PYTHON_LOG_PATH') is not None)
 
     def open(self, usb_address=None):
         if self.mounted:

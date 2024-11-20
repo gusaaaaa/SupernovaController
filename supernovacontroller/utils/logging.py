@@ -1,3 +1,4 @@
+import inspect
 import os
 import logging
 from functools import wraps
@@ -41,11 +42,14 @@ setup_logging()
 
 logger = logging.getLogger(__name__)
 
-def log_function_call(func):
+def log_function_call(func, logger = logger):
     @wraps(func)
     def wrapper(*args, **kwargs):
+        signature = inspect.signature(func)
+        bound_args = signature.bind(*args, **kwargs)
+        bound_args.apply_defaults()
         # Log function name and arguments
-        logger.debug("Calling %s with args: %s and kwargs: %s", func.__name__, args, kwargs)
+        logger.debug("Calling %s with args: %s", func.__name__, bound_args.arguments)
 
         try:
             # Call the original function
@@ -61,3 +65,19 @@ def log_function_call(func):
             raise  # Re-raise the exception after logging it
 
     return wrapper
+
+# For logging all methods in some class vvvvvv
+def log_instance_method_calls(instance: object, enabled: bool):
+    if not enabled:
+        return instance
+
+    classLogger = logging.getLogger(f"{instance.__module__}:{instance.__class__.__name__}")
+    for attr_name in dir(instance):
+        if not attr_name.startswith('_'):  # Avoid private and protected methods
+            attr = getattr(instance, attr_name)
+            if callable(attr) and not hasattr(attr, "_wrapped"):  # Avoid double wrapping
+                wrapped = log_function_call(attr, classLogger)
+                wrapped._wrapped = True
+                setattr(instance, attr_name, wrapped)
+
+    return instance
