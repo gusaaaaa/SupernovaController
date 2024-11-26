@@ -45,7 +45,7 @@ class SupernovaDevice:
         self.process_response_thread.start()
         self.process_notifications_thread.start()
 
-        self.__driver = log_instance_method_calls(Supernova(), os.environ.get('PYTHON_LOG_PATH') is not None)
+        self.driver = Supernova()
 
         self.interfaces = {
             "i2c": [None, SupernovaI2CBlockingInterface],
