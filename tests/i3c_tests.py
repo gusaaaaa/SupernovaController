@@ -306,3 +306,6 @@ class TestI3CSupernovaController(unittest.TestCase):
         (success, result) = i3c.trigger_target_reset_pattern()
 
         self.assertTupleEqual((success, result), (True, None))
+
+if __name__ == "__main__":
+    unittest.main()
