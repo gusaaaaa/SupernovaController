@@ -69,7 +69,7 @@ class TestSupernovaController(unittest.TestCase):
         if self.use_simulator:
             self.skipTest("For real device only")
 
-        d = SupernovaDevice(start_id=655535)
+        d = SupernovaDevice(start_id=65535)
         timeout = 3
 
         device_info = None
@@ -86,7 +86,6 @@ class TestSupernovaController(unittest.TestCase):
 
         if thread.is_alive():
             self.fail("Transaction ID over 65535 timed out")
-            return
         else:
             self.__validate_device_info(device_info)
 
