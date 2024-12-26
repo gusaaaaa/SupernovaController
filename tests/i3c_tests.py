@@ -1,14 +1,10 @@
-from threading import Event
-import unittest
-from unittest import mock
-from unittest.mock import patch
-from unittest.mock import MagicMock
 import sys
 import os
-from transfer_controller import TransferController
+import unittest
+from threading import Event
+from unittest import mock
 from supernovacontroller.sequential import SupernovaDevice
 from supernovacontroller.sequential.i3c import SupernovaI3CBlockingInterface
-from supernovacontroller.errors import BackendError
 
 sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), "..")))
 from binhosimulators import BinhoSupernovaSimulator
@@ -34,7 +30,7 @@ def _handle_ibi(name, message):
 BMM350_DATA = {"asString": ["0x07", "0x70", "0x10", "0x33", "0x00", "0x00"], "asInt": [7, 112, 16, 51, 0, 0]}
 BMI323_DATA = {"asString": ["0x07", "0x70", "0x10", "0x43", "0x10", "0x00"], "asInt": [7, 112, 16, 67, 16, 0]}
 
-class TestSupernovaController(unittest.TestCase):
+class TestI3CSupernovaController(unittest.TestCase):
     @classmethod
     def setUpClass(cls):
         """

@@ -9,7 +9,7 @@ from binhosimulators import BinhoSupernovaSimulator
 BMM350_DATA = {"asString": ["0x07", "0x70", "0x10", "0x33", "0x00", "0x00"], "asInt": [7, 112, 16, 51, 0, 0]}
 BMI323_DATA = {"asString": ["0x07", "0x70", "0x10", "0x43", "0x10", "0x00"], "asInt": [7, 112, 16, 67, 16, 0]}
 
-class TestSupernovaController(unittest.TestCase):
+class TestCCCSupernovaController(unittest.TestCase):
     @classmethod
     def setUpClass(cls):
         """
