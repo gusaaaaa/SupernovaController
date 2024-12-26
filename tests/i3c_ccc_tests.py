@@ -1,5 +1,6 @@
 import os
 import unittest
+from BinhoSupernova.commands.definitions import I3cTargetResetDefByte, TransferDirection
 from supernovacontroller.sequential.supernova_device import SupernovaDevice
 from supernovacontroller.sequential.i3c import SupernovaI3CBlockingInterface
 
@@ -259,7 +260,7 @@ class TestSupernovaController(unittest.TestCase):
 
         i3c.init_bus(3300)
 
-        (success, result) = i3c.ccc_direct_rstact(0x08,I3cTargetResetDefByte.RESET_I3C_PERIPHERAL, TransferDirection.READ)
+        (success, result) = i3c.ccc_direct_rstact(0x08, I3cTargetResetDefByte.RESET_I3C_PERIPHERAL, TransferDirection.READ)
 
         self.assertTupleEqual((success, result), (True, [0x00]))
 
@@ -271,7 +272,7 @@ class TestSupernovaController(unittest.TestCase):
 
         i3c.init_bus(3300)
 
-        (success, result) = i3c.ccc_direct_rstact(0x08,I3cTargetResetDefByte.RESET_I3C_PERIPHERAL, TransferDirection.WRITE)
+        (success, result) = i3c.ccc_direct_rstact(0x08, I3cTargetResetDefByte.RESET_I3C_PERIPHERAL, TransferDirection.WRITE)
 
         self.assertTupleEqual((success, result), (True, None))
 
