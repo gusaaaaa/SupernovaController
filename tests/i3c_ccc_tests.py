@@ -201,7 +201,7 @@ class TestSupernovaController(unittest.TestCase):
                     "stateByte": expected_state,
                     "frequency": 6.5,
                     "inaccuracy": 12
-                }
+            }
 
         (success, response) = self.i3c.ccc_broadcast_setxtime(0xDF)
         self.assertEqual(True, success)
