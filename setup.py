@@ -25,7 +25,7 @@ setup(
     url='https://github.com/binhollc/SupernovaController',
     license='Private',
     install_requires=[
-      'transfer_controller==0.4.1',
+      'transfer_controller==0.4.2',
       'BinhoSupernova==3.2.0',
     ] + dev_dependencies,
     classifiers=[
