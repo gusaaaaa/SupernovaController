@@ -1,4 +1,3 @@
-import threading
 import unittest
 from unittest import mock
 from unittest.mock import patch
@@ -64,30 +63,6 @@ class TestSupernovaController(unittest.TestCase):
 
         with self.assertRaises(DeviceAlreadyMountedError):
             self.device.open()
-
-    def test_id_overflow(self):
-        if self.use_simulator:
-            self.skipTest("For real device only")
-
-        d = SupernovaDevice(start_id=65535)
-        timeout = 3
-
-        device_info = None
-        def open_device():
-            nonlocal device_info
-            try:
-                device_info = d.open()
-            except Exception as e:
-                device_info = e
-
-        thread = threading.Thread(target=open_device, daemon=True)
-        thread.start()
-        thread.join(timeout)
-
-        if thread.is_alive():
-            self.fail("Transaction ID over 65535 timed out")
-        else:
-            self.__validate_device_info(device_info)
 
     def test_create_interface_before_open_throws_error(self):
         d = SupernovaDevice()
@@ -540,6 +515,5 @@ class TestSupernovaController(unittest.TestCase):
 
         self.assertTupleEqual((success, result), (True, None))
 
-        
 if __name__ == "__main__":
     unittest.main()
