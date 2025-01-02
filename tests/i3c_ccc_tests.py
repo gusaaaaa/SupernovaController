@@ -6,8 +6,9 @@ from supernovacontroller.sequential.i3c import SupernovaI3CBlockingInterface
 
 from binhosimulators import BinhoSupernovaSimulator
 
-BMM350_DATA = {"asString": ["0x07", "0x70", "0x10", "0x33", "0x00", "0x00"], "asInt": [7, 112, 16, 51, 0, 0]}
-BMI323_DATA = {"asString": ["0x07", "0x70", "0x10", "0x43", "0x10", "0x00"], "asInt": [7, 112, 16, 67, 16, 0]}
+BMM350_PID_DATA = {"asString": ["0x07", "0x70", "0x10", "0x33", "0x00", "0x00"], "asInt": [7, 112, 16, 51, 0, 0]}
+BMI323_PID_DATA = {"asString": ["0x07", "0x70", "0x10", "0x43", "0x10", "0x00"], "asInt": [7, 112, 16, 67, 16, 0]}
+LMS6DSV_PID_DATA = {"asString": ["0x02", "0x08", "0x00", "0x70", "0x92", "0x0b"], "asInt": [2, 8, 0, 112, 146, 11]}
 
 class TestCCCSupernovaController(unittest.TestCase):
     @classmethod
@@ -35,12 +36,12 @@ class TestCCCSupernovaController(unittest.TestCase):
             self.skipTest("For real device only")
 
         self.i3c.init_bus(3300)
-        (deviceFound, bmm350) = self.i3c.find_target_device_by_pid(BMM350_DATA["asString"])
+        (deviceFound, bmm350) = self.i3c.find_target_device_by_pid(BMM350_PID_DATA["asString"])
         if not deviceFound:
             self.skipTest("For BMM350")
 
         (success, response) = self.i3c.ccc_getpid(0x08)
-        self.assertTupleEqual((True, BMM350_DATA["asInt"]), (success, response))
+        self.assertTupleEqual((True, BMM350_PID_DATA["asInt"]), (success, response))
 
         self.i3c.ccc_rstdaa()
 
@@ -48,13 +49,13 @@ class TestCCCSupernovaController(unittest.TestCase):
         self.assertTupleEqual((True, None), (success, response))
 
         (success, response) = self.i3c.ccc_getpid(0x14)
-        self.assertTupleEqual((True, BMM350_DATA["asInt"]), (success, response))
+        self.assertTupleEqual((True, BMM350_PID_DATA["asInt"]), (success, response))
 
     def test_i3c_ccc_setaasa_errors(self):
         if self.use_simulator:
             self.skipTest("For real device only")
         self.i3c.init_bus(3300)
-        (deviceFound, bmm350) = self.i3c.find_target_device_by_pid(BMM350_DATA["asString"])
+        (deviceFound, bmm350) = self.i3c.find_target_device_by_pid(BMM350_PID_DATA["asString"])
         if not deviceFound:
             self.skipTest("For BMM350")
 
@@ -76,7 +77,7 @@ class TestCCCSupernovaController(unittest.TestCase):
         if self.use_simulator:
             self.skipTest("For real device only")
         self.i3c.init_bus(3300)
-        (deviceFound, bmm350) = self.i3c.find_target_device_by_pid(BMM350_DATA["asString"])
+        (deviceFound, bmm350) = self.i3c.find_target_device_by_pid(BMM350_PID_DATA["asString"])
         if not deviceFound:
             self.skipTest("For BMM350")
 
@@ -99,7 +100,7 @@ class TestCCCSupernovaController(unittest.TestCase):
             self.skipTest("For real device only")
 
         self.i3c.init_bus(3300)
-        (deviceFound, bmi323) = self.i3c.find_target_device_by_pid(BMI323_DATA["asString"])
+        (deviceFound, bmi323) = self.i3c.find_target_device_by_pid(BMI323_PID_DATA["asString"])
         if not deviceFound:
             self.skipTest("For BMI323")
 
@@ -116,7 +117,7 @@ class TestCCCSupernovaController(unittest.TestCase):
         }
 
         (success, response) = self.i3c.ccc_getpid(bmi323["dynamic_address"])
-        self.assertTupleEqual((True, BMI323_DATA["asInt"]), (success, response))
+        self.assertTupleEqual((True, BMI323_PID_DATA["asInt"]), (success, response))
 
         (res, msg) = self.i3c.reset_bus()
         self.assertTupleEqual((True, 3300), (res, msg))
@@ -125,9 +126,9 @@ class TestCCCSupernovaController(unittest.TestCase):
         self.assertTupleEqual((True, None), (res, msg))
         
         (success, response) = self.i3c.ccc_getpid(0x09)
-        self.assertTupleEqual((True, BMI323_DATA["asInt"]), (success, response))
+        self.assertTupleEqual((True, BMI323_PID_DATA["asInt"]), (success, response))
 
-        (deviceFound, bmi323) = self.i3c.find_target_device_by_pid(BMI323_DATA["asString"])
+        (deviceFound, bmi323) = self.i3c.find_target_device_by_pid(BMI323_PID_DATA["asString"])
         self.assertTupleEqual((True, {
                 "static_address" : 0x14,
                 "dynamic_address" : 0x09,
@@ -141,7 +142,7 @@ class TestCCCSupernovaController(unittest.TestCase):
             self.skipTest("For real device only")
 
         self.i3c.init_bus(3300)
-        (deviceFound, bmi323) = self.i3c.find_target_device_by_pid(BMI323_DATA["asString"])
+        (deviceFound, bmi323) = self.i3c.find_target_device_by_pid(BMI323_PID_DATA["asString"])
         if not deviceFound:
             self.skipTest("For BMI323")
 
@@ -244,11 +245,15 @@ class TestCCCSupernovaController(unittest.TestCase):
         if len(connectedDevices) == 0:
             self.fail("Test requires a connected target")
 
+        (deviceFound, lms6dsv) = self.i3c.find_target_device_by_pid(LMS6DSV_PID_DATA["asString"])
+        if not deviceFound:
+            self.skipTest("For LMS6DSV")
+
         (success, _) = i3c.ccc_broadcast_setmwl(10)
 
         self.assertEqual(success, True)
 
-        (success, result) = i3c.ccc_getmwl(0x08)
+        (success, result) = i3c.ccc_getmwl(lms6dsv["dynamic_address"])
 
         self.assertTupleEqual((success, result), (True, 10))
 

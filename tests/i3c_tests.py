@@ -27,8 +27,8 @@ def _handle_ibi(name, message):
     if counter == 5:
         last_ibi.set()
 
-BMM350_DATA = {"asString": ["0x07", "0x70", "0x10", "0x33", "0x00", "0x00"], "asInt": [7, 112, 16, 51, 0, 0]}
-BMI323_DATA = {"asString": ["0x07", "0x70", "0x10", "0x43", "0x10", "0x00"], "asInt": [7, 112, 16, 67, 16, 0]}
+BMM350_PID_DATA = {"asString": ["0x07", "0x70", "0x10", "0x33", "0x00", "0x00"], "asInt": [7, 112, 16, 51, 0, 0]}
+BMI323_PID_DATA = {"asString": ["0x07", "0x70", "0x10", "0x43", "0x10", "0x00"], "asInt": [7, 112, 16, 67, 16, 0]}
 
 class TestI3CSupernovaController(unittest.TestCase):
     @classmethod
@@ -102,7 +102,7 @@ class TestI3CSupernovaController(unittest.TestCase):
         (success, result) = self.i3c.init_bus(1500)
 
         self.assertEqual(success, False, "Init bus succeded, are there devices connected?")
-        self.assertTrue("errors" in result)
+        self.assertDictEqual(result, {"errors": "RSTDAA_FAILED"}, f"Got unexpected result: {result}")
 
     def test_i3c_reset_bus(self):
         if not self.use_simulator:
@@ -186,7 +186,7 @@ class TestI3CSupernovaController(unittest.TestCase):
 
         self.assertEqual(success, False)
 
-    def test_i3c_successful_write_operation_on_target_should_return_none(self):
+    def test_i3c_write_on_target_should_return_none(self):
         if not self.use_simulator:
             self.skipTest("For simulator only")
 
@@ -269,7 +269,7 @@ class TestI3CSupernovaController(unittest.TestCase):
 
         self.i3c.init_bus(3300)
         
-        (deviceFound, bmi323) = self.i3c.find_target_device_by_pid(BMI323_DATA["asString"])
+        (deviceFound, bmi323) = self.i3c.find_target_device_by_pid(BMI323_PID_DATA["asString"])
         if not deviceFound:
             self.skipTest("For BMI323")
 
